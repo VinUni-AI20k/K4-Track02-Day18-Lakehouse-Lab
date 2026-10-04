@@ -1,0 +1,27 @@
+<!doctype html><meta charset='utf-8'><style>
+            body{margin:48px;background:#f4f7fa;color:#14293b;font-family:Arial}
+            h1{font-size:32px} p{font-size:20px}
+            pre{background:white;border:1px solid #ccd8e0;border-radius:10px;padding:24px;
+            font:17px/1.4 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+            </style><h1>03_time_travel</h1>
+            <p>Đỗ Quốc An · 2A202602892 · Lightweight Python 3.11 · Executed Jupyter output</p>
+            <p>Run: 2026-10-04T19:34:23.499092+07:00 | Source: submission/notebooks/03_time_travel.ipynb</p>
+            <pre>MERGE 100K rows: 0.13s
+
+
+v0 row count: 100000
+v1 schema:    [&#x27;customer_id&#x27;, &#x27;status&#x27;, &#x27;score&#x27;, &#x27;tier&#x27;]
+
+
+RESTORE → v2: 0.02s   (target &lt; 30s)
+Rows with score&lt;0 after restore: 0  (expected 0)
+
+
+  v 4  RESTORE                  
+  v 3  WRITE                    
+  v 2  MERGE                    
+  v 1  WRITE                    
+  v 0  WRITE                    
+
+Total versions: 5  (target ≥ 5)
+</pre>

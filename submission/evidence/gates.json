@@ -1,0 +1,22 @@
+{
+  "smoke": {
+    "returncode": 0,
+    "seconds": 2.71
+  },
+  "generate_data": {
+    "returncode": 0,
+    "seconds": 2.56
+  },
+  "generate_ai_data": {
+    "returncode": 0,
+    "seconds": 0.67
+  },
+  "pytest": {
+    "returncode": 0,
+    "seconds": 5.52
+  },
+  "run_all": {
+    "returncode": 0,
+    "seconds": 58.52
+  }
+}

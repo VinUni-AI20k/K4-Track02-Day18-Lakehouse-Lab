@@ -1,0 +1,62 @@
+<!doctype html><meta charset='utf-8'><style>
+            body{margin:48px;background:#f4f7fa;color:#14293b;font-family:Arial}
+            h1{font-size:32px} p{font-size:20px}
+            pre{background:white;border:1px solid #ccd8e0;border-radius:10px;padding:24px;
+            font:17px/1.4 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+            </style><h1>05_iceberg_catalog</h1>
+            <p>Đỗ Quốc An · 2A202602892 · Lightweight Python 3.11 · Executed Jupyter output</p>
+            <p>Run: 2026-10-04T19:34:23.499092+07:00 | Source: submission/notebooks/05_iceberg_catalog.ipynb</p>
+            <pre>Catalog: SqlCatalog   namespaces: [(&#x27;lake&#x27;,)]
+
+
+Partition spec: [
+  1000: ts_day: day(2)
+]
+
+Note: &#x27;ts_day&#x27; is NOT a column you insert. It is derived from ts.
+
+
+Files to read, no filter:    10
+Files to read, one-day filter: 1
+→ Pruning ratio: 10×   (target ≥ 5×)
+  rows returned: 500
+
+
+Tier 1  metadata.json     : 00011-22bb6bc3-70da-48c8-ba46-70ebde256932.metadata.json
+Tier 2  manifest lists    : 10 (one per snapshot)
+Tier 3  manifest files    : 10
+        data files        : 10
+
+Metadata log entries: 12
+Partitions tracked  : 10
+
+
+data/        47.3 KB   (10 parquet files)
+metadata/   137.3 KB   (20 avro + 12 json)
+→ metadata is 290.3% of table size
+
+At 10 rows/file this looks absurd. At 512 MB/file it is ~0.1%.
+Small files punish you TWICE: more data files AND more metadata to plan over.
+
+
+Field IDs before: [(1, &#x27;event_id&#x27;), (2, &#x27;ts&#x27;), (3, &#x27;model&#x27;), (4, &#x27;latency_ms&#x27;), (5, &#x27;cost_usd&#x27;)]
+Field IDs after : [(1, &#x27;event_id&#x27;), (2, &#x27;ts&#x27;), (3, &#x27;model&#x27;), (4, &#x27;latency_millis&#x27;), (5, &#x27;cost_usd&#x27;), (6, &#x27;tier&#x27;)]
+
+latency_ms → latency_millis kept field_id=4: a rename rewrote NO data.
+Old rows read back with tier=NULL — no backfill, no migration job.
+
+
+Partition specs in use across data files: [1, 2]
+Total rows readable across BOTH specs: 5,500
+
+Two layouts, one table, zero rewrites. This is the feature.
+
+
+  [PASS] pruning ratio ≥ 5x
+  [PASS] ≥ 10 snapshots
+  [PASS] field_id stable on rename
+  [PASS] ≥ 2 partition specs
+  [PASS] all rows readable
+
+NB5 complete.
+</pre>

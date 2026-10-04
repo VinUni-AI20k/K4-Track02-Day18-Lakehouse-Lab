@@ -57,6 +57,8 @@ reset(SILVER)
 # autoloads an extension over the network; Arrow registration is offline and
 # zero-copy, so the lab works on a locked-down machine.
 con = duckdb.connect()
+# Input timestamps are UTC; keep date buckets independent of the host timezone.
+con.execute("SET TimeZone='UTC'")
 con.register("bronze", DeltaTable(BRONZE).to_pyarrow_table())
 
 silver_arrow = con.sql(f"""
@@ -133,7 +135,8 @@ DeltaTable(GOLD).optimize.z_order(["model"])
 
 # %%
 gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table())
-print(gold_df)
+with pl.Config(tbl_rows=30, tbl_cols=10, tbl_width_chars=180):
+    print(gold_df.sort(["date", "model"]))
 
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
@@ -155,3 +158,18 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %%
+checks = {
+    "all three Delta tables present": all(Path(p, "_delta_log").exists() for p in (BRONZE, SILVER, GOLD)),
+    "Silver dedup reduced rows": silver_n < bronze_n,
+    "Gold covers >= 7 days x 3 models": n_dates >= 7 and n_models == 3 and gold_df.height == n_dates * n_models,
+    "each date has all 3 models": gold_df.group_by("date").agg(pl.col("model").n_unique().alias("n")).get_column("n").eq(3).all(),
+    "p50 <= p95": (gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all(),
+    "cost_usd positive": gold_df["cost_usd"].is_not_null().all() and (gold_df["cost_usd"] > 0).all(),
+    "error_rate in [0, 1]": gold_df["error_rate"].is_not_null().all() and gold_df["error_rate"].is_between(0, 1).all(),
+}
+for label, ok in checks.items():
+    print(f"  [{'PASS' if ok else 'FAIL'}] {label}")
+assert all(checks.values()), "NB4 incomplete - inspect Gold checks"
+print("\nNB4 complete.")
