@@ -1,0 +1,9 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB2 — Lakehouse Lab evidence</title>
+<style>body{font:16px Arial,sans-serif;margin:32px;color:#17212d;background:white;max-width:1460px}h1{font-size:24px}p{line-height:1.5}pre{font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #bcc6d1;padding:18px;background:#f5f7fa}</style>
+<h1>NB2 · 02_optimize_zorder · Mai Huy Hoang · 2A202602685</h1>
+<p>Verbatim output from the executed notebook: submission/notebooks/02_optimize_zorder.ipynb</p>
+<pre>Files before=200; after compact+ZORDER=55
+Median before=71.186 ms; after=13.102 ms; speedup=5.43x
+Target user=4242; candidate files=1/55; pruning=55.00x
+Candidate user_id ranges: [(3696, 5534)]
+</pre><p>200 micro-batch tạo 200 file nhỏ. Compaction giảm số file; Z-order gom user_id để min/max loại file không chứa 4242. Pruning ratio là tổng file sau tối ưu chia số file có khoảng chứa user đích; đây là file có thể cần đọc, không phải số dòng khớp. Speedup dùng median ba lần, có thể biến động do cache và tải máy; rubric chấp nhận speedup ≥3× hoặc pruning ≥10×.</p></html>

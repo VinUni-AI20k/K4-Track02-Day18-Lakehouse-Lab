@@ -1,0 +1,5 @@
+docs      2,000 rows, dim=256  → /home/huyhoangg/repo/vinai/K4-Track02-Day18-MaiHuyHoang-2A202602685-Lakehouse-Lab/_lakehouse/bronze/docs_multimodal
+blobs     200 files, 12.5 MB  → /home/huyhoangg/repo/vinai/K4-Track02-Day18-MaiHuyHoang-2A202602685-Lakehouse-Lab/_lakehouse/blobs
+traces    1,578 steps / 300 sessions → /home/huyhoangg/repo/vinai/K4-Track02-Day18-MaiHuyHoang-2A202602685-Lakehouse-Lab/_lakehouse/bronze/agent_traces
+
+Ready for NB7 (multimodal + vectors) and NB8 (agents + provenance).

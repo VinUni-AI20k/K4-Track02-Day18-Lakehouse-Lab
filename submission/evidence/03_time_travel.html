@@ -1,0 +1,13 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB3 — Lakehouse Lab evidence</title>
+<style>body{font:16px Arial,sans-serif;margin:32px;color:#17212d;background:white;max-width:1460px}h1{font-size:24px}p{line-height:1.5}pre{font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #bcc6d1;padding:18px;background:#f5f7fa}</style>
+<h1>NB3 · 03_time_travel · Mai Huy Hoang · 2A202602685</h1>
+<p>Verbatim output from the executed notebook: submission/notebooks/03_time_travel.ipynb</p>
+<pre>MERGE 100K metrics: {&#x27;num_source_rows&#x27;: 100000, &#x27;num_target_rows_inserted&#x27;: 50000, &#x27;num_target_rows_updated&#x27;: 50000, &#x27;num_target_rows_deleted&#x27;: 0, &#x27;num_target_rows_copied&#x27;: 50000, &#x27;num_output_rows&#x27;: 150000, &#x27;num_target_files_scanned&#x27;: 1, &#x27;num_target_files_skipped_during_scan&#x27;: 0, &#x27;num_target_files_added&#x27;: 1, &#x27;num_target_files_removed&#x27;: 1, &#x27;execution_time_ms&#x27;: 40, &#x27;scan_time_ms&#x27;: 29, &#x27;rewrite_time_ms&#x27;: 5}
+Time travel v0 rows=100000; current rows=150000; score&lt;0=0
+History after RESTORE:
+v4: RESTORE
+v3: WRITE
+v2: MERGE
+v1: WRITE
+v0: WRITE
+</pre><p>MERGE xử lý 100.000 dòng nguồn: 50.000 update và 50.000 insert, thành 150.000 dòng. Time travel v0 vẫn có 100.000 dòng. RESTORE về trạng thái v2 tạo commit v4, giữ lịch sử v0–v3; số dòng score&lt;0 hiện tại phải bằng 0.</p></html>

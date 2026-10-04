@@ -1,0 +1,15 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB6 — Lakehouse Lab evidence</title>
+<style>body{font:16px Arial,sans-serif;margin:32px;color:#17212d;background:white;max-width:1460px}h1{font-size:24px}p{line-height:1.5}pre{font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #bcc6d1;padding:18px;background:#f5f7fa}</style>
+<h1>NB6 · 06_maintenance · Mai Huy Hoang · 2A202602685</h1>
+<p>Verbatim output from the executed notebook: submission/notebooks/06_maintenance.ipynb</p>
+<pre>Compaction: 200 -&gt; 11 files; 18.18x fewer
+Clustering: touched 11 -&gt; 1/10; skip=90.00%
+Delta vacuum reclaimed=16904647 bytes
+Delta orphans found/removed=3; remaining=0
+Iceberg snapshots=20 -&gt; 3; avro before/after expiry=40/40
+Stranded manifest lists removed=17; reclaimed=37997 bytes; remaining=0
+Checkpoint: [&#x27;00000000000000000199.checkpoint.parquet&#x27;, &#x27;00000000000000000099.checkpoint.parquet&#x27;, &#x27;00000000000000000203.checkpoint.parquet&#x27;]
+_last_checkpoint: True
+Current Delta rows: 100000
+Current Iceberg rows: 2000
+</pre><p>Compaction giảm file live nhưng tạm tăng dung lượng vật lý vì file cũ được tombstone. Clustering được đo bằng min/max, không chỉ stopwatch. VACUUM thu hồi file đã tombstone, nhưng trong delta-rs phiên bản đang chạy không tìm ba orphan chưa commit; phép hiệu file trên đĩa và file được tham chiếu, có age guard, tìm và xóa chúng. PyIceberg expiry giảm 20→3 snapshot nhưng chưa xóa manifest list vật lý; sweep riêng dọn file stranded. Các phép dọn chỉ chạy trên bảng scratch của lab; production cần bảo vệ cả snapshot còn giữ và writer đang chạy. Checkpoint và _last_checkpoint hỗ trợ reader giảm replay JSON.</p></html>

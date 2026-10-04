@@ -50,7 +50,7 @@ updates = pl.DataFrame({
     "tier":        ["platinum"] * 100_000,
 })
 t0 = time.time()
-(DeltaTable(table_path)
+merge_metrics = (DeltaTable(table_path)
     .merge(source=updates.to_arrow(),
            predicate="t.customer_id = s.customer_id",
            source_alias="s", target_alias="t")
@@ -58,6 +58,10 @@ t0 = time.time()
     .when_not_matched_insert_all()
     .execute())
 print(f"MERGE 100K rows: {time.time()-t0:.2f}s")
+print("MERGE metrics:", merge_metrics)
+assert merge_metrics["num_target_rows_updated"] == 50_000
+assert merge_metrics["num_target_rows_inserted"] == 50_000
+assert DeltaTable(table_path).count() == 150_000
 
 # v3 — simulate bad data
 bad = pl.DataFrame({

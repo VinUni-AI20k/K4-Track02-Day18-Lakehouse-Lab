@@ -1,0 +1,100 @@
+Catalog: SqlCatalog   namespaces: [('lake',)]
+
+
+Created ('lake', 'llm_events')
+  location:  file:///home/huyhoangg/repo/vinai/K4-Track02-Day18-MaiHuyHoang-2A202602685-Lakehouse-Lab/_lakehouse/iceberg/nb5/warehouse/lake/llm_events
+  metadata:  00000-a896d80c-1dae-4d88-b3d9-8b24a428c84a.metadata.json
+  format-v2
+
+
+Partition spec: [
+  1000: ts_day: day(2)
+]
+
+Note: 'ts_day' is NOT a column you insert. It is derived from ts.
+
+
+Rows:      5,000
+Snapshots: 10   (one per commit)
+Data files: 10
+
+
+Files to read, no filter:    10
+Files to read, one-day filter: 1
+→ Pruning ratio: 10×   (target ≥ 5×)
+  rows returned: 500
+
+
+Hive user who forgets `WHERE dt=...`:  reads 10 files
+Iceberg user filtering on `ts`:        reads 1 files
+
+At 512 MB/file and $5/TB scanned:
+  wasted per query: 4.5 GB  =  $0.022
+  × 10,000 queries/day  =  $220/day
+
+That is the bill for one forgotten predicate. Hidden partitioning removes
+the opportunity to forget.
+
+
+Tier 1  metadata.json     : 00011-3e377b08-b675-4837-95fc-b6fb29db51ad.metadata.json
+Tier 2  manifest lists    : 10 (one per snapshot)
+Tier 3  manifest files    : 10
+        data files        : 10
+
+Metadata log entries: 12
+Partitions tracked  : 10
+
+
+data/        47.3 KB   (10 parquet files)
+metadata/   136.0 KB   (20 avro + 12 json)
+→ metadata is 287.6% of table size
+
+At 10 rows/file this looks absurd. At 512 MB/file it is ~0.1%.
+Small files punish you TWICE: more data files AND more metadata to plan over.
+
+
+Field IDs before: [(1, 'event_id'), (2, 'ts'), (3, 'model'), (4, 'latency_ms'), (5, 'cost_usd')]
+Field IDs after : [(1, 'event_id'), (2, 'ts'), (3, 'model'), (4, 'latency_millis'), (5, 'cost_usd'), (6, 'tier')]
+
+latency_ms → latency_millis kept field_id=4: a rename rewrote NO data.
+Old rows read back with tier=NULL — no backfill, no migration job.
+
+
+Rows still readable: 5,000
+Columns now: ['event_id', 'ts', 'model', 'latency_millis', 'cost_usd', 'tier']
+tier nulls: 5,000 (all pre-existing rows)
+
+
+snapshot[0]  5691049375070238009: 500 rows
+snapshot[-1] 3935897993220356133: 5,000 rows
+
+Total snapshots retained: 10
+
+History (last 3):
+  2026-10-04 17:11:10.233000  snapshot=2910850449289745885
+  2026-10-04 17:11:10.250000  snapshot=4138357378156855865
+  2026-10-04 17:11:10.267000  snapshot=3935897993220356133
+
+
+Partition specs in use across data files: [1, 2]
+Total rows readable across BOTH specs: 5,500
+
+Two layouts, one table, zero rewrites. This is the feature.
+
+
+  [PASS] pruning ratio ≥ 5x
+  [PASS] ≥ 10 snapshots
+  [PASS] field_id stable on rename
+  [PASS] ≥ 2 partition specs
+  [PASS] all rows readable
+
+NB5 complete.
+
+
+Catalog=SqlCatalog; table=('lake', 'llm_events'); day(ts) partition
+Plan files: all=10; one day=1; pruning=10.0x
+Metadata=139261 bytes; data=48419 bytes; metadata:data=2.8762
+Tree: metadata JSON -> 10 snapshot manifest lists -> 10 manifests -> 10 data files (before evolution)
+Field IDs after rename: [(1, 'event_id'), (2, 'ts'), (3, 'model'), (4, 'latency_millis'), (5, 'cost_usd'), (6, 'tier')]
+Partition spec IDs in use: [1, 2]
+Rows across specs: 5500

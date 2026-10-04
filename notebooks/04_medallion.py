@@ -57,6 +57,9 @@ reset(SILVER)
 # autoloads an extension over the network; Arrow registration is offline and
 # zero-copy, so the lab works on a locked-down machine.
 con = duckdb.connect()
+# Bronze timestamps cover seven UTC days. Make date grouping independent
+# of the host timezone (UTC+7 otherwise produces two partial boundary days).
+con.execute("SET TimeZone='UTC'")
 con.register("bronze", DeltaTable(BRONZE).to_pyarrow_table())
 
 silver_arrow = con.sql(f"""
@@ -134,6 +137,8 @@ DeltaTable(GOLD).optimize.z_order(["model"])
 # %%
 gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table())
 print(gold_df)
+print("Full Gold results:")
+print(gold_df.sort(["date", "model"]).write_csv())
 
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
@@ -148,6 +153,27 @@ assert n_dates >= 7, (
     f"Gold has only {n_dates} dates — slide deliverable requires ≥ 7. "
     "Re-run `make data` (the generator spreads across 7 UTC days)."
 )
+gold_checks = {
+    "Bronze/Silver/Gold present on storage": all(
+        (Path(p) / "_delta_log").is_dir() for p in (BRONZE, SILVER, GOLD)
+    ),
+    "Silver < Bronze": silver_n < bronze_n,
+    "Gold covers every date x 3 models": (
+        n_models == 3 and gold_df.height == n_dates * 3
+        and gold_df.select(["date", "model"]).n_unique() == gold_df.height
+    ),
+    "p50 <= p95 and both populated": gold_df.select(
+        (pl.col("p50_latency_ms").is_not_null()
+         & pl.col("p95_latency_ms").is_not_null()
+         & (pl.col("p50_latency_ms") <= pl.col("p95_latency_ms"))).all()
+    ).item(),
+    "positive cost and valid error_rate": gold_df.select(
+        ((pl.col("cost_usd") > 0) & pl.col("error_rate").is_between(0, 1)).all()
+    ).item(),
+}
+for label, passed in gold_checks.items():
+    print(f"[{'PASS' if passed else 'FAIL'}] {label}")
+assert all(gold_checks.values()), "Gold does not meet the rubric"
 
 # %% [markdown]
 # ## ✅ Deliverable check

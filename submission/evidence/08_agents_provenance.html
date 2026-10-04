@@ -1,0 +1,12 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB8 — Lakehouse Lab evidence</title>
+<style>body{font:16px Arial,sans-serif;margin:32px;color:#17212d;background:white;max-width:1460px}h1{font-size:24px}p{line-height:1.5}pre{font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #bcc6d1;padding:18px;background:#f5f7fa}</style>
+<h1>NB8 · 08_agents_provenance · Mai Huy Hoang · 2A202602685</h1>
+<p>Verbatim output from the executed notebook: submission/notebooks/08_agents_provenance.ipynb</p>
+<pre>Silver partitions: [&#x27;agent_version=policy-v2&#x27;, &#x27;agent_version=policy-v3&#x27;]
+Gold policies: [{&#x27;agent_version&#x27;: &#x27;policy-v2&#x27;, &#x27;trajectories&#x27;: 150, &#x27;success_rate&#x27;: 0.76, &#x27;avg_steps&#x27;: 5.26, &#x27;avg_cost_usd&#x27;: 0.06915, &#x27;total_cost_usd&#x27;: 10.37, &#x27;avg_seconds&#x27;: 16.2}, {&#x27;agent_version&#x27;: &#x27;policy-v3&#x27;, &#x27;trajectories&#x27;: 150, &#x27;success_rate&#x27;: 0.753, &#x27;avg_steps&#x27;: 5.26, &#x27;avg_cost_usd&#x27;: 0.06928, &#x27;total_cost_usd&#x27;: 10.39, &#x27;avg_seconds&#x27;: 15.7}]
+Pinned version=0; training steps=1578; replay steps=1578
+5 list_tables calls -&gt; 1 catalog read; destructive call=input_required; task=completed
+Provenance partitions: [&#x27;provenance_bucket=UNCLASSIFIED&#x27;, &#x27;provenance_bucket=licensed&#x27;, &#x27;provenance_bucket=public_domain&#x27;, &#x27;provenance_bucket=scraped_optout_checked&#x27;, &#x27;provenance_bucket=synthetic&#x27;]
+Trainable=1666/2000; excluded UNCLASSIFIED=334
+Current-version deletion of user_007: 8 -&gt; 0; version 0 -&gt; 1
+</pre><p>Silver partition theo hai agent_version, Gold có cả hai policy. Training pin version trước append; replay đối chiếu số bước, chưa chứng minh equality toàn bộ nội dung. Lớp MCP chạy offline: năm list_tables chỉ đọc catalog một lần, destructive call trả input_required, task polling hoàn tất. confirmed do caller truyền và delete_rows là no-op, nên không phải authorization production hay MCP server thật. Bốn bucket là fixture minh họa; CC-BY-4.0 cần ghi công, không phải public domain, và consent không chứng minh đã kiểm tra scraping opt-out. UNCLASSIFIED bị loại khỏi trainable set. Xóa subject chỉ xác nhận version hiện tại; version cũ vẫn chứa dữ liệu.</p></html>

@@ -1,0 +1,12 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB5 — Lakehouse Lab evidence</title>
+<style>body{font:16px Arial,sans-serif;margin:32px;color:#17212d;background:white;max-width:1460px}h1{font-size:24px}p{line-height:1.5}pre{font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #bcc6d1;padding:18px;background:#f5f7fa}</style>
+<h1>NB5 · 05_iceberg_catalog · Mai Huy Hoang · 2A202602685</h1>
+<p>Verbatim output from the executed notebook: submission/notebooks/05_iceberg_catalog.ipynb</p>
+<pre>Catalog=SqlCatalog; table=(&#x27;lake&#x27;, &#x27;llm_events&#x27;); day(ts) partition
+Plan files: all=10; one day=1; pruning=10.0x
+Metadata=139261 bytes; data=48419 bytes; metadata:data=2.8762
+Tree: metadata JSON -&gt; 10 snapshot manifest lists -&gt; 10 manifests -&gt; 10 data files (before evolution)
+Field IDs after rename: [(1, &#x27;event_id&#x27;), (2, &#x27;ts&#x27;), (3, &#x27;model&#x27;), (4, &#x27;latency_millis&#x27;), (5, &#x27;cost_usd&#x27;), (6, &#x27;tier&#x27;)]
+Partition spec IDs in use: [1, 2]
+Rows across specs: 5500
+</pre><p>SqlCatalog SQLite quản lý namespace, đăng ký bảng và con trỏ metadata. day(ts) cho phép filter trực tiếp trên ts; plan_files chọn file một ngày thay vì cả 10 ngày. Rename latency_ms giữ field_id=4 và không rewrite dữ liệu. Spec mới thêm model cùng tồn tại với spec cũ; vẫn đọc được 5.500 dòng. Metadata:data được tính bằng tổng byte metadata chia byte data; tỷ lệ cao ở bảng nhỏ không thể suy ra trực tiếp cho production. Phép tính chi phí trong notebook là giả định minh họa của đề.</p></html>

@@ -1,0 +1,10 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB7 — Lakehouse Lab evidence</title>
+<style>body{font:16px Arial,sans-serif;margin:32px;color:#17212d;background:white;max-width:1460px}h1{font-size:24px}p{line-height:1.5}pre{font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #bcc6d1;padding:18px;background:#f5f7fa}</style>
+<h1>NB7 · 07_vectors_multimodal · Mai Huy Hoang · 2A202602685</h1>
+<p>Verbatim output from the executed notebook: submission/notebooks/07_vectors_multimodal.ipynb</p>
+<pre>Row group=200 rows / 13110466 bytes; blob=65536 bytes; amplification=200.05x
+Float32=2685240 bytes; int8=462726 bytes; ratio=5.803x
+Recall@10=0.904; topic fidelity=1.000
+SQL top-5 neighbours: [(7, &#x27;storage-note-00007&#x27;, &#x27;storage&#x27;, 1.0), (1703, &#x27;storage-note-01703&#x27;, &#x27;storage&#x27;, 0.779325544834137), (1200, &#x27;storage-note-01200&#x27;, &#x27;storage&#x27;, 0.7769769430160522), (766, &#x27;storage-note-00766&#x27;, &#x27;storage&#x27;, 0.7764201164245605), (1250, &#x27;storage-note-01250&#x27;, &#x27;storage&#x27;, 0.7683840990066528)]
+Lifecycle: erased docs in table=0; stale external index=8; CDF deletes=8
+</pre><p>Amplification dùng byte row group trong footer chia kích thước một blob; đây là ước lượng theo granularity row group, không phải đo byte mạng của một truy vấn. Query chỉ chọn topic tránh đọc blob nhờ column pruning. int8 tiết kiệm dung lượng nhưng phải kiểm tra recall@10 và topic fidelity trên 100 query của corpus giả; self-match được giữ theo bài mẫu. SQL cast list&lt;float&gt; thành FLOAT[256] vì đường Delta không giữ fixed-size vector. Xóa user_042 làm in-table hết hit nhưng external index cũ vẫn còn hit; CDF mang doc_id của delete để index có thể đồng bộ. Notebook minh họa feed, chưa triển khai consumer tự đồng bộ.</p></html>
