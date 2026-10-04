@@ -176,3 +176,16 @@ print(f"\n  (speedup={speedup:.1f}x, pruning={pruned_ratio:.1f}x — the slide a
 print("   wall-clock is noisy on a laptop, which is why file-pruning is the fallback.)")
 assert all(checks.values()), "NB2 incomplete — see FAIL rows above"
 print("\nNB2 complete.")
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - Lần chạy này giảm từ 200 xuống 55 file; min/max cho thấy chỉ 1/55 file có thể
+#   chứa `user_id=4242`, tương đương pruning 55×, vượt ngưỡng 10×.
+# - **Compaction** xử lý chi phí small-file bằng cách gom file nhưng giữ thứ tự tương
+#   đối; **Z-order** sắp xếp gần nhau các dòng có giá trị `user_id` gần nhau để thu
+#   hẹp min/max từng file và tăng file skipping.
+# - Nếu compaction gom toàn bảng thành đúng một file, point query vẫn phải mở file đó;
+#   khi ấy không còn nhiều file để loại và metric pruning không thể hiện lợi ích Z-order.
+# - Wall-clock thay đổi theo cache hệ điều hành, SSD, antivirus, CPU, RAM và tiến trình
+#   nền. Vì vậy tỷ lệ 55× suy ra từ file stats là bằng chứng ổn định hơn speedup thời gian.

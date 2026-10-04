@@ -138,16 +138,34 @@ print(gold_df)
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
 n_models = gold_df.select("model").n_unique()
+p50_le_p95 = bool((gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all())
+min_cost = float(gold_df["cost_usd"].min())
+min_error = float(gold_df["error_rate"].min())
+max_error = float(gold_df["error_rate"].max())
 print(
     f"\n──── Gold deliverable metrics ────\n"
     f"  Distinct dates:   {n_dates:>3}   (target ≥ 7)\n"
     f"  Distinct models:  {n_models:>3}\n"
-    f"  Total Gold rows:  {gold_df.height:>3}   (= dates × models)"
+    f"  Total Gold rows:  {gold_df.height:>3}   (= dates × models)\n"
+    f"  p50 ≤ p95:        {p50_le_p95}\n"
+    f"  Minimum cost_usd: {min_cost:.6f}\n"
+    f"  error_rate range: [{min_error:.6f}, {max_error:.6f}]\n"
+    f"  Bronze path:      {BRONZE}\n"
+    f"  Silver path:      {SILVER}\n"
+    f"  Gold path:        {GOLD}"
 )
-assert n_dates >= 7, (
-    f"Gold has only {n_dates} dates — slide deliverable requires ≥ 7. "
-    "Re-run `make data` (the generator spreads across 7 UTC days)."
-)
+
+gold_checks = {
+    "Bronze/Silver/Gold exist": all(Path(p).exists() for p in (BRONZE, SILVER, GOLD)),
+    "Silver < Bronze": silver_n < bronze_n,
+    "Gold covers ≥ 7 dates × 3 models": n_dates >= 7 and n_models == 3,
+    "p50 ≤ p95 for every group": p50_le_p95,
+    "cost_usd is positive": min_cost > 0,
+    "error_rate is within [0, 1]": min_error >= 0 and max_error <= 1,
+}
+for k, v in gold_checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(gold_checks.values()), "NB4 incomplete — see FAIL rows above"
 
 # %% [markdown]
 # ## ✅ Deliverable check
@@ -155,3 +173,17 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - Bronze có 200.000 dòng thô; Silver còn 190.052 dòng sau khi parse, chuẩn hóa và
+#   loại 9.948 retry trùng `request_id`. Gold có 24 nhóm = 8 ngày × 3 model; mọi
+#   nhóm đều có p50 ≤ p95, chi phí dương và error rate trong [0,1].
+# - Dedup ở Silver ngăn retry/event giao lại nhiều lần làm phóng đại token, chi phí,
+#   lỗi và lưu lượng. Bronze vẫn giữ bản gốc để audit hoặc xử lý lại khi rule đổi.
+# - Dashboard đọc Gold vì dữ liệu đã được tổng hợp đúng grain `(date, model)`, ít dòng,
+#   schema ổn định và tránh parse JSON/scan toàn Silver cho mỗi lượt xem.
+# - `error_rate = AVG(status != 'ok')` phù hợp vì mỗi dòng Silver là một request duy
+#   nhất. Chi phí nhân tổng input/output token với đơn giá minh họa theo model rồi chia
+#   1e6; công thức phù hợp input, nhưng không phải bảng giá production/canonical.

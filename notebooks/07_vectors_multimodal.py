@@ -403,3 +403,18 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB7 incomplete — see FAIL rows above"
 print("\nNB7 complete.")
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - Random-read một blob 64 KB trong row group 12,5 MB tạo amplification 200×. Inline
+#   không gây cùng chi phí cho analytical scan nhờ column projection, nhưng row-group là
+#   đơn vị I/O cho random access nên pointer phù hợp hơn cho payload lớn.
+# - int8 nhỏ hơn 5,8× trên đĩa và tiết kiệm 83%, đổi lại recall@10 theo doc ID là 0,904.
+#   Topic fidelity vẫn 1,000: nhiều “miss” là đổi sang tài liệu khác nhưng cùng chủ đề.
+# - Recall theo doc ID đo giao của hai tập top-k chính xác; topic fidelity chỉ hỏi kết
+#   quả còn đúng semantic topic hay không, thường sát mục tiêu RAG hơn nhưng kém nghiêm
+#   ngặt về danh tính tài liệu.
+# - Sau delete, bảng có 0 hit còn stale index có 8 hit. External index phải tiêu thụ CDF
+#   `delete` và cả update/reprocess/expiry tương ứng để evict hoặc thay vector, không chỉ
+#   đồng bộ upsert; lần chạy này CDF ghi đúng 8 delete events.

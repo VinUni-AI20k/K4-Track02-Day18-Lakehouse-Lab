@@ -438,3 +438,17 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB6 incomplete — see FAIL rows above"
 print("\nNB6 complete.")
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - Compaction giảm 200 → 11 file (18×); clustering để point query chỉ mở 1/10 file,
+#   skip 90%. Delta vacuum thu hồi 16,1 MB; Iceberg expiry giữ đúng 3 snapshot.
+# - Delta vacuum của delta-rs đi từ tombstone trong transaction log. Ba file do writer
+#   lỗi tạo nhưng chưa từng commit không có tombstone nên vacuum không biết chúng tồn
+#   tại; directory/log diff có age guard mới tìm và xóa an toàn được cả 3.
+# - Trên đường PyIceberg này, expiry chỉ bỏ reference snapshot và ghi metadata mới;
+#   không xóa file vật lý. Sweep tiếp theo dọn 17 manifest list, thu hồi 37,1 KB.
+# - Retention ngắn có thể làm reader/job cũ không còn đọc được file của snapshot đã pin,
+#   phá time travel hoặc retry đang chạy. Phải đặt retention theo SLA reader, phối hợp
+#   writer đang active, rồi mới vacuum/orphan sweep.

@@ -479,3 +479,19 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB8 incomplete — see FAIL rows above"
 print("\nNB8 complete.")
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - Silver có 2 partition policy và Gold có đủ `policy-v2`, `policy-v3`. Training run
+#   pin version 0 với 1.578 bước; dù current table tăng lên 1.978 bước, replay version 0
+#   vẫn trả đúng 1.578. Pin version biến “dữ liệu đã train” thành tham chiếu tái lập được.
+# - 5 lượt `list_tables` chỉ đọc catalog 1 lần; destructive call chưa xác nhận trả
+#   `input_required`; task đạt `completed`. Đây là bằng chứng đúng cho mô phỏng offline.
+# - Xóa `user_007` làm current version từ 8 xuống 0 dòng, nhưng version 0 vẫn tham chiếu
+#   file cũ. Xóa vật lý cần retention/vacuum và còn phải xử lý backup, index, feature,
+#   checkpoint hoặc model dẫn xuất.
+# - Chưa thể dùng mô phỏng làm control production: `confirmed` do caller tự truyền,
+#   không có authn/authz hay policy engine; task không phải job thật; replay chỉ so row
+#   count chứ chưa hash/so nội dung; cache không chứng minh isolation; bốn provenance
+#   bucket và mapping license chỉ là fixture, không chứng minh quyền sử dụng hay tuân thủ.

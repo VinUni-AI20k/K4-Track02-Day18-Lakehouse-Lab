@@ -47,15 +47,28 @@ print("\nHistory:")
 for h in dt.history():
     print(f"  v{h['version']}  {h['operation']}  {h.get('operationMetrics', {})}")
 
+# Show the physical evidence recorded by the first transaction.
+import json
+from pathlib import Path
+
+first_commit = sorted(Path(table_path).glob("_delta_log/*.json"))[0]
+print(f"\nCommit JSON: {first_commit}")
+with first_commit.open(encoding="utf-8") as fh:
+    for line in fh:
+        entry = json.loads(line)
+        print(json.dumps(entry, indent=2, ensure_ascii=False))
+
 # %% [markdown]
 # ## 3. Schema enforcement — try to write a wrong schema
 
 # %%
 bad = pl.DataFrame({"id": [4], "name": ["dan"], "age": ["thirty"], "city": ["Hue"]})
+bad_write_blocked = False
 try:
     write_deltalake(table_path, bad.to_arrow(), mode="append")
     print("UNEXPECTED: bad write succeeded — schema enforcement broken")
 except Exception as e:
+    bad_write_blocked = True
     msg = str(e).splitlines()[0][:120]
     print(f"BLOCKED by schema enforcement (expected): {type(e).__name__}: {msg}")
 
@@ -71,6 +84,8 @@ dt = DeltaTable(table_path)
 # Sort by id so the printout is stable across reruns — Delta does not
 # preserve write-order across appends.
 print(pl.from_arrow(dt.to_pyarrow_table()).sort("id"))
+print("\nSchema after evolution:")
+print(dt.schema())
 
 # %% [markdown]
 # ## 5. Query with DuckDB via Arrow (part of the required notebook)
@@ -92,8 +107,7 @@ print(tier_counts)
 # - [ ] Schema enforcement blocked the bad write
 # - [ ] schema_mode="merge" added the `tier` column
 # - [ ] DuckDB query returned 2 tier groups
-# The final schema-enforcement flag is hardcoded; inspect the actual error
-# from the bad-write cell rather than treating that PASS line as proof.
+# The enforcement check below is tied to the actual exception path above.
 
 # %%
 from pathlib import Path as _Path  # noqa: E402
@@ -102,7 +116,7 @@ _log = sorted(_Path(table_path).glob("_delta_log/*.json"))
 _cols = DeltaTable(table_path).schema().to_arrow().names
 checks = {
     "_delta_log/ has JSON commits": len(_log) >= 2,
-    "schema enforcement blocked bad write": True,   # placeholder; inspect the bad-write output
+    "schema enforcement blocked bad write": bad_write_blocked,
     "tier column added via schema_mode=merge": "tier" in _cols,
     "duckdb sees 2 tier groups": len(tier_counts) == 2,
 }
@@ -110,3 +124,18 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB1 incomplete — see FAIL rows above"
 print("\nNB1 complete.")
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - Bảng có 2 commit JSON: commit đầu chứa `commitInfo`, `protocol`, `metaData`
+#   và `add`; commit sau ghi file Parquet mới cùng schema có thêm `tier`.
+# - **Schema enforcement** kiểm tra dữ liệu ghi vào có khớp schema hiện hành hay
+#   không; vì vậy `age='thirty'` bị chặn thật ở cell trên. **Schema evolution** là
+#   thay đổi schema có chủ đích; `schema_mode="merge"` thêm `tier` và các dòng cũ
+#   nhận `NULL`.
+# - Thêm cột cần opt-in để lỗi chính tả hoặc payload ngoài hợp đồng không âm thầm
+#   biến thành schema vĩnh viễn, gây drift và làm hỏng downstream consumer.
+# - Transaction log là bằng chứng kiểm toán của lần ghi: operation/metrics, protocol,
+#   schema table, tên file Parquet, kích thước, số dòng và min/max/null-count stats.
+#   DuckDB xác nhận đúng 2 nhóm `tier`: `premium=1` và `NULL=3`.

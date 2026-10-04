@@ -299,3 +299,18 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB5 incomplete — see FAIL rows above"
 print("\nNB5 complete.")
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - Filter trực tiếp trên `ts` chỉ plan 1/10 file (pruning 10×). Iceberg dùng transform
+#   `day(ts)` trong partition spec để suy ra partition từ cột nguồn; người dùng không
+#   phải nhớ hoặc truy vấn một cột `ts_day` vật lý.
+# - Rename `latency_ms` thành `latency_millis` vẫn giữ field ID 4. Reader liên kết dữ
+#   liệu theo ID ổn định thay vì chỉ theo tên, nên rename là thay đổi metadata và không
+#   cần rewrite file cũ.
+# - Sau partition evolution, spec IDs `[1, 2]` cùng tồn tại và đọc được 5.500 dòng.
+#   Metadata của mỗi data file ghi spec đã dùng, nên planner áp dụng đúng transform cho
+#   file cũ lẫn mới; không cần migration đồng loạt.
+# - Metadata là 136,7 KB so với 47,3 KB data (289,2%) trong fixture tiny-file. Tỷ lệ cao
+#   này minh họa small files làm tăng cả data-file overhead lẫn metadata planning.

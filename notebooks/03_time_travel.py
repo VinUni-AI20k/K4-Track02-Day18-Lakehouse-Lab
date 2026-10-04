@@ -132,3 +132,16 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB3 incomplete — see FAIL rows above"
 print("\nNB3 complete.")
+
+# %% [markdown]
+# ## Nhận xét và giải thích
+#
+# - MERGE nhận 100.000 dòng nguồn, update 50.000 và insert 50.000; sau lần ghi lỗi,
+#   RESTORE về version 2 tạo version 4. History có 5 version và bảng hiện tại còn
+#   0 dòng `score < 0`.
+# - Đọc `version=...` là time travel chỉ tạo một **view chỉ đọc** của snapshot cũ;
+#   current version không đổi. RESTORE lại ghi một transaction mới làm trạng thái cũ
+#   trở thành trạng thái hiện tại cho mọi reader mới.
+# - RESTORE không xóa lịch sử vì Delta là log append-only: transaction mới tham chiếu
+#   lại tập file hợp lệ của version đích. Nhờ vậy thao tác rollback vẫn có audit trail,
+#   có thể time travel qua cả sự cố lẫn lần khôi phục.
