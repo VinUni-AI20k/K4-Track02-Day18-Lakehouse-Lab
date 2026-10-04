@@ -1,0 +1,6 @@
+- Họ tên: Dương Hữu Đạt
+- MSSV: 2A202602544
+- Mã bài: K4-Track02-Day18
+- Đường chạy: Local
+- Python: 3.x
+- Hệ điều hành: Windows
