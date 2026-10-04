@@ -176,3 +176,47 @@ print(f"\n  (speedup={speedup:.1f}x, pruning={pruned_ratio:.1f}x — the slide a
 print("   wall-clock is noisy on a laptop, which is why file-pruning is the fallback.)")
 assert all(checks.values()), "NB2 incomplete — see FAIL rows above"
 print("\nNB2 complete.")
+
+# %% [markdown]
+# ## 📝 Phân tích kết quả (NB2)
+#
+# - **Small-file problem:** 200 lần append × 5K dòng → **200 file** (≥ 100 theo rubric). Truy vấn điểm
+#   `user_id=4242 AND kind='purchase'` phải mở gần như mọi file vì `user_id` ngẫu nhiên → mỗi file có
+#   min/max ≈ [1, 100000], stats không loại được file nào.
+# - **Sau `compact()` + `z_order(["user_id"])` với target 256 KB:** 200 → **55 file**. Cố tình giữ nhiều file:
+#   nếu gộp hết thành 1 file thì không còn gì để skip.
+# - **Files-pruned ratio = 55×** (≥ 10×): bảng min/max cho thấy các dải `user_id` gần như không chồng lấn
+#   (~1.85K user/file) và chỉ **1/55 file** chứa 4242 (`[3696, 5534]`). Đây là thước đo xác định,
+#   không phụ thuộc máy.
+# - **Speedup wall-clock** (xem output phía trên; các lần chạy của mình 7–8×) đạt ≥ 3× nhưng dao động theo SSD,
+#   cache OS và tải CPU — vì vậy rubric chấp nhận pruning ratio thay thế.
+# - **Ý nghĩa production:** trên object storage mỗi file là một GET + một lần đọc footer; với 10K query/ngày,
+#   đọc 1 thay vì 55 file là khác biệt lớn về latency và chi phí request.
+
+# %% [markdown]
+# ## ❓ Trả lời câu hỏi (mục 3.2)
+#
+# | Metric | Trước | Sau |
+# |---|---:|---:|
+# | Số file | 200 | 55 |
+# | Median point query | ~290 ms | ~40 ms |
+# | File chứa `user_id=4242` | gần như mọi file | 1 / 55 |
+# | Speedup / pruning ratio | — | ~7× / **55×** |
+#
+# **1. Compaction và Z-order tác động khác nhau thế nào?**
+# Compaction (bin-packing) chỉ gộp nhiều file nhỏ thành ít file lớn hơn — giảm số file phải mở, số GET và metadata,
+# nhưng *không* sắp xếp lại dữ liệu: mỗi file mới vẫn chứa `user_id` trải khắp [1, 100000], nên stats min/max không
+# giúp loại file. Z-order sắp xếp lại dữ liệu theo `user_id` trước khi ghi, nên mỗi file giữ một dải hẹp
+# (~1.85K user, ví dụ `[3696, 5534]`), và stats trong log mới đủ "chặt" để engine bỏ qua 54/55 file.
+#
+# **2. Vì sao gộp thành một file lớn có thể làm khó quan sát file pruning?**
+# Pruning hoạt động ở mức file: engine chỉ bỏ được *cả file* khi dải min/max của nó không chứa giá trị cần tìm.
+# Nếu chỉ còn 1 file thì file đó luôn chứa target, pruning ratio luôn là 1/1 — không còn gì để skip. Vì vậy notebook đặt
+# `target_size=256 KB` để giữ 55 file. Trong một file lớn, việc skip chuyển xuống mức row group, không đo được bằng
+# số file.
+#
+# **3. Vì sao thời gian benchmark biến động giữa các máy?**
+# Median chỉ trên 3 lần chạy, ở mức mili giây, nên chịu ảnh hưởng của tốc độ SSD, page cache của OS (lần đọc sau
+# nhanh hơn lần đầu), số nhân CPU dùng để decode Parquet, tải nền (antivirus, trình duyệt) và chi phí đọc log.
+# Ngay trên cùng máy này speedup dao động 7–8× giữa các lần chạy. Pruning ratio thì xác định (chỉ phụ thuộc dữ liệu
+# seed và stats), nên là thước đo đáng tin hơn.

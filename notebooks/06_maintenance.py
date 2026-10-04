@@ -180,7 +180,7 @@ print("and the engine must read everything. Clustering is what makes stats USEFU
 dt = DeltaTable(TABLE)
 doomed = dt.vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
 print(f"VACUUM would reclaim {len(doomed)} tombstoned files "
-      f"({human(sum(du(f) for f in doomed))})")
+      f"({human(sum(du(Path(TABLE) / f) for f in doomed))})")
 
 before_vacuum = du(TABLE)
 dt.vacuum(retention_hours=0, dry_run=False, enforce_retention_duration=False)
@@ -207,11 +207,17 @@ for i in range(3):
     old = time.time() - 30 * 86400          # 30 days old — well past any retention
     os.utime(orphan, (old, old))
 
+def data_files_on_disk(table_path: str) -> int:
+    """Parquet files outside _delta_log/ — checkpoints are parquet too, but not data."""
+    return sum(1 for f in Path(table_path).rglob("*.parquet") if "_delta_log" not in f.parts)
+
+
 dt = DeltaTable(TABLE)
 print(f"Rows reported by the table: {dt.count():,}   (orphans are invisible)")
-print(f"Parquet files on disk:      {count_files(TABLE)}")
+print(f"Parquet files on disk:      {data_files_on_disk(TABLE)}   "
+      f"(+ {count_files(Path(TABLE) / '_delta_log')} auto-checkpoint parquet in _delta_log/)")
 print(f"Parquet files in the log:   {len(dt.file_uris())}")
-print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and cannot see")
+print(f"→ {data_files_on_disk(TABLE) - len(dt.file_uris())} files you pay for and cannot see")
 
 # %% [markdown]
 # ### Measured finding: `VACUUM` alone does **not** catch these
@@ -220,8 +226,10 @@ print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and can
 
 # %%
 still = DeltaTable(TABLE).vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
-print(f"VACUUM dry-run now finds: {len(still)} files")
-print(f"Orphans still on disk:    {count_files(TABLE) - len(DeltaTable(TABLE).file_uris())}")
+print(f"VACUUM dry-run now finds: {len(still)} paths, of which "
+      f"{sum((Path(TABLE) / f).exists() for f in still)} still exist on disk")
+print("  (the dry-run lists tombstones still in the log; those files were already deleted)")
+print(f"Orphans still on disk:    {data_files_on_disk(TABLE) - len(DeltaTable(TABLE).file_uris())}")
 print("""
 `deltalake` (the Rust/Python implementation used here) reclaims files the
 transaction log has TOMBSTONED. A file that was never committed was never
@@ -260,7 +268,7 @@ for f in found:
     print(f"  {os.path.basename(f)}")
     os.remove(f)
 
-print(f"\nAfter removal — on disk: {count_files(TABLE)}, in log: {len(DeltaTable(TABLE).file_uris())}")
+print(f"\nAfter removal — on disk: {data_files_on_disk(TABLE)}, in log: {len(DeltaTable(TABLE).file_uris())}")
 print("\n⚠️ The age guard is not optional. Without it you will delete files that a")
 print("   concurrent writer has written but not yet committed, and corrupt the table.")
 
@@ -273,12 +281,15 @@ print("   concurrent writer has written but not yet committed, and corrupt the t
 # %%
 log_dir = Path(TABLE) / "_delta_log"
 json_before = len(list(log_dir.glob("*.json")))
+auto_ckpts = sorted(p.name for p in log_dir.glob("*.checkpoint.parquet"))
+print(f"Checkpoints delta-rs already wrote on its own: {auto_ckpts or 'none'}")
 
 DeltaTable(TABLE).create_checkpoint()
 
-ckpt = list(log_dir.glob("*.checkpoint.parquet"))
-print(f"JSON log entries a cold reader would replay: {json_before}")
-print(f"Checkpoint written: {ckpt[0].name if ckpt else 'NONE'}")
+ckpt = sorted(log_dir.glob("*.checkpoint.parquet"))
+print(f"JSON log entries on disk (no checkpoint → replay all): {json_before}")
+print(f"Checkpoint written: {ckpt[-1].name if ckpt else 'NONE'}   "
+      f"(table version {DeltaTable(TABLE).version()})")
 print(f"_last_checkpoint present: {(log_dir / '_last_checkpoint').exists()}")
 print("\nA reader now loads 1 checkpoint + the few JSONs after it, not all 200.")
 print("For CDC/streaming tables this is the difference between a 200 ms and a")
@@ -428,8 +439,10 @@ checks = {
     "clustering skips ≥ 50% files": (1 - after_cluster / max(total_files, 1)) >= 0.5,
     "vacuum reclaimed bytes":       before_vacuum > du(TABLE),
     "3 delta orphans removed":      len(found) == 3,
-    "no delta orphans remain":      find_orphans(TABLE) == [],
-    "checkpoint written":           bool(ckpt) and (log_dir / "_last_checkpoint").exists(),
+    "no delta orphans remain":      find_orphans(TABLE) == []
+                                    and data_files_on_disk(TABLE) == len(DeltaTable(TABLE).file_uris()),
+    "checkpoint written":           bool(ckpt) and (log_dir / "_last_checkpoint").exists()
+                                    and ckpt[-1].name.startswith(f"{DeltaTable(TABLE).version():020d}"),
     "iceberg expired to 3 snaps":   len(ice.snapshots()) == KEEP_LAST,
     "iceberg stranded files swept": len(stranded) > 0 and find_iceberg_orphans(ice) == [],
     "iceberg data intact":          cat.load_table(f"{ns}.maint").scan().to_arrow().num_rows == 2000,
@@ -438,3 +451,58 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB6 incomplete — see FAIL rows above"
 print("\nNB6 complete.")
+
+# %% [markdown]
+# ## 📝 Phân tích kết quả (NB6)
+#
+# - **Job 1 – Compaction:** 200 file (TB 51.5 KB) → **11 file** (18×, ≥ 10×). Bytes data *tăng* tạm thời
+#   10.1 → 16.1 MB vì compaction ghi file mới trước khi file cũ được thu hồi.
+# - **Job 2 – Clustering:** trước Z-order, point query `user_id=12345` phải mở 11/11 file (min/max chồng lấn);
+#   sau Z-order chỉ 1/10 → **skip 90%** (≥ 50%), chứng minh từ min/max stats trong `get_add_actions()`.
+# - **Job 3 – Expiry:** Delta `vacuum(retention_hours=0)` xóa 211 file đã bị tombstone, thu hồi **16.1 MB**
+#   (dữ liệu gốc + output compaction trung gian) và mất khả năng time travel về v0. Iceberg `expire_snapshots`:
+#   **20 → 3 snapshot**, dữ liệu còn đủ 2,000 dòng.
+# - **Job 4 – Orphans (hành vi đo được):** 3 file "crashed writer" 30 ngày tuổi vô hình với bảng. VACUUM dry-run
+#   lần 2 vẫn liệt kê 211 *tombstone* nhưng **0** file trong đó còn trên đĩa, và không thấy 3 orphan — với
+#   `deltalake` 1.6.6, vacuum chỉ dựa vào log, không liệt kê thư mục. Phép hiệu tập hợp (disk − log, age guard
+#   24h) tìm và xóa đúng 3 orphan (21.2 KB); sau đó disk = log = 10 file.
+#   Phía Iceberg, PyIceberg 0.12 expire xong **không xóa file**: vẫn 40 avro (metadata còn tăng 346 → 355 KB);
+#   sweep tìm 17 manifest list bị bỏ rơi (37.2 KB) → còn 23 avro. Expiry và orphan removal phải đi theo cặp.
+# - **Job 5 – Checkpoint:** `create_checkpoint()` ghi `00000000000000000203.checkpoint.parquet` (đúng version 203)
+#   + `_last_checkpoint`. Phát hiện thêm: delta-rs đã **tự** checkpoint ở v99 và v199 (mặc định mỗi 100 commit),
+#   nên reader nguội thực tế chỉ replay vài JSON sau checkpoint gần nhất. Bản gốc đếm 2 checkpoint này là
+#   "orphan" (báo 5 thay vì 3) và in nhầm tên checkpoint v99 — mình đã sửa phần in và siết check
+#   (checkpoint phải trùng version hiện tại; disk phải bằng log sau khi dọn orphan).
+# - `retention_hours=0` chỉ dùng cho dữ liệu scratch của lab; production giữ ≥ 168h để không phá reader đang chạy.
+
+# %% [markdown]
+# ## ❓ Trả lời câu hỏi (mục 3.6)
+#
+# | Job | Trước | Sau |
+# |---|---|---|
+# | 1 Compaction | 200 file, TB 51.5 KB | 11 file (18×) |
+# | 2 Clustering | mở 11/11 file | mở 1/10 (skip 90%) |
+# | 3 Vacuum / expiry | Delta: 211 file tombstone · Iceberg: 20 snapshots | Delta: thu hồi 16.1 MB, data còn 6.2 MB · Iceberg: 3 snapshots |
+# | 4 Orphans | 3 Delta orphan · 40 avro Iceberg | 0 orphan (disk = log = 10) · 23 avro (17 manifest list) |
+# | 5 Checkpoint | 204 JSON | `…203.checkpoint.parquet` + `_last_checkpoint` |
+#
+# Dữ liệu hiện tại vẫn đọc được: Delta 100,000 dòng, Iceberg 2,000 dòng.
+#
+# **1. Vì sao orphan chưa từng commit có thể không được Delta vacuum dọn?**
+# `deltalake` 1.6.6 vacuum dựa trên log: nó xóa các file đã bị *tombstone* (action `remove`) và quá retention. File do
+# writer crash ghi ra trước khi commit chưa bao giờ có `add`, nên cũng chưa bao giờ có `remove` — log không biết nó
+# tồn tại. Đo được: dry-run sau khi đặt 3 orphan 30 ngày tuổi vẫn chỉ liệt kê 211 tombstone (0 file trong đó còn trên
+# đĩa) và bỏ qua cả 3 orphan. Phải tự lấy *file trên đĩa − file log tham chiếu* (kèm age guard) mới tìm ra.
+#
+# **2. Vì sao giảm snapshot trong đường PyIceberg này chưa đồng nghĩa file vật lý đã bị xóa?**
+# `expire_snapshots` của PyIceberg 0.12 chỉ ghi metadata mới bỏ tham chiếu tới 17 snapshot; nó không xóa file.
+# Đo được: snapshots 20 → 3 nhưng avro vẫn 40 → 40, metadata còn *tăng* 346 → 355 KB (thêm metadata.json mới). Các
+# manifest list của snapshot đã expire thành file không được tham chiếu; phải chạy orphan sweep (17 file, 37.2 KB) mới
+# thu hồi. Đây là hành vi của API/phiên bản này; Spark `expire_snapshots` có thể tự xóa file.
+#
+# **3. Retention ảnh hưởng reader cũ thế nào?**
+# Retention là khoảng thời gian file đã tombstone/snapshot cũ được giữ lại. Trong thời gian đó, time travel và các
+# query dài đang đọc snapshot cũ vẫn chạy được. Lab dùng `retention_hours=0`, nên sau vacuum time travel về v0 không
+# còn, và nếu có reader đang đọc version cũ, file của nó bị xóa giữa chừng → query lỗi "file not found". Orphan cũng
+# vậy: không có age guard sẽ xóa file của writer đang chạy chưa commit. Production giữ ≥ 7 ngày (168 h), dài hơn query
+# lâu nhất và cửa sổ time travel cần cho audit/rollback; đổi lại phải trả tiền lưu trữ cho các file cũ trong thời gian đó.

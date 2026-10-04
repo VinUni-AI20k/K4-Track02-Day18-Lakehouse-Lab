@@ -479,3 +479,55 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB8 incomplete — see FAIL rows above"
 print("\nNB8 complete.")
+
+# %% [markdown]
+# ## 📝 Phân tích kết quả (NB8)
+#
+# - **Trajectory medallion:** Bronze 1,578 step → Silver partition theo `agent_version`
+#   (`policy-v2`, `policy-v3`); Gold có cả hai policy (150 trajectory mỗi bên, success 0.76 vs 0.753, chi phí gần
+#   bằng nhau) → chưa có bằng chứng v3 tốt hơn v2.
+# - **Pin version:** training run ghi `table_version = 0`, `n_steps_seen = 1578`. Sau khi có thêm rollout (v1:
+#   1,978 step), replay tại v0 vẫn ra **1,578** → khớp. Giới hạn: chỉ so số bước, chưa so nội dung từng dòng.
+# - **Lớp MCP mô phỏng (offline):** 5 lượt `list_tables` chỉ tốn **1** lần đọc catalog (cache theo session,
+#   TTL 60s); `delete_rows` chưa xác nhận trả `input_required`, có xác nhận → `ok`; task `submit_scan` poll
+#   `working → completed` (300 dòng). Đây không phải MCP server thật, và cờ `confirmed` do bên gọi tự truyền nên
+#   không phải ranh giới phân quyền.
+# - **Provenance:** 4 bucket minh họa (`licensed` 675, `public_domain` 333, `synthetic` 331,
+#   `scraped_optout_checked` 327) + `UNCLASSIFIED` 334 đều là partition riêng; tập train của lab chỉ lấy
+#   **1,666/2,000** dòng, loại 334 dòng `license=unknown`. Mapping có hạn chế: CC-BY-4.0 bị xếp vào
+#   `public_domain` dù giấy phép yêu cầu ghi công — không dùng để kết luận pháp lý.
+# - **Erasure:** `user_007` có 8 dòng → 0 ở version hiện tại (v0 → v1), nhưng **v0 vẫn chứa dữ liệu đã xóa**
+#   cho tới khi VACUUM sau retention; các bản sao/derived artifact (vector index, model đã train) phải xử lý riêng.
+
+# %% [markdown]
+# ## ❓ Trả lời câu hỏi (mục 3.8)
+#
+# | Bằng chứng | Giá trị |
+# |---|---|
+# | Version pin / số bước | training ghi `table_version=0`, 1,578 bước; bảng lên v1 (1,978 bước); replay v0 = 1,578 ✅ |
+# | Catalog reads | 5 lượt `list_tables` → 1 lần đọc catalog |
+# | Confirmation / task | chưa xác nhận → `input_required`; có xác nhận → `ok`; task `working → completed` |
+# | Partitions | Silver: `policy-v2`, `policy-v3`; corpus: 4 bucket + `UNCLASSIFIED` (334 dòng bị loại, train 1,666/2,000) |
+# | Subject `user_007` | 8 dòng → 0 ở version hiện tại (v0 → v1) |
+#
+# **1. Pin version giải quyết vấn đề gì?**
+# Bảng trajectory luôn có rollout mới ghi vào. Nếu training run chỉ ghi "đọc bảng X", khi tái lập hay điều tra một
+# model sẽ đọc ra dữ liệu khác (1,978 thay vì 1,578 bước). Ghi `table_version` vào metadata của run biến dữ liệu train
+# thành một tham chiếu bất biến: replay đúng tập đã thấy, so sánh công bằng giữa các run, và truy được model nào đã
+# học từ dữ liệu nào (cần cho erasure/audit). Giới hạn: lab chỉ so *số bước*, chưa so nội dung (ví dụ hash từng dòng).
+#
+# **2. Vì sao xóa ở version hiện tại chưa xóa bản cũ?**
+# `delete()` là một commit mới: nó tombstone file chứa dòng của `user_007` và ghi file mới không có các dòng đó.
+# File cũ vẫn trên đĩa và v0 vẫn tham chiếu chúng, nên time travel về v0 vẫn đọc được 8 dòng đã xóa — đúng tính chất
+# giúp NB3 rollback được. Muốn xóa thật phải VACUUM sau khi hết retention (NB6), và xử lý cả các bản sao ngoài bảng:
+# vector index (NB7), checkpoint model đã train trên v0, export, cache.
+#
+# **3. Những điểm nào khiến mô phỏng này chưa phù hợp làm cơ chế kiểm soát production?**
+# - Không phải MCP server thật: chỉ là class Python trong cùng process, không có transport, xác thực hay phân quyền.
+# - Cờ `confirmed` do chính bên gọi truyền vào → agent có thể tự "xác nhận"; production cần xác nhận out-of-band từ
+#   con người/hệ thống phê duyệt và quyền được kiểm tra phía server.
+# - Cache đo ở `list_tables`, không phải `tools/list`; TTL 60 s nghĩa là bảng mới/bị xóa có thể không hiện ngay.
+# - Task polling chạy cục bộ, không có job nền thật, không xử lý timeout/hủy/thử lại.
+# - Replay chỉ so số bước, không so nội dung.
+# - Mapping provenance chỉ minh họa: CC-BY-4.0 bị xếp vào `public_domain` dù cần ghi công; `user-owned` + consent
+#   chưa chứng minh đã kiểm tra opt-out — không dùng để kết luận quyền sử dụng dữ liệu hay tuân thủ pháp luật.

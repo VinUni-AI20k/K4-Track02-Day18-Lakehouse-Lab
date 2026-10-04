@@ -403,3 +403,43 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB7 incomplete — see FAIL rows above"
 print("\nNB7 complete.")
+
+# %% [markdown]
+# ## 📝 Phân tích kết quả (NB7)
+#
+# - **Inline vs pointer:** tổng bytes gần như bằng nhau (12.5 MB) — byte phải nằm ở đâu đó. Với scan phân tích
+#   `GROUP BY topic`, cả hai layout chỉ đọc **1.2 KB** nhờ projection pushdown: cột blob không làm chậm scan cột.
+# - **Random-access amplification = 200×** (≥ 5×): file inline có 1 row group chứa 200 dòng (12.5 MB). Parquet
+#   đọc/giải nén theo column chunk của cả row group, nên lấy 1 frame (64 KB) buộc phải đọc 12.5 MB; layout
+#   pointer chỉ cần một GET 64 KB. Đây là nguyên nhân GPU bị "đói" dữ liệu khi training đọc ngẫu nhiên.
+# - **Quantization int8:** 1,024 B → 256 B/vector (4× trong RAM); trên đĩa 2.6 MB → 451.9 KB (**5.8×**, ≥ 3×; int8
+#   nén tốt hơn float32). **recall@10 = 0.904** (≥ 0.80) và **topic fidelity = 1.000** (≥ 0.95): các "miss" chỉ là
+#   hoán đổi giữa các hàng xóm gần tương đương, nên recall theo ID đánh giá thấp chất lượng cho RAG.
+# - **Semantic search bằng SQL:** `array_cosine_similarity` trong DuckDB trả top-5 cùng topic `storage`
+#   (sim 0.77–0.78). Delta trả `list<float>` nên phải cast `FLOAT[256]`. Brute-force ~9 ms/2K vector, ngoại suy
+#   tuyến tính ~4.7 s ở 1M → vector DB là *index dẫn xuất*, lakehouse là system-of-record.
+# - **Lifecycle bug:** xóa 8 doc của `user_042` → bảng còn **0 hit**, external index vẫn trả **8 hit** (vi phạm
+#   yêu cầu xóa). CDF từ v1 phát ra đúng 8 sự kiện delete kèm `doc_id` — index phải subscribe delete thay vì
+#   chỉ upsert một chiều.
+
+# %% [markdown]
+# ## ❓ Trả lời câu hỏi (mục 3.7)
+#
+# **1. Tiết kiệm dung lượng đánh đổi chất lượng tìm kiếm ra sao?**
+# int8 lưu mỗi chiều bằng 1 byte thay vì 4: 1,024 → 256 B/vector, trên đĩa 2.6 MB → 451.9 KB (**5.8×**, tiết kiệm 83%).
+# Đổi lại, sai số lượng tử hóa làm thay đổi nhẹ điểm cosine, nên thứ hạng của các hàng xóm có điểm gần nhau bị đảo:
+# recall@10 theo doc ID = **0.904** (mất ~1/10 ID so với float32), nhưng topic fidelity = **1.000**. Với RAG trên
+# corpus này, đánh đổi rất có lợi; trên corpus có nhiều tài liệu gần giống nhau nhưng khác nghĩa, cần đo lại hoặc
+# rerank top-k bằng float32.
+#
+# **2. Recall theo doc ID khác topic fidelity thế nào?**
+# Recall@10 hỏi "int8 có trả về *đúng các doc* mà float32 trả về không" — rất khắt khe: đổi doc #10 lấy doc #11 có
+# điểm gần bằng cũng bị tính là miss. Topic fidelity hỏi "các kết quả có *cùng chủ đề* với query không" — gần với điều
+# người dùng RAG quan tâm (ngữ cảnh có liên quan không). Vì vậy recall ID đánh giá thấp chất lượng: 9.6% miss đều là
+# hoán đổi giữa các doc cùng topic.
+#
+# **3. External index cần nhận loại sự kiện nào để hết trả dữ liệu đã xóa?**
+# Sự kiện **delete** (và cả update làm đổi embedding), không chỉ insert/upsert. Đo được: sau khi xóa 8 doc của
+# `user_042`, bảng trả 0 hit nhưng index cũ vẫn trả 8 hit. Change Data Feed của Delta phát ra đúng 8 dòng
+# `_change_type = delete` kèm `doc_id` — index cần subscribe CDF và xóa theo các ID đó. Pipeline sync chỉ upsert một
+# chiều sẽ giữ dữ liệu đã xóa *mãi mãi* — vi phạm yêu cầu xóa dữ liệu cá nhân.

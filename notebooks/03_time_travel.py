@@ -132,3 +132,33 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB3 incomplete — see FAIL rows above"
 print("\nNB3 complete.")
+
+# %% [markdown]
+# ## 📝 Phân tích kết quả (NB3)
+#
+# - **MERGE 100K dòng:** metrics trong `history()` ghi `num_target_rows_updated=50000`,
+#   `num_target_rows_inserted=50000`, `num_output_rows=150000` — đúng thiết kế (50K key trùng → update, 50K mới
+#   → insert), chạy dưới 1 giây trên đường lightweight.
+# - **Time travel:** `version=0` vẫn đọc được 100,000 dòng; `version=1` có schema thêm `tier`. Đọc version cũ
+#   chỉ là đọc lại tập file mà log ở version đó tham chiếu.
+# - **RESTORE:** v3 chèn 50 dòng `score=-1`. `restore(2)` tạo **commit mới v4 (RESTORE)** thay vì xóa lịch sử,
+#   nên `history()` có **5 version** (WRITE, WRITE, MERGE, WRITE, RESTORE) và số dòng `score < 0` = **0**.
+# - **Ý nghĩa:** rollback là một transaction có audit trail — vẫn biết dữ liệu lỗi vào ở v3 và được gỡ ở v4.
+#   Chừng nào chưa VACUUM, file chứa dữ liệu lỗi vẫn nằm trên đĩa (xem NB6, NB8).
+
+# %% [markdown]
+# ## ❓ Trả lời câu hỏi (mục 3.3)
+#
+# **1. Đọc version cũ khác RESTORE thế nào?**
+# `DeltaTable(path, version=0)` là thao tác *chỉ đọc*: dựng lại tập file mà log ở v0 tham chiếu (100,000 dòng) và
+# không thay đổi bảng — version hiện tại vẫn là bản mới nhất, người khác đọc bảng không bị ảnh hưởng. `restore(2)`
+# là thao tác *ghi*: nó tạo commit mới (v4, operation `RESTORE`) gồm action `remove` cho file được thêm sau v2 (file chứa
+# 50 dòng `score=-1`) và `add` lại file của v2, nên từ đó mọi reader thấy trạng thái v2 (0 dòng `score < 0`).
+#
+# **2. Vì sao RESTORE tạo transaction mới thay vì xóa lịch sử?**
+# - *Log chỉ ghi thêm (append-only):* xóa commit v3 sẽ phá tính nhất quán cho reader/writer đang dùng các version đó
+#   và mâu thuẫn với optimistic concurrency của Delta.
+# - *Audit:* history cuối vẫn cho thấy WRITE (v3, dữ liệu lỗi) rồi RESTORE (v4) — biết lỗi vào lúc nào và được
+#   gỡ lúc nào, phục vụ điều tra sự cố.
+# - *Có thể đảo ngược:* nếu restore nhầm, vẫn có thể time travel/restore tới v3.
+# Hệ quả: file chứa dữ liệu lỗi vẫn nằm trên đĩa cho tới khi VACUUM vượt retention (NB6).

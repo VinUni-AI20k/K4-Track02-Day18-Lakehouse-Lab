@@ -299,3 +299,44 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB5 incomplete — see FAIL rows above"
 print("\nNB5 complete.")
+
+# %% [markdown]
+# ## 📝 Phân tích kết quả (NB5)
+#
+# - **Tạo qua catalog:** `SqlCatalog` (SQLite) tạo `lake.llm_events`; mình không chọn đường dẫn — catalog giữ
+#   con trỏ tới `metadata.json` hiện tại. Partition spec là `1000: ts_day: day(2)` — `ts_day` là transform suy ra
+#   từ field id 2 (`ts`), không phải cột người dùng insert.
+# - **Hidden partition pruning = 10×** (≥ 5×): `plan_files()` không filter → 10 file; lọc trên **`ts`** một ngày
+#   → 1 file, 500 dòng. Iceberg áp `day()` lên predicate của `ts` để suy ra partition; người dùng Hive quên
+#   `WHERE dt=...` sẽ đọc cả 10 file (~$220/ngày ở 10K query với giả định 512 MB/file, $5/TB).
+# - **3 tầng metadata:** metadata.json → 10 manifest list (1/snapshot) → 10 manifest → 10 data file.
+#   Metadata ~138 KB vs data 47.3 KB (**~291%**) — vô lý ở quy mô 500 dòng/file, ~0.1% ở 512 MB/file:
+#   small files phạt hai lần (nhiều file data *và* nhiều metadata phải plan).
+# - **Schema evolution theo field ID:** `latency_ms → latency_millis` giữ **field_id = 4**; đổi tên chỉ là thay đổi
+#   metadata, không rewrite file. Cột mới `tier` có id 6, 5,000 dòng cũ đọc ra NULL.
+# - **Partition evolution:** sau khi đổi spec, data file thuộc **spec 1 và 2** cùng tồn tại; 5,500 dòng đọc được
+#   qua cả hai layout mà không rewrite.
+
+# %% [markdown]
+# ## ❓ Trả lời câu hỏi (mục 3.5)
+#
+# **1. Hidden partitioning hỗ trợ filter trên cột nguồn như thế nào?**
+# Partition spec lưu *quan hệ* `ts_day = day(ts)` (field nguồn id 2, transform `day`) trong metadata, và mỗi data file
+# ghi giá trị partition của nó trong manifest. Khi query lọc `ts >= '2026-08-05' AND ts < '2026-08-06'`, scan planner
+# áp cùng transform lên predicate để suy ra điều kiện trên `ts_day`, rồi loại các manifest entry không khớp —
+# `plan_files()` trả 1/10 file (**10×**). Người dùng không cần biết cột partition tồn tại, nên không thể quên
+# predicate partition như ở Hive.
+#
+# **2. Field ID giúp gì khi rename?**
+# Iceberg nhận diện cột bằng ID số, không bằng tên; file Parquet cũng lưu field ID. Đổi `latency_ms → latency_millis`
+# chỉ đổi tên gắn với ID 4 trong metadata — không rewrite file nào, file cũ vẫn được đọc đúng cột. Nếu nhận diện theo
+# tên, rename sẽ khiến dữ liệu cũ đọc ra NULL; nếu theo vị trí, drop/thêm cột có thể đọc nhầm cột.
+#
+# **3. Vì sao partition evolution không yêu cầu mọi file cũ đổi layout ngay?**
+# Mỗi data file trong manifest gắn với `spec_id` mà nó được ghi. Sau khi thêm partition `model` (spec 2), file cũ vẫn
+# thuộc spec 1, file mới thuộc spec 2; planner đánh giá filter theo từng spec. Vì vậy đổi layout chỉ là commit
+# metadata, cả 5,500 dòng vẫn đọc được qua hai layout, và việc rewrite file cũ (nếu muốn) có thể làm dần bằng
+# compaction thay vì một job migration dừng hệ thống.
+#
+# *Phạm vi:* đây là SQLite catalog cục bộ và client-side planning; REST catalog production còn lo xác thực, cấp
+# credential và có thể plan phía server.
