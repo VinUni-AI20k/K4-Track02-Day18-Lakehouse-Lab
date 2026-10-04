@@ -278,6 +278,67 @@ print(f"Total rows readable across BOTH specs: {tbl.scan().to_arrow().num_rows:,
 print("\nTwo layouts, one table, zero rewrites. This is the feature.")
 
 # %% [markdown]
+# ### 🔎 Bằng chứng bổ sung — mỗi data file nhớ spec đã ghi ra nó
+#
+# *(Cell do học viên thêm, chỉ đọc metadata.)*
+
+# %%
+from collections import Counter  # noqa: E402
+
+print("Partition specs trong metadata:")
+for s in tbl.metadata.partition_specs:
+    print(f"  spec_id={s.spec_id}: {[(f.name, str(f.transform)) for f in s.fields]}")
+print("Số data file theo spec_id:",
+      dict(sorted(Counter(tbl.inspect.files().column("spec_id").to_pylist()).items())))
+print("Field ID hiện tại:", [(f.field_id, f.name) for f in tbl.schema().fields])
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB5 (Lò Văn Long — 2A202602541)
+#
+# **Số đo trên máy mình** (`pyiceberg` 0.12.0, SQLite catalog cục bộ):
+#
+# | Tiêu chí | Kết quả | Ngưỡng |
+# |---|---|---|
+# | Tạo bảng qua catalog | `cat.create_table("lake.llm_events")`. Mình không chọn path; catalog đặt bảng ở `warehouse/lake/llm_events`, format v2 | qua catalog |
+# | Partition spec | `1000: ts_day: day(2)`, tức transform `day` trên field id 2 (`ts`) | `day(ts)` |
+# | Hidden-partition pruning | `plan_files()`: không filter 10 file, filter 1 ngày trên **`ts`** 1 file → **10×**, trả 500 dòng | ≥ 5× |
+# | Metadata tree | metadata.json (bản thứ 12, `00011-…`) → 10 manifest list → 10 manifest → 10 data file; metadata 136,0 KB / data 47,3 KB = **287,7%** (dao động ±0,1% giữa các lần chạy do tên file chứa UUID) | có báo tỷ lệ |
+# | Rename | `(4, 'latency_ms')` → `(4, 'latency_millis')`, `tier` nhận id mới 6 | giữ field_id 4 |
+# | Partition evolution | spec_id **[1, 2]** cùng tồn tại; đọc đủ **5.500** dòng (10 ngày × 500 + ngày 11) | ≥ 2 spec, đọc được |
+#
+# **Hidden partitioning hỗ trợ filter trên cột nguồn như thế nào?** Spec lưu **phép biến đổi** `day(ts)`
+# trong metadata, không lưu một cột `ts_day` do người dùng tự ghi. Khi mình lọc
+# `ts >= '2026-08-05' AND ts < '2026-08-06'`, PyIceberg *chiếu* điều kiện này qua transform thành điều kiện
+# trên giá trị partition (`ts_day = 2026-08-05`), so với partition value lưu trong manifest, rồi loại 9/10
+# file mà không mở chúng. Người dùng không cần biết `ts_day` tồn tại, nên không thể "quên" điều kiện
+# partition. Với Hive, quên `WHERE dt=…` nghĩa là quét cả bảng. Theo phép tính của notebook (512 MB/file,
+# $5/TB, 10.000 query/ngày), một điều kiện bị quên tốn khoảng **$220/ngày**.
+#
+# **Tỷ lệ metadata:data ~288% nói lên điều gì?** Mỗi `append` tạo 1 snapshot, nên sinh thêm 1 metadata.json,
+# 1 manifest list và 1 manifest. Metadata tăng theo **số commit và số file**, không theo lượng dữ liệu. Ở đây
+# mỗi file chỉ 500 dòng (~4,7 KB) nên metadata lớn gấp gần 3 lần dữ liệu. Với file 512 MB, tỷ lệ này chỉ
+# còn khoảng 0,1%. File nhỏ và commit dày gây hại hai lần: nhiều file phải đọc và nhiều metadata phải
+# plan qua (liên hệ NB6).
+#
+# **Field ID giúp gì khi rename?** Iceberg gán mỗi cột một **ID số nguyên cố định**; tên chỉ là nhãn. File
+# Parquet cũ lưu field_id trong schema của chúng, và reader ghép cột theo ID chứ không theo tên hay vị trí.
+# Rename `latency_ms → latency_millis` vì thế chỉ là một commit metadata: 0 file dữ liệu bị ghi lại, dữ liệu
+# cũ vẫn đọc ra dưới tên mới. Cột `tier` thêm sau nhận ID mới (6); 5.000 dòng cũ đọc ra `tier = null` mà
+# không cần backfill. Nếu ghép theo tên như Hive, rename sẽ làm cột cũ "biến mất". Nếu ghép theo vị trí như
+# Parquet thuần, thêm hoặc đổi thứ tự cột sẽ đọc nhầm dữ liệu.
+#
+# **Vì sao partition evolution không bắt buộc file cũ đổi layout ngay?** Mỗi data file trong manifest ghi lại
+# `spec_id` đã dùng khi ghi nó. Cell bằng chứng cho thấy 10 file cũ thuộc spec 1 `day(ts)`; batch ngày 11
+# ghi ra 3 file thuộc spec 2 `day(ts)` + `identity(model)` (mỗi model một file); spec 0 là spec rỗng lúc tạo
+# bảng và không có file nào. Khi plan, Iceberg đánh giá filter theo **spec riêng của từng file**, nên
+# hai layout cùng tồn tại trong một bảng mà vẫn đúng. Không cần dừng hệ thống để ghi lại cả bảng như Hive.
+# Dữ liệu cũ có thể được ghi lại sang layout mới dần dần khi chạy compaction (NB6), hoặc giữ nguyên nếu
+# hiếm khi được truy vấn.
+#
+# **Giới hạn của lab:** catalog là SQLite cục bộ và việc plan diễn ra ở phía client. Lab không minh họa
+# remote planning, credential vending hay phân quyền của REST catalog ở production.
+
+# %% [markdown]
 # ## ✅ NB5 pass criteria
 #
 # | Check | Target |

@@ -157,6 +157,66 @@ print(
 )
 
 # %% [markdown]
+# ### 🔎 Bằng chứng bổ sung — compaction một mình có giúp pruning không?
+#
+# *(Cell do học viên thêm, chỉ đọc log.)* Dùng time travel trên metadata: version 199 là trước
+# OPTIMIZE (200 append = v0…v199), v200 là sau `compact()`, v201 là sau `z_order()`. Đếm số file
+# có khoảng [min, max] của `user_id` chứa user 4242, tức là file engine **không** thể bỏ qua.
+
+# %%
+import pyarrow as pa
+
+
+def files_covering(version: int) -> tuple[int, int]:
+    aa = pa.table(DeltaTable(table_path, version=version).get_add_actions(flatten=True)).to_pylist()
+    return sum(1 for f in aa if f["min.user_id"] <= TARGET_USER <= f["max.user_id"]), len(aa)
+
+
+for v, label in [(199, "trước OPTIMIZE"), (200, "sau compact()"), (201, "sau z_order()")]:
+    must_read, total = files_covering(v)
+    print(f"  v{v} {label:<16} phải đọc {must_read:>3}/{total:<3} file  "
+          f"→ pruning {total / max(must_read, 1):5.1f}×")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB2 (Lò Văn Long — 2A202602541)
+#
+# **Số đo trên máy mình:**
+#
+# | Chỉ số | Trước | Sau | Ngưỡng |
+# |---|---|---|---|
+# | Số file | 200 (200 append × 5K dòng) | 55 (compact + Z-order, target 256 KB) | ≥ 100 trước; giảm rõ |
+# | Point query `user_id=4242 AND kind='purchase'` | 182,7 ms | 17,1 ms | — |
+# | Speedup (wall-clock, median 3 lần) | | **10,7×** (lần chạy nộp bài; các lần chạy thử trên máy mình dao động 10,7×–11,2×) | ≥ 3× |
+# | Files-pruned ratio | | **55×** (1/55 file chứa user 4242) | ≥ 10× |
+#
+# Đạt **cả hai** ngưỡng, dù rubric chỉ cần một. Kết quả truy vấn trước và sau giống nhau (`count=5`),
+# nên tối ưu không làm thay đổi dữ liệu.
+#
+# **Compaction và Z-order tác động khác nhau thế nào?** Cell bằng chứng (time travel trên log) trả lời trực tiếp:
+# - **v199 (trước OPTIMIZE):** 200/200 file đều có khoảng `user_id` gần trọn [1, 100000], vì mỗi batch
+#   random user. Stats không loại được file nào, phải mở cả 200 file nhỏ.
+# - **v200 (chỉ `compact()`):** còn 67 file nhưng **vẫn phải đọc 67/67**. Compaction chỉ gộp file nhỏ thành
+#   file to hơn: giảm overhead mở file, đọc footer và số entry trong log. Nó không sắp xếp dữ liệu, nên mỗi
+#   file vẫn trộn đủ mọi user và pruning = 1×.
+# - **v201 (sau `z_order(["user_id"])`):** dữ liệu được sắp lại theo `user_id` (với 1 cột, Z-order tương
+#   đương sort). Mỗi file chỉ phủ khoảng ~1.850 user liền nhau và không chồng lấn (xem bảng range ở trên),
+#   nên engine đọc min/max trong log và bỏ qua 54/55 file.
+#
+# Tóm lại, compaction giải quyết **số lượng** file, còn Z-order/clustering làm cho **stats có ích** để skip file.
+#
+# **Vì sao gộp thành một file lớn làm khó quan sát pruning?** File pruning hoạt động ở đơn vị *file*. Nếu
+# OPTIMIZE gộp hết vào 1 file thì file đó có min = 1, max = 100000 và luôn "có thể chứa" mọi user: tỷ lệ
+# pruning = 1/1 = 1×, dù dữ liệu bên trong đã sort. Vì thế lab đặt `target_size = 256 KB` để còn khoảng 55
+# file. Ở production, target 128–512 MB trên bảng hàng trăm GB vẫn cho ra hàng nghìn file, nên pruning vẫn
+# có tác dụng. Khi đó việc skip ở mức row group bên trong file cũng giúp thêm.
+#
+# **Vì sao thời gian benchmark biến động giữa các máy?** Wall-clock phụ thuộc vào page cache của hệ điều hành
+# (lần đọc sau có thể không chạm đĩa), loại ổ (SSD/HDD), CPU và số core, tiến trình nền, và **Windows Defender
+# quét file mới tạo** (200 file nhỏ vừa ghi). Mỗi phía chỉ đo median của 3 lần. Ngay trên máy mình, hai lần
+# chạy liên tiếp đã cho 10.7× và 11.2×. Ngược lại, files-pruned ratio được tính từ metadata nên luôn ra 55×
+# trên mọi máy. Đó là lý do rubric chấp nhận nó làm ngưỡng thay thế.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] Speedup ≥ 3× **or** files-pruned ratio ≥ 10× (slide §6 allows either)
 # - [ ] File count dropped substantially after compact()

@@ -148,6 +148,24 @@ print("random read costs ~one row, not one row group.")
 AMPLIFICATION = rg_bytes / one_blob
 
 # %% [markdown]
+# ### 🔎 Thí nghiệm thêm — amplification tỷ lệ với số dòng trong một row group
+#
+# *(Cell do học viên thêm.)* Ghi cùng 200 frame ra file Parquet tạm với `row_group_size` khác nhau
+# (bằng pyarrow, không qua Delta) và đo lại số byte phải đọc để lấy 1 frame.
+
+# %%
+import tempfile  # noqa: E402
+
+with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as _tmp:
+    for rg_size in (200, 50, 10, 1):
+        _f = Path(_tmp) / f"inline_rg{rg_size}.parquet"
+        pq.write_table(inline_tbl, _f, row_group_size=rg_size)
+        _md = pq.read_metadata(_f)
+        _rg_bytes = _md.row_group(0).total_byte_size
+        print(f"  row_group_size={rg_size:>3}: {_md.num_row_groups:>3} row group, đọc 1 frame = "
+              f"{human(_rg_bytes):>9} → amplification {_rg_bytes / one_blob:6.1f}×")
+
+# %% [markdown]
 # ## 2. Embeddings as a column: the storage arithmetic
 #
 # The slide's numbers: `VECTOR(768, FLOAT)` = 3,072 B/row; `INT8` = 768 B/row.
@@ -231,6 +249,10 @@ legal = con.sql(f"""
 for doc_id, topic, lic, sim in legal:
     print(f"{doc_id:>7}  {topic:<12} {lic:<12} {sim:6.3f}")
 print("\nNo sync job, no ID reconciliation, no 'is this vector still valid?'")
+
+# %%
+# (Cell do học viên thêm) Vì sao doc 7 — chính câu query — không có trong kết quả có filter?
+print(con.sql("SELECT doc_id, topic, source, license, consent_train FROM docs WHERE doc_id = 7").fetchall())
 
 # %% [markdown]
 # ### Honest scaling check: brute force is not a serving path
@@ -372,6 +394,59 @@ That is the contract: the index subscribes to deletes instead of guessing.
 Best of all is not needing the sync — keep the vector in the row (§2 above)
 and the lifecycle is enforced by the table itself.
 """)
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB7 (Lò Văn Long — 2A202602541)
+#
+# **Số đo trên máy mình:**
+#
+# | Tiêu chí | Kết quả | Ngưỡng |
+# |---|---|---|
+# | Inline vs pointer (tổng dung lượng) | inline 12,5 MB; pointer 4,7 KB + 12,5 MB object riêng | — |
+# | Scan phân tích `SELECT topic, count(*)` | chỉ đọc **1,2 KB / 12,5 MB** ở bảng inline | — |
+# | Random-read 1 frame (inline) | 1 row group 200 dòng = 12,5 MB so với 64 KB của 1 object → **200×** | ≥ 5× |
+# | int8 vs float32 trên đĩa | 2,6 MB → 451,9 KB = **5,8× nhỏ hơn** (tiết kiệm 83%) | ≥ 3× |
+# | recall@10 (đúng doc ID) | **0,904** | ≥ 0,80 |
+# | topic fidelity của top-10 int8 | **1,000** | ≥ 0,95 |
+# | SQL semantic search | top-5 của doc 7 (`storage`) đều là `storage` (sim 1,000; 0,779; 0,777; …) | đa số cùng topic |
+# | Lifecycle bug | xóa `user_042` (8 doc): **0 hit** trong bảng, **8 hit** ở external index; CDF ra 8 sự kiện `delete` | 0 và > 0 |
+#
+# **Amplification và row group.** Parquet nén và đọc theo **column chunk trong row group**; muốn lấy một
+# giá trị blob phải đọc và giải nén cả chunk của cột `blob` trong row group chứa nó. delta-rs ghi 200 frame
+# vào **1 row group**, nên lấy 1 frame 64 KB phải kéo 12,5 MB. Thí nghiệm thêm cho thấy amplification
+# **bằng đúng số dòng mỗi row group**: 200 → 200×, 50 → 50×, 10 → 10×, 1 → 1×. Row group nhỏ giảm
+# amplification nhưng làm footer và metadata phình to, nén kém hơn và scan phân tích chậm hơn. Đó là lý do
+# dữ liệu media nên lưu **pointer** (một GET đúng 64 KB) hoặc dùng format thiết kế cho random access như Lance.
+# Ngược lại, khi chỉ scan cột `topic`, column pruning khiến blob gần như không tốn gì (1,2 KB). Lời khuyên
+# "đừng bao giờ để blob trong bảng" chỉ đúng cho kiểu truy cập ngẫu nhiên từng dòng.
+#
+# **Tiết kiệm dung lượng đánh đổi với chất lượng tìm kiếm ra sao?** Lý thuyết int8 nhỏ hơn 4× (1.024 B →
+# 256 B/vector). Trên đĩa đo được 5,8×: số float32 ngẫu nhiên gần như không nén được và kiểu `list<float>`
+# có thêm overhead mã hóa, còn int8 nén tốt hơn chút. Cái giá là sai số lượng tử khoảng 1/254 mỗi chiều.
+# Sai số này làm đổi thứ tự giữa các láng giềng có độ tương đồng gần bằng nhau: **mất khoảng 10% doc ID
+# chính xác** (recall@10 = 0,904) nhưng **100% kết quả vẫn đúng topic**.
+#
+# **Recall theo doc ID khác topic fidelity thế nào?** Recall@10 so *tập ID* top-10 của int8 với float32
+# (ground truth); chỉ cần hoán đổi hạng 10 và 11 là đã tính một lần trượt. Topic fidelity đo xem các kết quả
+# int8 có **cùng chủ đề** với câu query không, tức gần với điều RAG cần (ngữ cảnh đúng chủ đề) hơn. Trong
+# corpus này, các topic tách xa nhau (cosine cùng topic khoảng 0,78–0,86, khác topic gần 0), nên sai số int8
+# không đẩy được kết quả sang topic khác. Với embedding thật, các chủ đề chồng lấn nhiều hơn và kết quả có
+# thể kém hơn, nên phải đo trên corpus của chính mình. Với bài toán cần thứ hạng chính xác (dedup, near-duplicate)
+# thì recall theo ID quan trọng hơn.
+#
+# **SQL semantic search có filter:** vector nằm cùng dòng với cột governance, nên lọc
+# `consent_train AND license <> 'unknown'` chỉ là một mệnh đề WHERE. Chính doc 7 bị loại khỏi kết quả lọc
+# vì nó đến từ `scraped_forum`, license `unknown`, `consent_train = False` (cell bằng chứng). Brute force
+# mất khoảng 18 ms cho 2.000 vector (16–18 ms qua các lần chạy); ngoại suy tuyến tính lên 1 triệu vector là
+# khoảng 9 giây, nên đây chỉ hợp cho phân tích hoặc đo recall offline, không dùng để phục vụ online.
+#
+# **External index cần nhận loại sự kiện nào?** Index ngoài là một **bản sao dẫn xuất** được sync kiểu
+# upsert, nên nó chỉ biết các dòng mới hoặc dòng bị sửa. Lệnh xóa ở lakehouse không bao giờ tới được nó: còn
+# trả 8 doc của `user_042` cho prompt RAG, tức vi phạm quyền được xóa dữ liệu. Index phải tiêu thụ
+# **Change Data Feed** với đủ các loại: `delete` (gỡ doc_id, ở đây là 8 sự kiện, doc_id 42, 292, 542…),
+# `update_preimage`/`update_postimage` (embed lại khi nội dung đổi) và `insert`. Cách chắc nhất là giữ
+# vector **ngay trong dòng** của bảng gốc, để vòng đời của embedding đi theo dòng dữ liệu. Lưu ý thêm: sau
+# `delete`, version cũ vẫn chứa dữ liệu qua time travel cho tới khi VACUUM hết retention (NB6, NB8).
 
 # %% [markdown]
 # ## ✅ NB7 pass criteria

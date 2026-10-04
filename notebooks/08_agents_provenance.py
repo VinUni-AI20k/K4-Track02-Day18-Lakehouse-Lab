@@ -450,6 +450,65 @@ physical files. Retention and VACUUM must be considered separately (NB6),
 as must any copies or derived artifacts outside this table.""")
 
 # %% [markdown]
+# ### 🔎 Bằng chứng bổ sung — so sánh version hiện tại với version cũ
+#
+# *(Cell do học viên thêm, chỉ đọc.)*
+
+# %%
+for label, t in [(f"v{corpus_version} (time travel)", DeltaTable(GOVERNED, version=corpus_version)),
+                 (f"v{after_dt.version()} (hiện tại)", DeltaTable(GOVERNED))]:
+    # Lọc bằng Polars: file mới ghi sau delete dùng string_view, filter pyarrow không so sánh được.
+    n_subject = pl.from_arrow(t.to_pyarrow_table()).filter(pl.col("subject_id") == SUBJECT).height
+    print(f"  {label:<20} rows của {SUBJECT}: {n_subject}   tổng rows: {t.count():,}")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB8 (Lò Văn Long — 2A202602541)
+#
+# **Số đo trên máy mình:**
+#
+# | Phần | Kết quả |
+# |---|---|
+# | Silver trajectory | 1.578 step, 2 partition `agent_version=policy-v2` / `policy-v3` |
+# | Gold | 2 policy × 150 trajectory; success 0,760 / 0,753; 5,26 bước trung bình; ~$10,4 mỗi policy |
+# | Version pin | run ghi `table_version = 0`, `n_steps_seen = 1.578`; append thêm 400 → v1 có 1.978; replay v0 = **1.578, khớp** |
+# | Cache `list_tables` | 5 lượt: lần đầu `cached=False`, 4 lần sau `cached=True` → **1 lần đọc catalog** (TTL 60 s) |
+# | Destructive call | `delete_rows` chưa xác nhận → **`input_required`**; truyền `confirmed=True` → `ok` (no-op) |
+# | Task | `submit_scan` → poll `working`, `working`, **`completed`** (300 dòng) |
+# | Provenance | licensed 675, UNCLASSIFIED 334, public_domain 333, synthetic 331, scraped_optout_checked 327; **5 partition** trên đĩa; tập trainable 1.666/2.000, loại 334 UNCLASSIFIED |
+# | Xóa subject | `user_007`: 8 dòng (5 UNCLASSIFIED, 1 licensed, 1 scraped_optout_checked, 1 synthetic) → **0 ở v1**, nhưng **v0 vẫn còn 8** |
+#
+# Ghi chú về Gold: `agent_version` được gán theo số session (< 150 là v2), không phải hai policy thật, nên
+# success rate gần như bằng nhau là điều dễ hiểu. Gold ở đây minh họa *cấu trúc* so sánh giữa các policy,
+# không chứng minh policy nào tốt hơn.
+#
+# **Pin version giải quyết vấn đề gì?** Bảng trajectory chỉ được append và thay đổi liên tục: chỉ vài phút
+# sau khi train đã có thêm 400 step. Nếu run chỉ ghi lại *đường dẫn bảng* thì sau này không thể biết model
+# đã thấy dữ liệu nào. Ghi kèm **một số nguyên** `table_version = 0` vào metadata của run giúp tái lập chính
+# xác tập dữ liệu (replay = 1.578 step), so sánh hai run công bằng, điều tra regression và trả lời kiểm toán
+# ("model này train trên dữ liệu nào?"). Giới hạn: replay ở đây mới so **số bước**, chưa so nội dung (nên
+# lưu thêm checksum hay hash). Và pin chỉ còn giá trị khi file của v0 chưa bị VACUUM.
+#
+# **Vì sao xóa ở version hiện tại chưa xóa bản cũ?** `delete` của Delta là một commit mới: ghi lại file
+# không còn các dòng của subject (`add`) và tombstone file cũ (`remove`). File cũ **vẫn nằm trên đĩa** và
+# v0 vẫn trỏ tới nó, nên time travel về v0 vẫn trả 8 dòng của `user_007` (cell bằng chứng). Muốn xóa thật
+# phải VACUUM sau khi hết retention, đồng thời xử lý mọi bản sao ngoài bảng: index vector (NB7), backup,
+# cache, và model đã train trên dữ liệu đó. Provenance giúp *xác định* phạm vi (biết 8 dòng thuộc bucket
+# nào và được dùng ở đâu), nhưng tự nó không thực hiện việc xóa.
+#
+# **Những điểm khiến mô phỏng này chưa thể dùng làm cơ chế kiểm soát ở production:**
+# 1. Cờ `confirmed` do **chính bên gọi truyền vào**: agent có thể tự đặt `confirmed=True`. Production cần
+#    phê duyệt ngoài luồng gắn với danh tính người duyệt và phân quyền phía server.
+# 2. Không có xác thực, phân quyền, transport hay schema chuẩn của MCP; cache được đo ở `list_tables` chứ
+#    không phải `tools/list`. Cache không có cơ chế làm mới (invalidation), nên trong 60 s có thể trả danh
+#    sách bảng đã lỗi thời.
+# 3. Task chỉ giả lập bằng thời gian chờ (50 ms), không chạy job thật; `delete_rows` là no-op.
+# 4. Replay chỉ so số bước, chưa so nội dung.
+# 5. Mapping provenance **chỉ là quy tắc minh họa**. CC-BY-4.0 bị xếp vào `public_domain` dù đây là giấy
+#    phép yêu cầu ghi công; `user-owned` + consent bị gọi là `scraped_optout_checked` nhưng không có bằng
+#    chứng đã kiểm tra opt-out. Bốn bucket này không phải phân loại của luật (EU AI Act Art. 10 không quy định
+#    chúng). UNCLASSIFIED (16,7%) chỉ bị loại khỏi tập train chứ chưa được xử lý.
+
+# %% [markdown]
 # ## ✅ NB8 pass criteria
 #
 # | Check | Target |
