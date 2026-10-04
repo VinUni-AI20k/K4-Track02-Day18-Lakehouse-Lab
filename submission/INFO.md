@@ -10,7 +10,7 @@
 | Đường chạy | Lightweight: Python APIs, không dùng Spark/Docker |
 | Python | 3.12.13 |
 | Hệ điều hành | macOS |
-| Commit bài nộp |  |
+| Commit bài nộp | d9ae21d9e1d1b924dc6b4e53f3d790854bf009ae |
 
 ## Phạm vi thực hiện
 
