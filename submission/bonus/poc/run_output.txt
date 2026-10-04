@@ -1,0 +1,16 @@
+Bronze rows: 240,000 in 120 commits (9.7s)
+Vault entries (distinct PII values): 10,000
+Rows with raw email: 0   raw phone: 0
+Sample Bronze prompt: Hi, I am tok_c6cb38398c2fc90b, call me at tok_cc6d87de7cefcfaa. Summarise ticket #119
+Deterministic token (case-insensitive): True
+String columns with raw PII: none
+tenant_id=150
+  before: files touched 120/120   median 331.1 ms
+  after : files touched 2/47   median 35.8 ms  (optimize+vacuum 0.7s)
+  skip rate after Z-order: 96%   speedup: 9.2x
+  [PASS] 0 raw emails/phones in Bronze
+  [PASS] tokens deterministic
+  [PASS] no string column leaks PII
+  [PASS] vault holds every token
+  [PASS] Z-order skips >= 50% files
+  [PASS] rows intact after optimize
