@@ -1,0 +1,13 @@
+Parquet volume/day: 2.0 TB   steady state: 730 TB
+  STD     14 TB  x $  23.0/TB-mo = $     322
+  IA     166 TB  x $  12.5/TB-mo = $   2,075
+  GIR    550 TB  x $   4.0/TB-mo = $   2,200
+STORAGE total      $   4,597
+  retrieval IA: 40 TB x $10/TB = $400
+  retrieval GIR: 10 TB x $30/TB = $300
+  compute ingest     $     673
+  compute trino      $     897
+  compute compaction $     115
+ALL-IN total       $   6,982   cap $8,000   headroom $1,018
+Pure-lifecycle penalty (days 8-30 stuck in Standard): +$483/mo
+Unbounded scan of cold tier: 550 TB x $30/TB = $16,500 per query
