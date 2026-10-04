@@ -150,6 +150,105 @@ assert n_dates >= 7, (
 )
 
 # %% [markdown]
+# ### 🔎 Bằng chứng bổ sung — kiểm tra đủ điều kiện Gold mà notebook chưa assert
+#
+# *(Cell do học viên thêm, chỉ đọc.)* In **toàn bộ** Gold và tự kiểm từng điều kiện của rubric:
+# ≥ 7 ngày × 3 model, p50 ≤ p95, `cost_usd` > 0, `error_rate` ∈ [0, 1].
+
+# %%
+with pl.Config(tbl_rows=-1, tbl_cols=-1, tbl_width_chars=140, fmt_str_lengths=20):
+    print(gold_df.sort(["date", "model"]).select(
+        "date", "model", "p50_latency_ms", "p95_latency_ms", "error_rate",
+        pl.col("cost_usd").round(2)))
+
+models_per_date = gold_df.group_by("date").agg(pl.col("model").n_unique().alias("n"))
+gold_checks = {
+    "≥ 7 dates":                       n_dates >= 7,
+    "3 models on every date":          models_per_date["n"].min() == 3,
+    "p50 ≤ p95 on every row":          bool((gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all()),
+    "cost_usd > 0 on every row":       bool((gold_df["cost_usd"] > 0).all()),
+    "0 ≤ error_rate ≤ 1 on every row": bool(gold_df["error_rate"].is_between(0, 1).all()),
+}
+for k, v in gold_checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(gold_checks.values()), "Gold chưa đạt đủ điều kiện"
+
+# %% [markdown]
+# ### 🔎 Vì sao Gold có 8 ngày chứ không phải 7? — múi giờ của phiên DuckDB
+#
+# Generator rải `ts` (kiểu timestamp **có múi giờ UTC**) trên đúng 7 ngày UTC. Nhưng
+# `CAST(ts AS DATE)` trong DuckDB dùng `TimeZone` của phiên, mặc định là múi giờ máy.
+
+# %%
+print("DuckDB TimeZone:", con.sql("SELECT current_setting('TimeZone')").fetchone()[0])
+print("ts min/max (theo TimeZone phiên):",
+      con.sql("SELECT CAST(min(ts) AS VARCHAR), CAST(max(ts) AS VARCHAR) FROM silver").fetchone())
+print("\nSố request Silver theo `date` (múi giờ phiên):")
+for d, n in con.sql("SELECT CAST(date AS VARCHAR), count(*) FROM silver GROUP BY 1 ORDER BY 1").fetchall():
+    print(f"  {d}  {n:>6,}")
+utc_days = con.sql("SELECT count(DISTINCT CAST(timezone('UTC', ts) AS DATE)) FROM silver").fetchone()[0]
+print(f"\nSố ngày nếu cắt theo UTC: {utc_days}")
+
+print("\nPhân bố status trong Silver (đầu vào của error_rate):")
+for s, n, pct in con.sql("""SELECT status, count(*), round(100.0 * count(*) / sum(count(*)) OVER (), 2)
+                            FROM silver GROUP BY 1 ORDER BY 2 DESC""").fetchall():
+    print(f"  {s:<13} {n:>7,}  {pct:>5}%")
+
+from lakehouse import ROOT  # noqa: E402
+
+print("\nVị trí 3 bảng trên storage (tính từ gốc repo):")
+for name, p_ in [("Bronze", BRONZE), ("Silver", SILVER), ("Gold", GOLD)]:
+    n_parts = len(list(Path(p_).glob("date=*")))
+    n_commits = len(list(Path(p_).glob("_delta_log/*.json")))
+    layout = f"{n_parts} partition date=…" if n_parts else "không partition"
+    print(f"  {name:<6} {Path(p_).relative_to(ROOT.parent).as_posix():<32} {layout:<20} {n_commits} commit")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB4 (Lò Văn Long — 2A202602541)
+#
+# **Số đo trên máy mình:**
+#
+# | Tầng | Vị trí | Số dòng |
+# |---|---|---|
+# | Bronze | `_lakehouse/bronze/llm_calls_raw` (JSON thô) | 200.000 |
+# | Silver | `_lakehouse/silver/llm_calls` (partition theo `date`) | **190.052** (dedup bỏ 9.948 dòng) |
+# | Gold | `_lakehouse/gold/llm_daily_metrics` (partition `date`, Z-order theo `model`) | 24 = **8 ngày × 3 model** |
+#
+# Kiểm tra Gold (cell bằng chứng, assert thật): ≥ 7 ngày ✔, đủ 3 model mỗi ngày ✔, p50 ≤ p95 ở mọi dòng ✔
+# (ví dụ Haiku khoảng 560 / 1.130 ms, Sonnet ~1.380 / 2.750 ms, Opus ~3.000 / 6.000 ms), `cost_usd` > 0 ✔,
+# `error_rate` ∈ [0, 1] ✔ (khoảng 0,04–0,06). Số dòng bị bỏ (9.948) **khớp đúng** số request_id trùng mà
+# generator chèn vào (`unique request_ids: 190,052`).
+#
+# **Vì sao Gold có 8 ngày, không phải 7?** Generator rải `ts` trên đúng 7 ngày **UTC** (01/04 00:00 → 07/04
+# 23:59 UTC). Nhưng `CAST(ts AS DATE)` trong DuckDB dùng `TimeZone` của phiên, ở máy mình là `Asia/Bangkok`
+# (UTC+7). Ranh giới ngày vì thế lệch 7 giờ: ngày 01/04 chỉ có 17 giờ dữ liệu (19.271 request), ngày 08/04
+# chỉ có 7 giờ (7.915 request); cắt theo UTC thì đúng 7 ngày. Rubric (≥ 7 ngày × 3 model) vẫn đạt. Tuy
+# nhiên đây là một bẫy thật: **cùng pipeline mà chạy ở máy khác múi giờ sẽ cho Gold khác nhau**, và
+# `cost_usd` của 01/04, 08/04 thấp chỉ vì đó là ngày thiếu giờ. Mình giữ nguyên code lab để không đổi đề.
+# Ở production nên cố định `SET TimeZone='UTC'`, hoặc tính `date` theo một múi giờ nghiệp vụ đã thống nhất
+# ngay từ lúc ingest.
+#
+# **Dedup ở Silver giải quyết vấn đề gì?** Client retry gửi lại cùng `request_id` (khoảng 5% ở đây). Không
+# dedup thì số request, token và chi phí bị đếm trùng khoảng 5%; p50/p95 và error rate cũng bị lệch vì một
+# request được tính nhiều lần. Silver dùng `ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY ts)` và giữ
+# bản ghi **sớm nhất**. Đồng thời bỏ JSON lỗi (`model IS NULL`) và ép kiểu thành các cột có kiểu rõ ràng.
+#
+# **Vì sao dashboard đọc Gold?** Gold chỉ có 24 dòng đã tổng hợp sẵn, so với 190.052 dòng Silver. Định nghĩa
+# chỉ số (p50/p95, công thức cost, error rate) được tính **một lần, thống nhất** thay vì mỗi dashboard tự
+# viết lại. Truy vấn nhanh và rẻ (partition theo `date`, Z-order theo `model` cho filter theo model). Bronze
+# và Silver chứa dữ liệu chi tiết (user_id) mà người xem dashboard không cần đọc.
+#
+# **Cách tính error rate và cost có phù hợp với dữ liệu không?** Chỉ phù hợp một phần:
+# - `error_rate = AVG(status <> 'ok')` gộp **`rate_limited` (2,99%)** với **`error` (1,98%)**. Rate limit
+#   thường do quota phía client, không phải lỗi model. Nên tách thành 2 cột để cảnh báo đúng đội.
+# - `cost_usd` cộng token của **mọi** request, kể cả request bị rate-limit hay lỗi. Thực tế request 429
+#   thường không bị tính tiền, nên chi phí có thể bị **ước cao** khoảng 3–5%. Ngược lại, dedup chỉ giữ lần
+#   gọi đầu, trong khi các lần retry đã thật sự chạy cũng có thể bị tính tiền. Cần thống nhất định nghĩa
+#   "chi phí" với bên tài chính.
+# - Bảng giá là **giá minh họa của lab**, không phải giá thật. `QUANTILE_CONT` nội suy giữa các giá trị nên
+#   p50/p95 có thể là số lẻ (ví dụ 2995.5).
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] All three tables exist under `_lakehouse/{bronze,silver,gold}/`
 # - [ ] Silver has fewer rows than Bronze (dedup worked)

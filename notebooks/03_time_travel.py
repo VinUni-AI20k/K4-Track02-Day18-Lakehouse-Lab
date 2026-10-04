@@ -115,6 +115,52 @@ for h in final_history:
 print(f"\nTotal versions: {len(final_history)}  (target ≥ 5)")
 
 # %% [markdown]
+# ### 🔎 Bằng chứng bổ sung — từng version còn đọc được, kể cả version lỗi
+#
+# *(Cell do học viên thêm, chỉ đọc.)* Sau RESTORE, version hiện tại sạch nhưng v3 (có dữ liệu lỗi)
+# vẫn truy vấn được bằng time travel: RESTORE không xóa lịch sử.
+
+# %%
+for v in range(len(final_history)):
+    t = DeltaTable(table_path, version=v)
+    neg = t.to_pyarrow_table(filters=[("score", "<", 0)]).num_rows
+    print(f"  v{v}: rows={t.count():>7,}  score<0={neg:>3}  columns={t.schema().to_arrow().names}")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB3 (Lò Văn Long — 2A202602541)
+#
+# **Lịch sử version đo được:**
+#
+# | Version | Operation | Kết quả |
+# |---|---|---|
+# | v0 | WRITE (overwrite) | 100.000 khách hàng |
+# | v1 | WRITE (overwrite + `schema_mode="overwrite"`) | thêm cột `tier`, ghi lại toàn bộ 100.000 dòng (1 file thêm, 1 file bỏ) |
+# | v2 | **MERGE** 100K dòng nguồn | `num_target_rows_updated = 50.000` (id 50K–99.999), `inserted = 50.000` (id 100K–149.999), `copied = 50.000` → 150.000 dòng; chạy dưới 0,1 giây |
+# | v3 | WRITE (append) | 50 dòng lỗi `score = -1`, `status = null`, `tier = 'UNKNOWN'` → 150.050 dòng |
+# | v4 | **RESTORE** về v2 | 150.000 dòng, `score < 0` = **0**; chạy khoảng 0,01–0,02 giây (< 30 giây) |
+#
+# `history()` có **5 version gồm cả dòng RESTORE**, đạt ngưỡng ≥ 5.
+#
+# **Đọc version cũ khác RESTORE thế nào?**
+# - `DeltaTable(path, version=N)` (tương đương `versionAsOf`) là thao tác **chỉ đọc**. Nó dựng lại trạng thái
+#   tại v3 từ log để truy vấn (cell bằng chứng: v3 vẫn có 50 dòng `score < 0`). Bảng hiện tại không đổi và
+#   reader khác vẫn thấy version mới nhất.
+# - `restore(2)` là thao tác **ghi**. Nó tạo commit mới v4: `add` lại các file thuộc v2 và `remove` file
+#   chứa 50 dòng lỗi của v3. Từ v4 trở đi, mọi reader mặc định đều thấy dữ liệu sạch.
+#
+# **Vì sao RESTORE tạo transaction mới thay vì xóa lịch sử?**
+# 1. Log của Delta **chỉ được append, không sửa** (immutable). Version là số tăng dần mà cơ chế optimistic
+#    concurrency dựa vào. Xóa hay sửa commit cũ sẽ làm hỏng reader hoặc writer đang chạy ở version đó.
+# 2. **Kiểm toán:** v4 ghi rõ có người đã rollback, lúc nào và về đâu. Sự cố v3 vẫn còn để điều tra nguyên
+#    nhân, ví dụ job nào ghi `score = -1`.
+# 3. **Có thể hoàn tác chính lần RESTORE:** nếu rollback nhầm thì vẫn restore về v3 được.
+#
+# **Lưu ý vận hành:** RESTORE chỉ chạy được khi file Parquet của version đích còn trên đĩa. Sau khi
+# `VACUUM` xóa file đã hết retention (NB6), cả time travel lẫn RESTORE về các version đó đều thất bại. Ngoài
+# ra, v1 ở lab thêm cột bằng cách overwrite toàn bảng. Ở production nên dùng `schema_mode="merge"` hoặc
+# `ALTER TABLE ADD COLUMNS` (chỉ đổi metadata) để không phải ghi lại 100% dữ liệu.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] history() shows ≥ 5 versions (incl. RESTORE itself)
 # - [ ] MERGE 100K finished in < 60s (likely < 1s on lightweight path)
