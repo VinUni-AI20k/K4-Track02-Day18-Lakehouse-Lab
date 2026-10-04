@@ -1,5 +1,19 @@
 # K4-Track02-Day18-Lakehouse-Lab
 
+## Bài làm Đỗ Quốc An - 2A202602892
+
+Bản lightweight có 8 notebook đã chạy qua Jupyter, giữ output và giải thích,
+8 ảnh bằng chứng, reflection và khai báo AI. Smoke 9/9, pytest 24/24,
+scripts 8/8; số liệu từng tiêu chí tại [báo cáo checkpoint](submission/CHECKPOINT_REPORT.md).
+
+- [Thông tin người nộp](submission/INFO.md)
+- [Notebook có output](submission/notebooks/) và [ảnh](submission/screenshots/)
+- [Reflection](submission/REFLECTION.md) và [phạm vi hỗ trợ AI](submission/AI_USAGE.md)
+- [Bonus architecture brief](submission/bonus/ARCHITECTURE.md), kèm PDF 5 trang
+- [Hướng dẫn tự kiểm tra và nộp bài](submission/HUONG_DAN_NOP_BAI.md)
+
+Phần hướng dẫn và đề gốc tiếp tục bên dưới.
+
 Lab cho **Khóa 4 · Track 02 · Day 18 · Data Lakehouse Architecture**.
 
 **Hình thức làm bài: cá nhân cho cả phần bắt buộc và bonus.** Mỗi học viên tự chạy,

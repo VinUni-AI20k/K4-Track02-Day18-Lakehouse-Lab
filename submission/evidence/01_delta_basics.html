@@ -1,0 +1,40 @@
+<!doctype html><meta charset='utf-8'><style>
+            body{margin:48px;background:#f4f7fa;color:#14293b;font-family:Arial}
+            h1{font-size:32px} p{font-size:20px}
+            pre{background:white;border:1px solid #ccd8e0;border-radius:10px;padding:24px;
+            font:17px/1.4 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+            </style><h1>01_delta_basics</h1>
+            <p>Đỗ Quốc An · 2A202602892 · Lightweight Python 3.11 · Executed Jupyter output</p>
+            <p>Run: 2026-10-04T19:34:23.499092+07:00 | Source: submission/notebooks/01_delta_basics.ipynb</p>
+            <pre>BLOCKED by schema enforcement (expected): Exception: Cast error: Cannot cast string &#x27;thirty&#x27; to value of Int64 type
+
+
+shape: (4, 5)
+┌─────┬─────────┬─────┬────────┬─────────┐
+│ id  ┆ name    ┆ age ┆ city   ┆ tier    │
+│ --- ┆ ---     ┆ --- ┆ ---    ┆ ---     │
+│ i64 ┆ str     ┆ i64 ┆ str    ┆ str     │
+╞═════╪═════════╪═════╪════════╪═════════╡
+│ 1   ┆ alice   ┆ 30  ┆ Hanoi  ┆ null    │
+│ 2   ┆ bob     ┆ 25  ┆ HCMC   ┆ null    │
+│ 3   ┆ charlie ┆ 35  ┆ Danang ┆ null    │
+│ 4   ┆ dan     ┆ 28  ┆ Hue    ┆ premium │
+└─────┴─────────┴─────┴────────┴─────────┘
+
+
+[(&#x27;premium&#x27;, 1), (None, 3)]
+
+
+Transaction log files: [&#x27;00000000000000000000.json&#x27;, &#x27;00000000000000000001.json&#x27;]
+First commit JSON:
+ {&quot;commitInfo&quot;:{&quot;timestamp&quot;:1791117208756,&quot;operation&quot;:&quot;WRITE&quot;,&quot;operationParameters&quot;:{&quot;mode&quot;:&quot;Overwrite&quot;},&quot;engineInfo&quot;:&quot;delta-rs:py-1.6.6&quot;,&quot;operationMetrics&quot;:{&quot;num_added_files&quot;:1,&quot;num_removed_files&quot;:0,&quot;num_partitions&quot;:0,&quot;num_added_rows&quot;:3,&quot;execution_time_ms&quot;:3,&quot;num_retries&quot;:0},&quot;clientVersion&quot;:&quot;delta-rs.py-1.6.6&quot;}}
+{&quot;protocol&quot;:{&quot;minReaderVersion&quot;:1,&quot;minWriterVersion&quot;:2}}
+{&quot;metaData&quot;:{&quot;id&quot;:&quot;d2e33af1-c250-4b28-a893-4ce0f71f152f&quot;,&quot;name&quot;:null,&quot;description&quot;:null,&quot;format&quot;:{&quot;provider&quot;:&quot;parquet&quot;,&quot;options&quot;:{}},&quot;schemaString&quot;:&quot;{\&quot;type\&quot;:\&quot;struct\&quot;,\&quot;fields\&quot;:[{\&quot;name\&quot;:\&quot;id\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;name\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;age\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;city\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}}]}&quot;,&quot;partitionColumns&quot;:[],&quot;createdTime&quot;:1791117208753,&quot;configuration&quot;:{}}}
+{&quot;add&quot;:{&quot;path&quot;:&quot;part-00000-b7c8ee45-fcfd-4d1f-8031-c96470be32a8-c000.snappy.parquet&quot;,&quot;partitionValues&quot;:{},&quot;size&quot;:1384,&quot;modificationTime&quot;:1791117208756,&quot;dataChange&quot;:true,&quot;stats&quot;:&quot;{\&quot;numRecords\&quot;:3,\&quot;minValues\&quot;:{\&quot;age\&quot;:25,\&quot;id\&quot;:1,\&quot;city\&quot;:\&quot;Danang\&quot;,\&quot;name\&quot;:\&quot;alice\&quot;},\&quot;maxValues\&quot;:{\&quot;name\&quot;:\&quot;charlie\&quot;,\&quot;age\&quot;:35,\&quot;city\&quot;:\&quot;Hanoi\&quot;,\&quot;id\&quot;:3},\&quot;nullCount\&quot;:{\&quot;id\&quot;:0,\&quot;name\&quot;:0,\&quot;city\&quot;:0,\&quot;age\&quot;:0}}&quot;,&quot;tags&quot;:null,&quot;baseRowId&quot;:null,&quot;defaultRowCommitVersion&quot;:null,&quot;clusteringProvider&quot;:null}}
+  [PASS] _delta_log/ has JSON commits
+  [PASS] schema enforcement blocked bad write
+  [PASS] tier column added via schema_mode=merge
+  [PASS] duckdb sees 2 tier groups
+
+NB1 complete.
+</pre>

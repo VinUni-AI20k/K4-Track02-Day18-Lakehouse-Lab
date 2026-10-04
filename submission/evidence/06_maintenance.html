@@ -1,0 +1,92 @@
+<!doctype html><meta charset='utf-8'><style>
+            body{margin:48px;background:#f4f7fa;color:#14293b;font-family:Arial}
+            h1{font-size:32px} p{font-size:20px}
+            pre{background:white;border:1px solid #ccd8e0;border-radius:10px;padding:24px;
+            font:17px/1.4 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+            </style><h1>06_maintenance</h1>
+            <p>Đỗ Quốc An · 2A202602892 · Lightweight Python 3.11 · Executed Jupyter output</p>
+            <p>Run: 2026-10-04T19:34:23.499092+07:00 | Source: submission/notebooks/06_maintenance.ipynb</p>
+            <pre>Ingested 100,000 rows in 200 commits (15.4s)
+
+BASELINE (the mess)      files= 200  data=  10.1 MB  log= 385.7 KB (200 json)  rows=100,000
+
+Average file size: 51.5 KB   ← production target is 128–512 MB
+
+
+AFTER compaction         files=  11  data=  16.1 MB  log= 434.4 KB (201 json)  rows=100,000
+
+filesAdded=11  filesRemoved=200
+File reduction: 200 → 11 (18× fewer)
+Note: data bytes went UP slightly — compaction WRITES new files before
+the old ones are reclaimed. You pay twice, briefly. Budget for it.
+
+
+Point query user_id=12345
+  before clustering: must open 11/11 files
+  after  clustering: must open 1/10 files
+  → skip rate: 90% of files never touched
+
+Unclustered data has overlapping min/max ranges, so stats prove nothing
+and the engine must read everything. Clustering is what makes stats USEFUL.
+
+
+VACUUM would reclaim 211 tombstoned files (0 B)
+AFTER vacuum             files=  10  data=   6.2 MB  log= 445.1 KB (204 json)  rows=100,000
+
+Reclaimed: 16.1 MB
+Time travel to v0 is now GONE — that is the trade you just made.
+
+
+Orphans found: 3  (21.2 KB)
+  part-99990-crashed-writer-c000.snappy.parquet
+  part-99991-crashed-writer-c000.snappy.parquet
+  part-99992-crashed-writer-c000.snappy.parquet
+
+After removal — on disk: 12, in log: 10
+
+⚠️ The age guard is not optional. Without it you will delete files that a
+   concurrent writer has written but not yet committed, and corrupt the table.
+
+
+JSON log entries a cold reader would replay: 204
+Checkpoint written: 00000000000000000099.checkpoint.parquet
+_last_checkpoint present: True
+
+A reader now loads 1 checkpoint + the few JSONs after it, not all 200.
+For CDC/streaming tables this is the difference between a 200 ms and a
+20 s cold start — and it is why the slide calls it the 5th job.
+
+
+snapshots: 20 → 3  (17 expired)
+avro files on disk: 40 → 40  (deleted: 0)
+metadata bytes: 344.5 KB → 352.6 KB
+
+Expiry alone reclaimed NOTHING. Now find what it stranded:
+
+
+Stranded manifest lists: 17  (37.2 KB)
+  snap-122045286867194294-0-f52220dc-e19f-446d-8d76-e4a3f5753868.avro
+  snap-1758512590974888122-0-2b757610-8b6a-4a3d-b8c8-0d4a565f766a.avro
+  snap-2356506160121112126-0-80e8e29d-4628-4ef8-a3a0-914f943d9a9c.avro
+  ... and 14 more
+after sweep    snapshots=  3  avro= 23  json= 22  metadata=315.5 KB
+
+Reclaimed by chaining expiry → orphan removal: 37.2 KB
+Rows still intact: 2,000
+
+→ Job 3 and Job 4 are a PAIR. Running expiry without a sweep is why
+  teams report &#x27;we expire snapshots but the S3 bill never drops&#x27;.
+
+
+  [PASS] compaction ≥ 10x fewer files
+  [PASS] clustering skips ≥ 50% files
+  [PASS] vacuum reclaimed bytes
+  [PASS] 3 delta orphans removed
+  [PASS] no delta orphans remain
+  [PASS] checkpoint written
+  [PASS] iceberg expired to 3 snaps
+  [PASS] iceberg stranded files swept
+  [PASS] iceberg data intact
+
+NB6 complete.
+</pre>

@@ -1,0 +1,59 @@
+Bronze rows: 200,000
+shape: (2, 3)
+┌─────────────────────────────────┬─────────────────────────┬─────────────────────────────────┐
+│ request_id                      ┆ ts                      ┆ raw_json                        │
+│ ---                             ┆ ---                     ┆ ---                             │
+│ str                             ┆ datetime[μs, UTC]       ┆ str                             │
+╞═════════════════════════════════╪═════════════════════════╪═════════════════════════════════╡
+│ 5f74970d-b087-4368-8203-3cd9fa… ┆ 2026-04-01 00:00:00 UTC ┆ {"model": "claude-sonnet-4-6",… │
+│ 4ec784d6-6c8c-4998-b992-ebc019… ┆ 2026-04-01 00:00:03 UTC ┆ {"model": "claude-haiku-4-5", … │
+└─────────────────────────────────┴─────────────────────────┴─────────────────────────────────┘
+
+Silver rows: 190,052  (Bronze 200,000 → dedup dropped 9,948)
+
+
+shape: (21, 8)
+┌────────────┬───────────────────┬────────────────┬────────────────┬─────────────────────┬─────────────────────────┬────────────┬────────────┐
+│ date       ┆ model             ┆ p50_latency_ms ┆ p95_latency_ms ┆ total_prompt_tokens ┆ total_completion_tokens ┆ error_rate ┆ cost_usd   │
+│ ---        ┆ ---               ┆ ---            ┆ ---            ┆ ---                 ┆ ---                     ┆ ---        ┆ ---        │
+│ date       ┆ str               ┆ f64            ┆ f64            ┆ decimal[38,0]       ┆ decimal[38,0]           ┆ f64        ┆ f64        │
+╞════════════╪═══════════════════╪════════════════╪════════════════╪═════════════════════╪═════════════════════════╪════════════╪════════════╡
+│ 2026-04-01 ┆ claude-haiku-4-5  ┆ 563.0          ┆ 1131.0         ┆ 16722403            ┆ 8258111                 ┆ 0.048825   ┆ 46.410366  │
+│ 2026-04-01 ┆ claude-opus-4-7   ┆ 3008.0         ┆ 6039.4         ┆ 5436642             ┆ 2709702                 ┆ 0.05013    ┆ 284.77728  │
+│ 2026-04-01 ┆ claude-sonnet-4-6 ┆ 1381.0         ┆ 2751.65        ┆ 32948206            ┆ 16442926                ┆ 0.050467   ┆ 345.488508 │
+│ 2026-04-02 ┆ claude-haiku-4-5  ┆ 578.0          ┆ 1142.05        ┆ 16464541            ┆ 8270686                 ┆ 0.049259   ┆ 46.254377  │
+│ 2026-04-02 ┆ claude-opus-4-7   ┆ 3013.0         ┆ 5950.8         ┆ 5653961             ┆ 2802835                 ┆ 0.052444   ┆ 295.02204  │
+│ 2026-04-02 ┆ claude-sonnet-4-6 ┆ 1384.0         ┆ 2739.0         ┆ 33061519            ┆ 16401774                ┆ 0.049315   ┆ 345.211167 │
+│ 2026-04-03 ┆ claude-haiku-4-5  ┆ 563.0          ┆ 1130.45        ┆ 16298601            ┆ 8067775                 ┆ 0.048048   ┆ 45.309981  │
+│ 2026-04-03 ┆ claude-opus-4-7   ┆ 3058.0         ┆ 5959.9         ┆ 5529446             ┆ 2801556                 ┆ 0.045088   ┆ 293.05839  │
+│ 2026-04-03 ┆ claude-sonnet-4-6 ┆ 1391.0         ┆ 2744.0         ┆ 33229930            ┆ 16596714                ┆ 0.046037   ┆ 348.6405   │
+│ 2026-04-04 ┆ claude-haiku-4-5  ┆ 553.0          ┆ 1124.0         ┆ 15947267            ┆ 7959021                 ┆ 0.049981   ┆ 44.593898  │
+│ 2026-04-04 ┆ claude-opus-4-7   ┆ 2981.0         ┆ 5907.6         ┆ 5509000             ┆ 2761894                 ┆ 0.054015   ┆ 289.77705  │
+│ 2026-04-04 ┆ claude-sonnet-4-6 ┆ 1372.0         ┆ 2742.0         ┆ 33035490            ┆ 16465966                ┆ 0.049894   ┆ 346.09596  │
+│ 2026-04-05 ┆ claude-haiku-4-5  ┆ 567.0          ┆ 1134.0         ┆ 16488627            ┆ 8285946                 ┆ 0.050729   ┆ 46.334686  │
+│ 2026-04-05 ┆ claude-opus-4-7   ┆ 3098.0         ┆ 5964.5         ┆ 5338986             ┆ 2719749                 ┆ 0.046962   ┆ 284.065965 │
+│ 2026-04-05 ┆ claude-sonnet-4-6 ┆ 1370.0         ┆ 2735.0         ┆ 33110042            ┆ 16339748                ┆ 0.052302   ┆ 344.426346 │
+│ 2026-04-06 ┆ claude-haiku-4-5  ┆ 562.0          ┆ 1135.45        ┆ 16374102            ┆ 8149922                 ┆ 0.045499   ┆ 45.69897   │
+│ 2026-04-06 ┆ claude-opus-4-7   ┆ 3102.0         ┆ 6021.0         ┆ 5325688             ┆ 2734304                 ┆ 0.055492   ┆ 284.95812  │
+│ 2026-04-06 ┆ claude-sonnet-4-6 ┆ 1379.0         ┆ 2746.0         ┆ 32836966            ┆ 16488935                ┆ 0.050501   ┆ 345.844923 │
+│ 2026-04-07 ┆ claude-haiku-4-5  ┆ 566.0          ┆ 1124.3         ┆ 16606269            ┆ 8345341                 ┆ 0.05003    ┆ 46.666379  │
+│ 2026-04-07 ┆ claude-opus-4-7   ┆ 2993.0         ┆ 5987.6         ┆ 5479452             ┆ 2673162                 ┆ 0.061538   ┆ 282.67893  │
+│ 2026-04-07 ┆ claude-sonnet-4-6 ┆ 1395.0         ┆ 2754.85        ┆ 32420545            ┆ 16413956                ┆ 0.048873   ┆ 343.470975 │
+└────────────┴───────────────────┴────────────────┴────────────────┴─────────────────────┴─────────────────────────┴────────────┴────────────┘
+
+──── Gold deliverable metrics ────
+  Distinct dates:     7   (target ≥ 7)
+  Distinct models:    3
+  Total Gold rows:   21   (= dates × models)
+
+  [PASS] all three Delta tables present
+  [PASS] Silver dedup reduced rows
+  [PASS] Gold covers >= 7 days x 3 models
+  [PASS] each date has all 3 models
+  [PASS] p50 <= p95
+  [PASS] cost_usd positive
+  [PASS] error_rate in [0, 1]
+
+NB4 complete.
+
+MEASURED_JSON={"bronze_rows": 200000, "silver_rows": 190052, "dates": 7, "models": 3, "gold_rows": 21, "gold": [{"date": "2026-04-01", "model": "claude-haiku-4-5", "p50_latency_ms": 563.0, "p95_latency_ms": 1131.0, "total_prompt_tokens": "16722403", "total_completion_tokens": "8258111", "error_rate": 0.04882503348350176, "cost_usd": 46.4103664}, {"date": "2026-04-01", "model": "claude-opus-4-7", "p50_latency_ms": 3008.0, "p95_latency_ms": 6039.400000000001, "total_prompt_tokens": "5436642", "total_completion_tokens": "2709702", "error_rate": 0.05012996658002228, "cost_usd": 284.77728}, {"date": "2026-04-01", "model": "claude-sonnet-4-6", "p50_latency_ms": 1381.0, "p95_latency_ms": 2751.6499999999996, "total_prompt_tokens": "32948206", "total_completion_tokens": "16442926", "error_rate": 0.05046660117878193, "cost_usd": 345.488508}, {"date": "2026-04-02", "model": "claude-haiku-4-5", "p50_latency_ms": 578.0, "p95_latency_ms": 1142.0499999999993, "total_prompt_tokens": "16464541", "total_completion_tokens": "8270686", "error_rate": 0.04925925925925926, "cost_usd": 46.2543768}, {"date": "2026-04-02", "model": "claude-opus-4-7", "p50_latency_ms": 3013.0, "p95_latency_ms": 5950.800000000001, "total_prompt_tokens": "5653961", "total_completion_tokens": "2802835", "error_rate": 0.05244381020335355, "cost_usd": 295.02204}, {"date": "2026-04-02", "model": "claude-sonnet-4-6", "p50_latency_ms": 1384.0, "p95_latency_ms": 2739.0, "total_prompt_tokens": "33061519", "total_completion_tokens": "16401774", "error_rate": 0.04931523674998465, "cost_usd": 345.211167}, {"date": "2026-04-03", "model": "claude-haiku-4-5", "p50_latency_ms": 563.0, "p95_latency_ms": 1130.4499999999998, "total_prompt_tokens": "16298601", "total_completion_tokens": "8067775", "error_rate": 0.04804804804804805, "cost_usd": 45.3099808}, {"date": "2026-04-03", "model": "claude-opus-4-7", "p50_latency_ms": 3058.0, "p95_latency_ms": 5959.900000000001, "total_prompt_tokens": "5529446", "total_completion_tokens": "2801556", "error_rate": 0.045087976539589444, "cost_usd": 293.05839000000003}, {"date": "2026-04-03", "model": "claude-sonnet-4-6", "p50_latency_ms": 1391.0, "p95_latency_ms": 2744.0, "total_prompt_tokens": "33229930", "total_completion_tokens": "16596714", "error_rate": 0.04603658536585366, "cost_usd": 348.6405}, {"date": "2026-04-04", "model": "claude-haiku-4-5", "p50_latency_ms": 553.0, "p95_latency_ms": 1124.0, "total_prompt_tokens": "15947267", "total_completion_tokens": "7959021", "error_rate": 0.049981162878312196, "cost_usd": 44.5938976}, {"date": "2026-04-04", "model": "claude-opus-4-7", "p50_latency_ms": 2981.0, "p95_latency_ms": 5907.5999999999985, "total_prompt_tokens": "5509000", "total_completion_tokens": "2761894", "error_rate": 0.05401512423478574, "cost_usd": 289.77705000000003}, {"date": "2026-04-04", "model": "claude-sonnet-4-6", "p50_latency_ms": 1372.0, "p95_latency_ms": 2742.0, "total_prompt_tokens": "33035490", "total_completion_tokens": "16465966", "error_rate": 0.04989351992698509, "cost_usd": 346.09596}, {"date": "2026-04-05", "model": "claude-haiku-4-5", "p50_latency_ms": 567.0, "p95_latency_ms": 1134.0, "total_prompt_tokens": "16488627", "total_completion_tokens": "8285946", "error_rate": 0.05072907731895601, "cost_usd": 46.3346856}, {"date": "2026-04-05", "model": "claude-opus-4-7", "p50_latency_ms": 3098.0, "p95_latency_ms": 5964.5, "total_prompt_tokens": "5338986", "total_completion_tokens": "2719749", "error_rate": 0.04696235557212076, "cost_usd": 284.065965}, {"date": "2026-04-05", "model": "claude-sonnet-4-6", "p50_latency_ms": 1370.0, "p95_latency_ms": 2735.0, "total_prompt_tokens": "33110042", "total_completion_tokens": "16339748", "error_rate": 0.05230202578268876, "cost_usd": 344.42634599999997}, {"date": "2026-04-06", "model": "claude-haiku-4-5", "p50_latency_ms": 562.0, "p95_latency_ms": 1135.4499999999998, "total_prompt_tokens": "16374102", "total_completion_tokens": "8149922", "error_rate": 0.045499262174126906, "cost_usd": 45.6989696}, {"date": "2026-04-06", "model": "claude-opus-4-7", "p50_latency_ms": 3102.0, "p95_latency_ms": 6021.0, "total_prompt_tokens": "5325688", "total_completion_tokens": "2734304", "error_rate": 0.05549220828582288, "cost_usd": 284.95812}, {"date": "2026-04-06", "model": "claude-sonnet-4-6", "p50_latency_ms": 1379.0, "p95_latency_ms": 2746.0, "total_prompt_tokens": "32836966", "total_completion_tokens": "16488935", "error_rate": 0.05050073277967758, "cost_usd": 345.844923}, {"date": "2026-04-07", "model": "claude-haiku-4-5", "p50_latency_ms": 566.0, "p95_latency_ms": 1124.2999999999993, "total_prompt_tokens": "16606269", "total_completion_tokens": "8345341", "error_rate": 0.050030138637733576, "cost_usd": 46.666379199999994}, {"date": "2026-04-07", "model": "claude-opus-4-7", "p50_latency_ms": 2993.0, "p95_latency_ms": 5987.599999999999, "total_prompt_tokens": "5479452", "total_completion_tokens": "2673162", "error_rate": 0.06153846153846154, "cost_usd": 282.67893000000004}, {"date": "2026-04-07", "model": "claude-sonnet-4-6", "p50_latency_ms": 1395.0, "p95_latency_ms": 2754.8499999999985, "total_prompt_tokens": "32420545", "total_completion_tokens": "16413956", "error_rate": 0.04887264618434093, "cost_usd": 343.470975}]}
