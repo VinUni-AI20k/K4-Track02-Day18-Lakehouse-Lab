@@ -409,7 +409,23 @@ print(f"  per-object component: ${obj_cost:,.0f}/mo")
 print(f"  TOTAL:                ${gb_cost + obj_cost:,.0f}/mo")
 print(f"\nThe object component is {obj_cost / (gb_cost + obj_cost) * 100:.0f}% of the bill —")
 print("it is driven by FILE COUNT, not data volume. Fixing your writer's")
-print("trigger interval is cheaper than paying someone to clean up after it.")
+# %% [markdown]
+# ## 📝 Báo cáo phân tích và giải thích (NB6)
+#
+# ### 1. Vì sao Orphan File chưa từng commit có thể không được Delta Vacuum dọn?
+# - **Cơ chế thu hồi của `DeltaTable.vacuum()`:** Trong delta-rs (cũng như cơ chế vacuum dựa trên log cơ bản), lệnh vacuum dựa vào thông tin trong **Transaction Log** (`_delta_log/`). Khi một file cũ bị thay thế bởi compaction, update hoặc overwrite, một hành động `remove` (tombstone) được ghi vào log commit. Lệnh vacuum chỉ duyệt qua danh sách các action `remove` này trong các commit có tuổi thọ vượt quá thời gian retention để tiến hành xóa file vật lý.
+# - **Bản chất của Uncommitted Orphan:** Khi một writer (job ETL/Spark) ghi dữ liệu ra đĩa nhưng bị crash/kill trước khi hoàn tất commit giao dịch, file Parquet đó đã tồn tại trên đĩa nhưng **chưa từng được ghi vào log** (không có `add` và dĩ nhiên không bao giờ có `remove`). Transaction log hoàn toàn không biết file đó tồn tại.
+# - Do đó, lệnh vacuum thuần túy theo log sẽ bỏ sót các orphan này. Để dọn dẹp triệt để, hệ thống phải thực hiện quét danh mục thư mục vật lý (directory listing pass) và lấy hiệu tập hợp giữa các file trên đĩa với các file đang được tham chiếu bởi live metadata (kèm theo một `min_age_hours` age guard để tránh xóa nhầm file của concurrent in-flight writers).
+#
+# ### 2. Vì sao giảm Snapshot trong đường PyIceberg này chưa đồng nghĩa file vật lý đã bị xóa?
+# - **Tách biệt trách nhiệm trong kiến trúc Iceberg:** Lệnh `expire_snapshots()` trong PyIceberg là một thao tác **chỉ cập nhật metadata (metadata-only operation)**. Nó chỉ cập nhật danh sách snapshot hoạt động trong file `metadata.json`, chuyển các snapshot cũ thành trạng thái unreferenced.
+# - Quá trình xóa file vật lý (manifest list `.avro` và data files `.parquet`) không tự động kích hoạt trong client call này mà đòi hỏi một tiến trình dọn dẹp rác riêng biệt (Orphan Cleanup / File Sweep - Job 4).
+# - Nếu kỹ sư dữ liệu chỉ chạy `expire_snapshots()` mà không xâu chuỗi (chain) với job dọn file rác, số lượng file trên Cloud Storage (S3/GCS) và dung lượng thực tế vẫn giữ nguyên 100%, dẫn đến hiện tượng hóa đơn lưu trữ không hề giảm.
+#
+# ### 3. Retention ảnh hưởng đến các Reader cũ như thế nào?
+# - **Bảo vệ Snapshot Isolation:** Retention duration (thời gian lưu giữ dữ liệu lịch sử) xác định khoảng thời gian an toàn mà các transaction cũ được bảo toàn trên storage.
+# - Nếu một tiến trình đọc dài hạn (ví dụ một truy vấn phân tích lớn, Spark batch job, hoặc huấn luyện ML kéo dài vài giờ) đang đọc dữ liệu tại snapshot v0, và một job maintenance chạy `vacuum` với retention = 0, hệ thống sẽ lập tức xóa các file vật lý của v0. Khi đó, reader đang chạy sẽ gặp lỗi nghiêm trọng `FileNotFoundException` (gãy pipeline).
+# - Vì vậy, trong production, retention bắt buộc phải được thiết lập lớn hơn thời gian chạy của query dài nhất trong hệ thống (khuyến nghị tối thiểu 7 ngày / 168 giờ). Retention 0 chỉ được sử dụng trong môi trường lab thử nghiệm để quan sát hiệu ứng thu hồi bytes ngay lập tức.
 
 # %% [markdown]
 # ## ✅ NB6 pass criteria

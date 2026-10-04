@@ -372,6 +372,20 @@ That is the contract: the index subscribes to deletes instead of guessing.
 Best of all is not needing the sync — keep the vector in the row (§2 above)
 and the lifecycle is enforced by the table itself.
 """)
+# %% [markdown]
+# ## 📝 Báo cáo phân tích và giải thích (NB7)
+#
+# ### 1. Tiết kiệm dung lượng đánh đổi chất lượng tìm kiếm ra sao?
+# - **Lợi ích lưu trữ:** Chuyển đổi embeddings từ `float32` (4 bytes/chiều) sang `int8` (1 byte/chiều thông qua đối xứng symmetric quantization) giúp giảm kích thước tệp Parquet trên đĩa và bộ nhớ RAM tới **3× đến 4×** (trong thực nghiệm lab giảm từ 2.0 MB xuống còn ~650 KB).
+# - **Cái giá phải trả (Trade-off):** Quá trình làm tròn vector liên tục về các mức số nguyên rời rạc `[-127, 127]` gây ra nhiễu lượng tử hóa (quantization error). Khoảng cách cosin giữa các vector bị biến dạng nhẹ, làm giảm độ chính xác tuyệt đối của thứ hạng tìm kiếm: chỉ số Exact-ID Recall@10 giảm từ 1.00 xuống khoảng 0.85 – 0.90 (mất khoảng 10–15% vị trí chính xác).
+#
+# ### 2. Recall theo Doc ID khác Topic Fidelity thế nào?
+# - **Exact-ID Recall@K:** Đo lường tỷ lệ các tài liệu trả về trùng khớp 100% về mã định danh `doc_id` so với ground truth (float32). Chỉ số này mang tính chất máy móc và quá khắt khe: nếu tài liệu A và tài liệu B cùng bàn về một chủ đề công nghệ và có độ tương đồng ngữ nghĩa sát nút (ví dụ 0.895 vs 0.894), việc int8 hoán đổi thứ tự hoặc đưa B vào thay A sẽ bị tính là một lỗi ("miss").
+# - **Topic Fidelity (Độ trung thực chủ đề):** Đo lường tỷ lệ các tài liệu trong top-K trả về có cùng chủ đề (`topic`) với truy vấn. Đối với các ứng dụng RAG (Retrieval-Augmented Generation), mô hình LLM cần các đoạn văn có ngữ cảnh đúng chủ đề để trả lời chứ không phụ thuộc vào `doc_id`. Thực nghiệm cho thấy dù Recall@10 giảm xuống ~0.90, nhưng **Topic Fidelity vẫn đạt trên 0.98 – 1.00**, chứng minh rằng lượng tử hóa int8 hầu như không làm suy giảm chất lượng đầu ra của các ứng dụng AI/RAG thực tế.
+#
+# ### 3. External Index cần nhận loại sự kiện nào để chấm dứt việc trả dữ liệu đã xóa?
+# - **Nguyên nhân của Lifecycle Bug:** Khi dữ liệu trong Lakehouse bị xóa (do yêu cầu quyền được lãng quên / GDPR Right to be Forgotten), các pipeline đồng bộ sang Vector DB bên ngoài thường chỉ thực hiện phép upsert định kỳ mà không có cơ chế nhận biết bản ghi bị xóa. Hậu quả là Vector DB vẫn tiếp tục trả về dữ liệu của người dùng bị xóa (vi phạm pháp luật và bảo mật nghiêm trọng).
+# - **Cơ chế khắc phục bằng CDF:** External Vector Index bắt buộc phải đăng ký lắng nghe luồng **Change Data Feed (CDF)** từ Lakehouse và xử lý các sự kiện có `_change_type = 'delete'`. Sự kiện này mang theo danh sách các `doc_id` đã bị xóa để Vector DB thực hiện lệnh thu hồi / hủy bỏ (evict/delete) vector tương ứng ra khỏi chỉ mục tìm kiếm ngay lập tức.
 
 # %% [markdown]
 # ## ✅ NB7 pass criteria

@@ -275,7 +275,21 @@ tbl = cat.load_table(f"{ns}.llm_events")
 specs_in_use = set(tbl.inspect.files().column("spec_id").to_pylist())
 print(f"Partition specs in use across data files: {sorted(specs_in_use)}")
 print(f"Total rows readable across BOTH specs: {tbl.scan().to_arrow().num_rows:,}")
-print("\nTwo layouts, one table, zero rewrites. This is the feature.")
+# %% [markdown]
+# ## 📝 Báo cáo phân tích và giải thích (NB5)
+#
+# ### 1. Hidden Partitioning hỗ trợ lọc trên cột nguồn như thế nào?
+# - **Hạn chế của Hive truyền thống:** Trong mô hình Hive, partition là một cột dẫn xuất nhân tạo tách biệt (ví dụ thư mục `ts_day=2026-08-05`). Người dùng bắt buộc phải biết rõ cấu trúc này và viết tường minh mệnh đề `WHERE ts_day = '...'`. Nếu người dùng vô tình chỉ lọc theo cột thời gian gốc `WHERE ts >= '2026-08-05T00:00:00' AND ts < '2026-08-06T00:00:00'`, Hive không thể tự liên kết và buộc phải thực hiện quét toàn bộ bảng (full scan). Ở quy mô lớn, việc này lãng phí hàng nghìn USD tiền quét dữ liệu mỗi ngày.
+# - **Cơ chế Hidden Partitioning trong Iceberg:** Iceberg lưu trữ trực tiếp hàm biến đổi phân vùng (`DayTransform()` trên cột `ts`) trong siêu dữ liệu `partition-spec` của bảng. Khi người dùng lọc trên cột nguồn gốc `ts`, query planner của Iceberg tự động suy biến predicate thành điều kiện partition tương ứng (`ts_day = 20670`) và loại trừ toàn bộ các manifest/data file nằm ngoài khoảng thời gian đó ở tầng client metadata planning. Người dùng không cần quan tâm đến cách phân vùng vật lý bên dưới và không thể mắc lỗi quên partition predicate.
+#
+# ### 2. Field ID giúp gì khi đổi tên cột (Rename Column)?
+# - Trong định dạng Parquet gốc, dữ liệu được ánh xạ theo vị trí (ordinal position), còn Hive ánh xạ theo tên chuỗi (string name). Khi đổi tên cột (ví dụ `latency_ms` thành `latency_millis`), Hive/Parquet coi đây là cột mới và đọc ra toàn bộ `NULL`, hoặc bắt buộc phải chạy job ETL nặng nề để rewrite lại toàn bộ dữ liệu trên đĩa.
+# - Iceberg gán cho mỗi trường dữ liệu một **Field ID nguyên bất biến** (ở đây `field_id = 4`). Tên cột chỉ là nhãn hiển thị bên ngoài. Khi rename, Iceberg chỉ cập nhật ánh xạ tên trong `metadata.json` (field 4 có tên mới là `latency_millis`). Thao tác này là **metadata-only (zero data copy)**, diễn ra tức thì và bảo đảm 100% dữ liệu cũ vẫn được đọc chính xác mà không cần sửa đổi bất kỳ file Parquet nào.
+#
+# ### 3. Vì sao Partition Evolution không yêu cầu mọi file cũ phải đổi layout ngay lập tức?
+# - Iceberg thiết kế kiến trúc **Partition Evolution** với `spec_id` đánh phiên bản cho từng cấu hình phân vùng (`spec_id = 0` cho `day(ts)`, `spec_id = 1` cho `day(ts) + model_id`).
+# - Mỗi data file được ghi xuống đều mang theo `spec_id` của cấu hình phân vùng tại thời điểm ghi file đó. Khi thay đổi spec, Iceberg chỉ lưu thêm spec mới vào metadata mà không bắt buộc migrate hay rewrite các file cũ.
+# - Dữ liệu cũ và dữ liệu mới thuộc hai layout khác nhau cùng tồn tại hòa bình trong một bảng duy nhất. Khi query, engine tự động áp dụng logic pruning tương ứng cho từng nhóm file theo đúng `spec_id` của nó, loại bỏ hoàn toàn các đợt downtime và chi phí tính toán cho việc tái cấu trúc bảng.
 
 # %% [markdown]
 # ## ✅ NB5 pass criteria
