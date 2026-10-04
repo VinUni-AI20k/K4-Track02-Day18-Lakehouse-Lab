@@ -1,6 +1,6 @@
 # Thông tin bài nộp
 
-- Họ tên: Lê Phan Việt Cương
+- Họ tên: Lê Phan Việt Cường
 - MSSV: 2A202602641
 - Mã bài: K4-Track02-Day18 (Lakehouse Lab)
 - Đường chạy: Lightweight Python (deltalake, PyIceberg, DuckDB, Polars); không dùng Spark/Docker

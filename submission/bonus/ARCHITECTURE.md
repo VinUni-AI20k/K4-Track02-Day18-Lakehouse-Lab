@@ -1,6 +1,6 @@
 # Bonus — Lakehouse click-stream 10 TB/ngày dưới trần ngân sách $8K/tháng (Topic E)
 
-Tác giả: Lê Phan Việt Cương — MSSV 2A202602641 · Bài cá nhân · K4-Track02-Day18
+Tác giả: Lê Phan Việt Cường — MSSV 2A202602641 · Bài cá nhân · K4-Track02-Day18
 
 > Mọi con số dưới đây tái lập được bằng `poc/cost_model.py` (output lưu ở `poc/cost_model_output.txt`). Đơn giá S3/EC2 là **giá niêm yết giả định** (us-east-1); tôi chưa đối chiếu với trang giá hiện hành, nên phải kiểm tra lại trước khi dùng thật. Tỷ lệ nén 5× cũng là giả định cần kiểm chứng ở MVP.
 
