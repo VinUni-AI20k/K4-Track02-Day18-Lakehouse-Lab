@@ -14,6 +14,7 @@
 | Giải thích kết quả | Soạn nháp cell "📝 Giải thích kết quả" (tiếng Việt) cho từng notebook, dựa trên output thật của lần chạy nộp bài |
 | Screenshots | Render các cell từ `.ipynb` đã chạy sang HTML (nbconvert) và chụp bằng Chrome headless |
 | Tài liệu nộp | Soạn nháp `INFO.md`, `REFLECTION.md`, file này; chủ đề reflection và topic bonus do mình chọn |
+| Bonus (topic D) | Soạn nháp `bonus/ARCHITECTURE.md` (quyết định, failure mode, phép tính chi phí, MVP) và viết PoC `bonus/poc/`. Số liệu PoC là output thật trên máy mình; đơn giá cloud, throughput GPU và quy mô là **giả định** ghi rõ trong tài liệu |
 
 ## AI không làm những việc sau
 

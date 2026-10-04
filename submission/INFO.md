@@ -57,4 +57,10 @@ Chỉ **thêm** cell vào `notebooks/0*.py` (`git diff` chỉ có dòng thêm, 0
 - **NB6:** "0 B" là lỗi hiển thị (đường dẫn tương đối); "5 files cannot see" gồm 3 orphan + 2 checkpoint tự động;
   `vacuum(full=True)` của deltalake 1.6.6 có tìm thấy orphan, chế độ mặc định thì không.
 
+## Bonus
+
+Topic **D — Multimodal RAG trên 10 triệu văn bản pháp lý**: [bonus/ARCHITECTURE.md](bonus/ARCHITECTURE.md)
+(6 trang A4 khi render), kèm PoC [bonus/poc/reproducible_retrieval_poc.ipynb](bonus/poc/reproducible_retrieval_poc.ipynb)
+(chạy từ gốc repo: `python submission/bonus/poc/reproducible_retrieval_poc.py`; kết quả 50/50 citation replay đúng từ tag).
+
 Khai báo sử dụng AI: [AI_USAGE.md](AI_USAGE.md).
