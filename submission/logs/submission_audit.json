@@ -1,0 +1,115 @@
+{
+  "notebooks": [
+    {
+      "name": "01_delta_basics.ipynb",
+      "status": "complete",
+      "error_outputs": []
+    },
+    {
+      "name": "02_optimize_zorder.ipynb",
+      "status": "complete",
+      "error_outputs": []
+    },
+    {
+      "name": "03_time_travel.ipynb",
+      "status": "complete",
+      "error_outputs": []
+    },
+    {
+      "name": "04_medallion.ipynb",
+      "status": "complete",
+      "error_outputs": []
+    },
+    {
+      "name": "05_iceberg_catalog.ipynb",
+      "status": "complete",
+      "error_outputs": []
+    },
+    {
+      "name": "06_maintenance.ipynb",
+      "status": "pending_authorization",
+      "error_outputs": []
+    },
+    {
+      "name": "07_vectors_multimodal.ipynb",
+      "status": "pending_authorization",
+      "error_outputs": []
+    },
+    {
+      "name": "08_agents_provenance.ipynb",
+      "status": "pending_authorization",
+      "error_outputs": []
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "nb01_delta_basics.png",
+      "width": 1400,
+      "height": 1650,
+      "bytes": 104810
+    },
+    {
+      "name": "nb02_optimize_zorder.png",
+      "width": 1400,
+      "height": 1600,
+      "bytes": 53187
+    },
+    {
+      "name": "nb03_time_travel.png",
+      "width": 1400,
+      "height": 1600,
+      "bytes": 69704
+    },
+    {
+      "name": "nb04_medallion.png",
+      "width": 1400,
+      "height": 1600,
+      "bytes": 113532
+    },
+    {
+      "name": "nb05_iceberg_catalog.png",
+      "width": 1400,
+      "height": 1600,
+      "bytes": 104049
+    },
+    {
+      "name": "nb06_maintenance.png",
+      "width": 1400,
+      "height": 1600,
+      "bytes": 67148
+    },
+    {
+      "name": "nb06_vacuum_candidates.png",
+      "width": 1400,
+      "height": 1100,
+      "bytes": 39362
+    },
+    {
+      "name": "nb07_vectors_multimodal.png",
+      "width": 1400,
+      "height": 1600,
+      "bytes": 108583
+    },
+    {
+      "name": "nb08_agents_provenance.png",
+      "width": 1400,
+      "height": 1670,
+      "bytes": 120479
+    },
+    {
+      "name": "nb08_version_pin.png",
+      "width": 1400,
+      "height": 1100,
+      "bytes": 39054
+    }
+  ],
+  "reflection_word_count": 183,
+  "credential_pattern_findings": [],
+  "scan_limit": "Only selected common credential patterns; not a guarantee of absence.",
+  "ready_to_submit": false,
+  "blockers": [
+    "NB6–NB8 destructive cells await direct authorization under the user's AGENTS policy",
+    "Full smoke 9/9, pytest 24/24 and runner 8/8 have not completed"
+  ],
+  "publication": "Not staged, committed, pushed or submitted as a completed lab."
+}

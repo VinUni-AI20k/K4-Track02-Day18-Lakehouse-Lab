@@ -34,6 +34,7 @@ import glob
 import os
 import time
 from pathlib import Path
+from urllib.parse import unquote
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -179,8 +180,10 @@ print("and the engine must read everything. Clustering is what makes stats USEFU
 # %%
 dt = DeltaTable(TABLE)
 doomed = dt.vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
+# delta-rs may return paths relative to TABLE; resolve before measuring bytes.
+doomed_paths = [Path(f) if Path(f).is_absolute() else Path(TABLE) / f for f in doomed]
 print(f"VACUUM would reclaim {len(doomed)} tombstoned files "
-      f"({human(sum(du(f) for f in doomed))})")
+      f"({human(sum(du(f) for f in doomed_paths))})")
 
 before_vacuum = du(TABLE)
 dt.vacuum(retention_hours=0, dry_run=False, enforce_retention_duration=False)
@@ -241,7 +244,8 @@ does the directory pass. Verify it, or run the diff yourself:
 # %%
 def find_orphans(table_path: str, min_age_hours: int = 24) -> list[str]:
     """Files on disk that no live snapshot references, older than the guard."""
-    referenced = {os.path.realpath(u.replace("file://", ""))
+    # file_uris() URL-encodes spaces (e.g. Duong%20Vinh on Windows).
+    referenced = {os.path.realpath(unquote(u.replace("file://", "")))
                   for u in DeltaTable(table_path).file_uris()}
     cutoff = time.time() - min_age_hours * 3600
     orphans = []

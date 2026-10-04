@@ -1,0 +1,54 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>07_vectors_multimodal</title><style>body{margin:30px;background:#fff;color:#17212b;font:16px Arial}h1{font-size:25px;margin-bottom:8px}.status{font-weight:bold;color:#244d72}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px Consolas,monospace;line-height:1.32;padding:18px;border:1px solid #ccd5df;background:#f8fafc}footer{font-size:13px;color:#536171}</style><h1>07_vectors_multimodal</h1><p class="status">Trạng thái: pending_authorization</p><p>Output thật trích từ notebook đã thực thi trên máy. Trang bằng chứng xuất từ ipynb; không phải giao diện Jupyter.</p><pre>Corpus: 2,000 docs, embedding dim=256
+Columns: [&#x27;doc_id&#x27;, &#x27;title&#x27;, &#x27;topic&#x27;, &#x27;subject_id&#x27;, &#x27;source&#x27;, &#x27;license&#x27;, &#x27;consent_train&#x27;, &#x27;generator&#x27;, &#x27;blob_uri&#x27;, &#x27;emb&#x27;]
+
+inline table :    12.5 MB
+pointer table:     4.7 KB   (+ 12.5 MB of objects alongside)
+
+Total bytes stored is nearly identical — the bytes have to live somewhere.
+The difference is not SIZE. It is what a reader is forced to touch.
+
+Bytes read by `SELECT topic, count(*) GROUP BY topic`:
+  inline layout : 1.2 KB  of 12.5 MB total
+  pointer layout: 1.2 KB  of 2.4 KB total
+
+→ The blob column costs the analytical scan essentially NOTHING.
+  Projection pushdown is real. The scary advice is wrong for this case.
+
+inline parquet: 1 row group(s), 200 rows, 12.5 MB per group
+
+Fetching ONE frame (doc_id=137):
+  inline  → must read the row group: 12.5 MB
+  pointer → one GET of the object:   64.0 KB
+  → amplification: 200× more bytes than needed
+
+At 1,000 random frame fetches/sec to feed a GPU, that amplification IS
+the GPU-starvation problem. Formats like Lance restructure the file so a
+random read costs ~one row, not one row group.
+
+embeddings: 2,000 × 256  (2.0 MB in memory)
+per row: float32 = 1,024 B   int8 = 256 B   (4× smaller)
+at dim=768: float32 = 3,072 B   int8 = 768 B   ← the slide&#x27;s numbers
+
+On disk (Parquet, compressed):
+  float32: 2.6 MB
+  int8   : 451.9 KB   →  5.8× smaller
+
+2,000 vectors → ~    25.2 ms   fine
+     100,000 vectors → ~  1260.9 ms   NOT a serving path
+   1,000,000 vectors → ~ 12609.0 ms   NOT a serving path
+
+Rule from the slide: vector DB = a rebuildable DERIVED INDEX.
+                     lakehouse = the SYSTEM-OF-RECORD.
+
+recall@10 (exact doc IDs), int8 vs float32: 0.904
+topic fidelity of int8 top-10:              1.000
+storage saved: 83%
+
+→ int8 loses ~10% of exact IDs but 100% of results are still
+  on-topic. The &quot;misses&quot; are swaps between near-equivalent neighbours, which
+  is why exact-ID recall UNDERSTATES quantization quality for RAG.
+  Measure both on YOUR corpus before shipping — the trade is corpus-dependent.
+
+External index synced: 2,000 vectors
+
+CHƯA HOÀN TẤT: các bước phá hủy và các cell phụ thuộc chưa thực thi.</pre><footer>Nguồn: submission/notebooks/07_vectors_multimodal.ipynb</footer></html>

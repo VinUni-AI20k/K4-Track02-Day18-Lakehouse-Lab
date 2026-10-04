@@ -1,0 +1,71 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>08_agents_provenance</title><style>body{margin:30px;background:#fff;color:#17212b;font:16px Arial}h1{font-size:25px;margin-bottom:8px}.status{font-weight:bold;color:#244d72}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px Consolas,monospace;line-height:1.32;padding:18px;border:1px solid #ccd5df;background:#f8fafc}footer{font-size:13px;color:#536171}</style><h1>08_agents_provenance</h1><p class="status">Trạng thái: pending_authorization</p><p>Output thật trích từ notebook đã thực thi trên máy. Trang bằng chứng xuất từ ipynb; không phải giao diện Jupyter.</p><pre>Bronze trajectory steps: 1,578
+
+Silver: 1,578 steps, partitioned by agent_version
+  partitions on disk: [&#x27;agent_version=policy-v2&#x27;, &#x27;agent_version=policy-v3&#x27;]
+
+shape: (2, 7)
+┌──────────────┬──────────────┬──────────────┬───────────┬─────────────┬─────────────┬─────────────┐
+│ agent_versio ┆ trajectories ┆ success_rate ┆ avg_steps ┆ avg_cost_us ┆ total_cost_ ┆ avg_seconds │
+│ n            ┆ ---          ┆ ---          ┆ ---       ┆ d           ┆ usd         ┆ ---         │
+│ ---          ┆ i64          ┆ f64          ┆ f64       ┆ ---         ┆ ---         ┆ f64         │
+│ str          ┆              ┆              ┆           ┆ f64         ┆ f64         ┆             │
+╞══════════════╪══════════════╪══════════════╪═══════════╪═════════════╪═════════════╪═════════════╡
+│ policy-v2    ┆ 150          ┆ 0.76         ┆ 5.26      ┆ 0.06915     ┆ 10.37       ┆ 16.2        │
+│ policy-v3    ┆ 150          ┆ 0.753        ┆ 5.26      ┆ 0.06928     ┆ 10.39       ┆ 15.7        │
+└──────────────┴──────────────┴──────────────┴───────────┴─────────────┴─────────────┴─────────────┘
+
+Catalog now serves: [(&#x27;lake&#x27;, &#x27;trajectories&#x27;)]
+
+turn 0: cached=False  tables=[&#x27;lake.trajectories&#x27;]
+  turn 1: cached=True  tables=[&#x27;lake.trajectories&#x27;]
+  turn 2: cached=True  tables=[&#x27;lake.trajectories&#x27;]
+  turn 3: cached=True  tables=[&#x27;lake.trajectories&#x27;]
+  turn 4: cached=True  tables=[&#x27;lake.trajectories&#x27;]
+
+Actual catalog round-trips for 5 agent turns: 1
+tools/list advertises: {&#x27;ttlMs&#x27;: 60000, &#x27;cacheScope&#x27;: &#x27;session&#x27;}
+
+resultType: input_required
+prompt:     Confirm delete_rows({&#x27;table&#x27;: &#x27;lake.trajectories&#x27;, &#x27;where&#x27;: &#x27;reward = 0&#x27;}) — this cannot be undone by the agent.
+
+after human approval → resultType: ok
+
+Lab limitation: confirmed is supplied by the caller; this is not an authorization boundary.
+
+submit_scan → {&#x27;taskId&#x27;: &#x27;task_0001&#x27;, &#x27;status&#x27;: &#x27;working&#x27;, &#x27;pollAfterMs&#x27;: 50}
+  tasks/get #0: working
+  tasks/get #1: working
+  tasks/get #2: completed
+  result: {&#x27;rows&#x27;: 300}
+
+The task handle and polling are simulated locally; no background Spark job is submitted.
+
+shape: (5, 3)
+┌────────────────────────┬──────┬──────┐
+│ provenance_bucket      ┆ rows ┆ pct  │
+│ ---                    ┆ ---  ┆ ---  │
+│ str                    ┆ i64  ┆ f64  │
+╞════════════════════════╪══════╪══════╡
+│ licensed               ┆ 675  ┆ 33.8 │
+│ UNCLASSIFIED           ┆ 334  ┆ 16.7 │
+│ public_domain          ┆ 333  ┆ 16.7 │
+│ synthetic              ┆ 331  ┆ 16.6 │
+│ scraped_optout_checked ┆ 327  ┆ 16.4 │
+└────────────────────────┴──────┴──────┘
+
+UNCLASSIFIED rows: 334
+→ UNCLASSIFIED rows fail the lab&#x27;s classification rule; this is not a legal audit result.
+
+Partitions on disk:
+  provenance_bucket=UNCLASSIFIED
+  provenance_bucket=licensed
+  provenance_bucket=public_domain
+  provenance_bucket=scraped_optout_checked
+  provenance_bucket=synthetic
+
+Rows selected by the lab&#x27;s training filter: 1,666 / 2,000
+Excluded as UNCLASSIFIED:  334
+
+Erasure request from user_007: 8 rows, used as: [{&#x27;provenance_bucket&#x27;: &#x27;licensed&#x27;, &#x27;rows&#x27;: 1}, {&#x27;provenance_bucket&#x27;: &#x27;UNCLASSIFIED&#x27;, &#x27;rows&#x27;: 5}, {&#x27;provenance_bucket&#x27;: &#x27;synthetic&#x27;, &#x27;rows&#x27;: 1}, {&#x27;provenance_bucket&#x27;: &#x27;scraped_optout_checked&#x27;, &#x27;rows&#x27;: 1}]
+
+CHƯA HOÀN TẤT: các bước phá hủy và các cell phụ thuộc chưa thực thi.</pre><footer>Nguồn: submission/notebooks/08_agents_provenance.ipynb</footer></html>

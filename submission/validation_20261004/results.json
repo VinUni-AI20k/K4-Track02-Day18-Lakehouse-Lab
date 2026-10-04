@@ -1,0 +1,37 @@
+{
+  "smoke": "9/9",
+  "pytest": "24/24",
+  "runner": "8/8",
+  "jupyter": "8/8 sequential",
+  "review_sha256": "39d944a5dcbc2db82598a13bdc96e615cd599f302fe5621718fbcb0e7a937f38",
+  "data_scope": [
+    {
+      "canonical_path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\validation_ready_20261004\\smoke",
+      "tracked": false,
+      "ignored": true,
+      "preexisting_user_data": false,
+      "effect": "Original verify_lite: delete id<5, reset smoke catalog, remove _smoke_delta/_smoke_cdf"
+    },
+    {
+      "canonical_path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\validation_ready_20261004\\pytest",
+      "tracked": false,
+      "ignored": true,
+      "preexisting_user_data": false,
+      "effect": "All 24 original tests: id<3 deletion, expiry to 2 snapshots, reset nb6/drop catalog; fresh --basetemp; no test deselection"
+    },
+    {
+      "canonical_path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\validation_ready_20261004\\runner",
+      "tracked": false,
+      "ignored": true,
+      "preexisting_user_data": false,
+      "effect": "Original run_all: table/catalog resets if present; NB6 VACUUM, 3 orphan removals, expiry to 3 snapshots, manifest sweep, checkpoint; NB7 user_042 and NB8 user_007 deletes"
+    },
+    {
+      "canonical_path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\validation_ready_20261004\\notebooks",
+      "tracked": false,
+      "ignored": true,
+      "preexisting_user_data": false,
+      "effect": "Real Jupyter sequential execution of all 8 source notebooks with identical lab mutations; save new outputs separately"
+    }
+  ]
+}

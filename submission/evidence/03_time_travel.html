@@ -1,0 +1,27 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>03_time_travel</title><style>body{margin:30px;background:#fff;color:#17212b;font:16px Arial}h1{font-size:25px;margin-bottom:8px}.status{font-weight:bold;color:#244d72}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px Consolas,monospace;line-height:1.32;padding:18px;border:1px solid #ccd5df;background:#f8fafc}footer{font-size:13px;color:#536171}</style><h1>03_time_travel</h1><p class="status">Trạng thái: complete</p><p>Output thật trích từ notebook đã thực thi trên máy. Trang bằng chứng xuất từ ipynb; không phải giao diện Jupyter.</p><pre>MERGE 100K rows: 0.14s
+
+v 3  WRITE                      metrics={&#x27;num_added_files&#x27;: 1, &#x27;num_removed_files&#x27;: 0, &#x27;num_partitions&#x27;: 0, &#x27;num_added_rows&#x27;: 50, &#x27;execution_time_ms&#x27;: 5, &#x27;num_retries&#x27;: 0}
+  v 2  MERGE                      metrics={&#x27;num_source_rows&#x27;: 100000, &#x27;num_target_rows_inserted&#x27;: 50000, &#x27;num_target_rows_updated&#x27;: 50000, &#x27;num_target_rows_deleted&#x27;: 0, &#x27;num_target_rows_copied&#x27;: 50000, &#x27;num_output_rows&#x27;: 150000, &#x27;num_target_files_scanned&#x27;: 1, &#x27;num_target_files_skipped_during_scan&#x27;: 0, &#x27;num_target_files_added&#x27;: 1, &#x27;num_target_files_removed&#x27;: 1, &#x27;execution_time_ms&#x27;: 125, &#x27;scan_time_ms&#x27;: 73, &#x27;rewrite_time_ms&#x27;: 28}
+  v 1  WRITE                      metrics={&#x27;num_added_files&#x27;: 1, &#x27;num_removed_files&#x27;: 1, &#x27;num_partitions&#x27;: 0, &#x27;num_added_rows&#x27;: 100000, &#x27;execution_time_ms&#x27;: 29, &#x27;num_retries&#x27;: 0}
+  v 0  WRITE                      metrics={&#x27;num_added_files&#x27;: 1, &#x27;num_removed_files&#x27;: 0, &#x27;num_partitions&#x27;: 0, &#x27;num_added_rows&#x27;: 100000, &#x27;execution_time_ms&#x27;: 28, &#x27;num_retries&#x27;: 0}
+
+v0 row count: 100000
+v1 schema:    [&#x27;customer_id&#x27;, &#x27;status&#x27;, &#x27;score&#x27;, &#x27;tier&#x27;]
+
+RESTORE → v2: 0.03s   (target &lt; 30s)
+Rows with score&lt;0 after restore: 0  (expected 0)
+
+v 4  RESTORE                  
+  v 3  WRITE                    
+  v 2  MERGE                    
+  v 1  WRITE                    
+  v 0  WRITE                    
+
+Total versions: 5  (target ≥ 5)
+
+[PASS] history ≥ 5 versions
+  [PASS] history includes the RESTORE
+  [PASS] MERGE recorded in history
+  [PASS] bad rows gone after restore
+
+NB3 complete.</pre><footer>Nguồn: submission/notebooks/03_time_travel.ipynb</footer></html>

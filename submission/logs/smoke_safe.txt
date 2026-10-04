@@ -1,0 +1,10 @@
+  ✓ delta write + read
+  ✓ delta time travel + history
+  ✓ delta maintenance (compact / vacuum) — NB6
+  ✓ duckdb vector search (core, offline)
+  ✓ duckdb ↔ delta via arrow (no extension download)
+  ✓ iceberg catalog + append
+  ✓ iceberg scan planning prunes 5 → 1 files
+  ✓ iceberg maintenance API present — NB6
+Smoke catalog preserved; cleanup not executed
+8/9 capability checks executed; CDF delete check pending authorization.

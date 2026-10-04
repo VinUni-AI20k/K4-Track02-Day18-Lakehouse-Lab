@@ -1,0 +1,33 @@
+{
+  "authorization_scope": "NB6 review targets ONLY",
+  "review_sha256": "5f3353489c9260560459fe5dea33154702026336138dc7328f40d0fcd774cd7b",
+  "vacuum": {
+    "candidate_files": 211,
+    "deleted_bytes": 16907742,
+    "before_table_bytes": 23887810,
+    "after_table_bytes": 6980655
+  },
+  "vacuum_net_reclaimed_bytes": 16907155,
+  "delta_orphans_removed": 3,
+  "delta_orphan_bytes_removed": 21702,
+  "iceberg_snapshots_before": 20,
+  "iceberg_snapshots_after": 3,
+  "iceberg_manifest_lists_removed": 17,
+  "iceberg_manifest_bytes_removed": 37907,
+  "delta_current_rows": 100000,
+  "iceberg_current_rows": 2000,
+  "checks": {
+    "compaction ≥ 10x fewer files": true,
+    "clustering skips ≥ 50% files": true,
+    "vacuum reclaimed bytes": true,
+    "3 delta orphans removed": true,
+    "no delta orphans remain": true,
+    "checkpoint written": true,
+    "iceberg expired to 3 snaps": true,
+    "iceberg stranded files swept": true,
+    "iceberg data intact": true
+  },
+  "manual_checkpoint_created": false,
+  "automatic_checkpoints_verified": true,
+  "active_delta_data_hashes_unchanged": true
+}

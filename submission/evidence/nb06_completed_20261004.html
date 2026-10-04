@@ -1,0 +1,33 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB6 complete</title><style>body{margin:32px;color:#17212b;font:17px Arial}h1{font-size:26px}pre{white-space:pre-wrap;font:15px Consolas;line-height:1.4;padding:20px;background:#f5f8fc;border:1px solid #bdccdb}</style><h1>NB6 — VACUUM / expiry / sweep: 9 assertion gốc PASS</h1><p>04/10/2026 — Bằng chứng xuất từ output thật; không phải giao diện Jupyter.</p><pre>{
+  &quot;vacuum&quot;: {
+    &quot;candidate_files&quot;: 211,
+    &quot;deleted_bytes&quot;: 16907742,
+    &quot;before_table_bytes&quot;: 23887810,
+    &quot;after_table_bytes&quot;: 6980655
+  },
+  &quot;vacuum_net_reclaimed_bytes&quot;: 16907155,
+  &quot;delta_orphans_removed&quot;: 3,
+  &quot;delta_orphan_bytes_removed&quot;: 21702,
+  &quot;iceberg_snapshots_before&quot;: 20,
+  &quot;iceberg_snapshots_after&quot;: 3,
+  &quot;iceberg_manifest_lists_removed&quot;: 17,
+  &quot;iceberg_manifest_bytes_removed&quot;: 37907,
+  &quot;delta_current_rows&quot;: 100000,
+  &quot;iceberg_current_rows&quot;: 2000,
+  &quot;manual_checkpoint_created&quot;: false,
+  &quot;automatic_checkpoints_verified&quot;: true,
+  &quot;active_delta_data_hashes_unchanged&quot;: true
+}
+
+  [PASS] compaction ≥ 10x fewer files
+  [PASS] clustering skips ≥ 50% files
+  [PASS] vacuum reclaimed bytes
+  [PASS] 3 delta orphans removed
+  [PASS] no delta orphans remain
+  [PASS] checkpoint written
+  [PASS] iceberg expired to 3 snaps
+  [PASS] iceberg stranded files swept
+  [PASS] iceberg data intact
+
+NB6 complete.
+</pre><p>Nguồn: submission/logs/nb6_completed_20261004.json và submission/notebooks/06_maintenance.ipynb</p></html>

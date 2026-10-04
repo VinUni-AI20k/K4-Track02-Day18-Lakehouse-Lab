@@ -1,0 +1,6 @@
+docs      2,000 rows, dim=256  → C:\Users\Duong Vinh\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\_lakehouse\validation_ready_20261004\notebooks\bronze\docs_multimodal
+blobs     200 files, 12.5 MB  → C:\Users\Duong Vinh\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\_lakehouse\validation_ready_20261004\notebooks\blobs
+traces    1,578 steps / 300 sessions → C:\Users\Duong Vinh\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\_lakehouse\validation_ready_20261004\notebooks\bronze\agent_traces
+
+Ready for NB7 (multimodal + vectors) and NB8 (agents + provenance).
+

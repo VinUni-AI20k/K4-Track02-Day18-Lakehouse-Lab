@@ -1,0 +1,29 @@
+Ingested 100,000 rows in 200 commits (23.8s)
+
+BASELINE (the mess)      files= 200  data=  10.1 MB  log= 385.7 KB (200 json)  rows=100,000
+
+Average file size: 51.5 KB   ← production target is 128–512 MB
+
+
+Full-scan GETs/day at 200 files: 10,000,000  →  $4.00/day just in requests
+Same data in 4 compacted files:      200,000  →  $0.08/day
+
+
+AFTER compaction         files=  11  data=  16.1 MB  log= 434.4 KB (201 json)  rows=100,000
+
+filesAdded=11  filesRemoved=200
+File reduction: 200 → 11 (18× fewer)
+Note: data bytes went UP slightly — compaction WRITES new files before
+the old ones are reclaimed. You pay twice, briefly. Budget for it.
+
+
+Point query user_id=12345
+  before clustering: must open 11/11 files
+  after  clustering: must open 1/10 files
+  → skip rate: 90% of files never touched
+
+Unclustered data has overlapping min/max ranges, so stats prove nothing
+and the engine must read everything. Clustering is what makes stats USEFUL.
+
+
+VACUUM would reclaim 211 tombstoned files (0 B)

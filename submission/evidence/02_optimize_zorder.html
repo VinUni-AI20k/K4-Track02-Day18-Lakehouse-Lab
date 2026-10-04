@@ -1,0 +1,23 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>02_optimize_zorder</title><style>body{margin:30px;background:#fff;color:#17212b;font:16px Arial}h1{font-size:25px;margin-bottom:8px}.status{font-weight:bold;color:#244d72}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px Consolas,monospace;line-height:1.32;padding:18px;border:1px solid #ccd5df;background:#f8fafc}footer{font-size:13px;color:#536171}</style><h1>02_optimize_zorder</h1><p class="status">Trạng thái: complete</p><p>Output thật trích từ notebook đã thực thi trên máy. Trang bằng chứng xuất từ ipynb; không phải giao diện Jupyter.</p><pre>Files before OPTIMIZE: 200
+
+BEFORE OPTIMIZE            count=5  median= 492.3 ms  (n=3)
+
+Files after OPTIMIZE+ZORDER: 55  (was 200)
+
+AFTER OPTIMIZE+ZORDER      count=5  median=  34.2 ms  (n=3)
+
+Speedup: 14.4×  (target ≥ 3×)
+File reduction: 200 → 55  (4× fewer)
+
+──── Z-order deliverable metrics ────
+  Speedup (wall-clock):    14.4×   (target ≥ 3×)
+  Files-pruned ratio:      55.0×   (target ≥ 10×)   [1 of 55 files cover user_id=4242]
+
+[PASS] compaction reduced file count
+  [PASS] speedup ≥ 3x OR pruning ≥ 10x
+  [PASS] stats isolate the target user
+
+  (speedup=14.4x, pruning=55.0x — the slide accepts EITHER;
+   wall-clock is noisy on a laptop, which is why file-pruning is the fallback.)
+
+NB2 complete.</pre><footer>Nguồn: submission/notebooks/02_optimize_zorder.ipynb</footer></html>

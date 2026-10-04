@@ -1,0 +1,4 @@
+Wrote 200,000 rows → C:\Users\Duong Vinh\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\_lakehouse\validation_ready_20261004\notebooks\bronze\llm_calls_raw
+  unique request_ids: 190,052  (9,948 duplicates seeded for dedup demo)
+  date span: 7 UTC days from 2026-04-01
+

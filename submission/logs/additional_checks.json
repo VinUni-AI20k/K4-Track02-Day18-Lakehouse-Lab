@@ -1,0 +1,24 @@
+{
+  "duckdb_timezone": "Asia/Bangkok",
+  "checks": {
+    "gold_has_8_dates_and_3_models": true,
+    "every_date_has_all_3_models": true,
+    "gold_metrics_nonnull_and_sensible": true,
+    "silver_request_ids_unique": true,
+    "silver_local_dates_match_ts_cast": true,
+    "delta_checkpoints_already_exist": true,
+    "01_delta_basics_output_has_no_error": true,
+    "02_optimize_zorder_output_has_no_error": true,
+    "03_time_travel_output_has_no_error": true,
+    "04_medallion_output_has_no_error": true,
+    "05_iceberg_catalog_output_has_no_error": true,
+    "06_maintenance_output_has_no_error": true,
+    "07_vectors_multimodal_output_has_no_error": true,
+    "08_agents_provenance_output_has_no_error": true
+  },
+  "existing_checkpoint_files": [
+    "00000000000000000099.checkpoint.parquet",
+    "00000000000000000199.checkpoint.parquet"
+  ],
+  "note": "Checkpoints were created automatically during writes. Manual NB6 checkpoint cell remains unexecuted."
+}

@@ -1,0 +1,59 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>05_iceberg_catalog</title><style>body{margin:30px;background:#fff;color:#17212b;font:16px Arial}h1{font-size:25px;margin-bottom:8px}.status{font-weight:bold;color:#244d72}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px Consolas,monospace;line-height:1.32;padding:18px;border:1px solid #ccd5df;background:#f8fafc}footer{font-size:13px;color:#536171}</style><h1>05_iceberg_catalog</h1><p class="status">Trạng thái: complete</p><p>Output thật trích từ notebook đã thực thi trên máy. Trang bằng chứng xuất từ ipynb; không phải giao diện Jupyter.</p><pre>Catalog: SqlCatalog   namespaces: [(&#x27;lake&#x27;,)]
+
+Created (&#x27;lake&#x27;, &#x27;llm_events&#x27;)
+  location:  file://C:\Users\Duong Vinh\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\_lakehouse\iceberg\nb5\warehouse/lake/llm_events
+  metadata:  00000-f91b82cc-796f-4f7b-865c-597d08128f39.metadata.json
+  format-v2
+
+Partition spec: [
+  1000: ts_day: day(2)
+]
+
+Note: &#x27;ts_day&#x27; is NOT a column you insert. It is derived from ts.
+
+Rows:      5,000
+Snapshots: 10   (one per commit)
+Data files: 10
+
+Files to read, no filter:    10
+Files to read, one-day filter: 1
+→ Pruning ratio: 10×   (target ≥ 5×)
+  rows returned: 500
+
+Tier 1  metadata.json     : 00011-78760c91-2254-42ee-a881-c86c9b070716.metadata.json
+Tier 2  manifest lists    : 10 (one per snapshot)
+Tier 3  manifest files    : 10
+        data files        : 10
+
+Metadata log entries: 12
+Partitions tracked  : 10
+
+data/        47.3 KB   (10 parquet files)
+metadata/   136.2 KB   (20 avro + 12 json)
+→ metadata is 288.0% of table size
+
+At 10 rows/file this looks absurd. At 512 MB/file it is ~0.1%.
+Small files punish you TWICE: more data files AND more metadata to plan over.
+
+Field IDs before: [(1, &#x27;event_id&#x27;), (2, &#x27;ts&#x27;), (3, &#x27;model&#x27;), (4, &#x27;latency_ms&#x27;), (5, &#x27;cost_usd&#x27;)]
+Field IDs after : [(1, &#x27;event_id&#x27;), (2, &#x27;ts&#x27;), (3, &#x27;model&#x27;), (4, &#x27;latency_millis&#x27;), (5, &#x27;cost_usd&#x27;), (6, &#x27;tier&#x27;)]
+
+latency_ms → latency_millis kept field_id=4: a rename rewrote NO data.
+Old rows read back with tier=NULL — no backfill, no migration job.
+
+Rows still readable: 5,000
+Columns now: [&#x27;event_id&#x27;, &#x27;ts&#x27;, &#x27;model&#x27;, &#x27;latency_millis&#x27;, &#x27;cost_usd&#x27;, &#x27;tier&#x27;]
+tier nulls: 5,000 (all pre-existing rows)
+
+Partition specs in use across data files: [1, 2]
+Total rows readable across BOTH specs: 5,500
+
+Two layouts, one table, zero rewrites. This is the feature.
+
+[PASS] pruning ratio ≥ 5x
+  [PASS] ≥ 10 snapshots
+  [PASS] field_id stable on rename
+  [PASS] ≥ 2 partition specs
+  [PASS] all rows readable
+
+NB5 complete.</pre><footer>Nguồn: submission/notebooks/05_iceberg_catalog.ipynb</footer></html>

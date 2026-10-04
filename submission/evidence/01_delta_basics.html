@@ -1,0 +1,70 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>01_delta_basics</title><style>body{margin:30px;background:#fff;color:#17212b;font:16px Arial}h1{font-size:25px;margin-bottom:8px}.status{font-weight:bold;color:#244d72}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px Consolas,monospace;line-height:1.32;padding:18px;border:1px solid #ccd5df;background:#f8fafc}footer{font-size:13px;color:#536171}</style><h1>01_delta_basics</h1><p class="status">Trạng thái: complete</p><p>Output thật trích từ notebook đã thực thi trên máy. Trang bằng chứng xuất từ ipynb; không phải giao diện Jupyter.</p><pre>shape: (3, 4)
+┌─────┬─────────┬─────┬────────┐
+│ id  ┆ name    ┆ age ┆ city   │
+│ --- ┆ ---     ┆ --- ┆ ---    │
+│ i64 ┆ str     ┆ i64 ┆ str    │
+╞═════╪═════════╪═════╪════════╡
+│ 1   ┆ alice   ┆ 30  ┆ Hanoi  │
+│ 2   ┆ bob     ┆ 25  ┆ HCMC   │
+│ 3   ┆ charlie ┆ 35  ┆ Danang │
+└─────┴─────────┴─────┴────────┘
+
+History:
+  v0  WRITE  {&#x27;num_added_files&#x27;: 1, &#x27;num_removed_files&#x27;: 0, &#x27;num_partitions&#x27;: 0, &#x27;num_added_rows&#x27;: 3, &#x27;execution_time_ms&#x27;: 6, &#x27;num_retries&#x27;: 0}
+
+BLOCKED by schema enforcement (expected): Exception: Cast error: Cannot cast string &#x27;thirty&#x27; to value of Int64 type
+
+shape: (4, 5)
+┌─────┬─────────┬─────┬────────┬─────────┐
+│ id  ┆ name    ┆ age ┆ city   ┆ tier    │
+│ --- ┆ ---     ┆ --- ┆ ---    ┆ ---     │
+│ i64 ┆ str     ┆ i64 ┆ str    ┆ str     │
+╞═════╪═════════╪═════╪════════╪═════════╡
+│ 1   ┆ alice   ┆ 30  ┆ Hanoi  ┆ null    │
+│ 2   ┆ bob     ┆ 25  ┆ HCMC   ┆ null    │
+│ 3   ┆ charlie ┆ 35  ┆ Danang ┆ null    │
+│ 4   ┆ dan     ┆ 28  ┆ Hue    ┆ premium │
+└─────┴─────────┴─────┴────────┴─────────┘
+
+[(&#x27;premium&#x27;, 1), (None, 3)]
+
+[PASS] _delta_log/ has JSON commits
+  [PASS] schema enforcement blocked bad write
+  [PASS] tier column added via schema_mode=merge
+  [PASS] duckdb sees 2 tier groups
+
+NB1 complete.
+
+_delta_log/: 00000000000000000000.json, 00000000000000000001.json
+Commit v0 — metadata và add thực tế:
+[
+  {
+    &quot;metaData&quot;: {
+      &quot;id&quot;: &quot;9214f110-5564-4a9b-a37d-e1fac27ca76f&quot;,
+      &quot;name&quot;: null,
+      &quot;description&quot;: null,
+      &quot;format&quot;: {
+        &quot;provider&quot;: &quot;parquet&quot;,
+        &quot;options&quot;: {}
+      },
+      &quot;schemaString&quot;: &quot;{\&quot;type\&quot;:\&quot;struct\&quot;,\&quot;fields\&quot;:[{\&quot;name\&quot;:\&quot;id\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;name\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;age\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;city\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}}]}&quot;,
+      &quot;partitionColumns&quot;: [],
+      &quot;createdTime&quot;: 1791104319692,
+      &quot;configuration&quot;: {}
+    }
+  },
+  {
+    &quot;add&quot;: {
+      &quot;path&quot;: &quot;part-00000-d43c0a6e-b099-421e-89fa-5c1d135f695f-c000.snappy.parquet&quot;,
+      &quot;partitionValues&quot;: {},
+      &quot;size&quot;: 1384,
+      &quot;modificationTime&quot;: 1791104319699,
+      &quot;dataChange&quot;: true,
+      &quot;stats&quot;: &quot;{\&quot;numRecords\&quot;:3,\&quot;minValues\&quot;:{\&quot;city\&quot;:\&quot;Danang\&quot;,\&quot;name\&quot;:\&quot;alice\&quot;,\&quot;age\&quot;:25,\&quot;id\&quot;:1},\&quot;maxValues\&quot;:{\&quot;id\&quot;:3,\&quot;age\&quot;:35,\&quot;city\&quot;:\&quot;Hanoi\&quot;,\&quot;name\&quot;:\&quot;charlie\&quot;},\&quot;nullCount\&quot;:{\&quot;age\&quot;:0,\&quot;city\&quot;:0,\&quot;id\&quot;:0,\&quot;name\&quot;:0}}&quot;,
+      &quot;tags&quot;: null,
+      &quot;baseRowId&quot;: null,
+      &quot;defaultRowCommitVersion&quot;: null,
+      &quot;clusteringProvider&quot;: null
+    }
+  }
+]</pre><footer>Nguồn: submission/notebooks/01_delta_basics.ipynb</footer></html>

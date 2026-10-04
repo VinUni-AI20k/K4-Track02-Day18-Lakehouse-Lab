@@ -1,0 +1,94 @@
+AFTER vacuum             files=  10  data=   6.2 MB  log= 445.1 KB (204 json)  rows=100,000
+
+Reclaimed: 16.1 MB
+Time travel to v0 is now GONE — that is the trade you just made.
+
+
+Rows reported by the table: 100,000
+Parquet files on disk: 15; in current log: 10
+Planted orphans present: 3
+
+
+VACUUM dry-run now finds: 211 files
+Orphans still on disk:    5
+
+`deltalake` (the Rust/Python implementation used here) reclaims files the
+transaction log has TOMBSTONED. A file that was never committed was never
+tombstoned, so the log has no idea it exists.
+
+Spark's VACUUM additionally lists the table directory, which is why the slide
+lists VACUUM under orphan removal — but you should never *assume* your engine
+does the directory pass. Verify it, or run the diff yourself:
+
+
+
+Orphans found: 3  (21.2 KB)
+  part-99990-crashed-writer-c000.snappy.parquet
+  part-99991-crashed-writer-c000.snappy.parquet
+  part-99992-crashed-writer-c000.snappy.parquet
+
+After removal — on disk: 12, in log: 10
+
+⚠️ The age guard is not optional. Without it you will delete files that a
+   concurrent writer has written but not yet committed, and corrupt the table.
+
+
+JSON log entries a cold reader would replay: 204
+Checkpoint written: 00000000000000000099.checkpoint.parquet
+_last_checkpoint present: True
+
+A reader now loads 1 checkpoint + the few JSONs after it, not all 200.
+For CDC/streaming tables this is the difference between a 200 ms and a
+20 s cold start — and it is why the slide calls it the 5th job.
+
+
+before expiry  snapshots= 20  avro= 40  json= 21  metadata=341.2 KB
+
+
+after expiry   snapshots=  3  avro= 40  json= 22  metadata=349.2 KB
+
+Rows still intact: 2,000
+
+
+snapshots: 20 → 3  (17 expired)
+avro files on disk: 40 → 40  (deleted: 0)
+metadata bytes: 341.2 KB → 349.2 KB
+
+Expiry alone reclaimed NOTHING. Now find what it stranded:
+
+
+Stranded manifest lists: 17  (37.0 KB)
+  snap-1092128835539890572-0-3b1cc301-50df-4dfe-863d-59c2e868554b.avro
+  snap-1227653604504497263-0-4dbb6236-ee17-43c8-a6f9-a416f1faa908.avro
+  snap-1432736783618986028-0-cfbd7644-7abf-48d6-994e-0b9c38af6cf4.avro
+  ... and 14 more
+after sweep    snapshots=  3  avro= 23  json= 22  metadata=312.2 KB
+
+Reclaimed by chaining expiry → orphan removal: 37.0 KB
+Rows still intact: 2,000
+
+→ Job 3 and Job 4 are a PAIR. Running expiry without a sweep is why
+  teams report 'we expire snapshots but the S3 bill never drops'.
+
+
+Managed compaction, 500 GB / 2,000,000 files, daily:
+  per-GB component:     $750/mo
+  per-object component: $240/mo
+  TOTAL:                $990/mo
+
+The object component is 24% of the bill —
+it is driven by FILE COUNT, not data volume. Fixing your writer's
+trigger interval is cheaper than paying someone to clean up after it.
+
+
+  [PASS] compaction ≥ 10x fewer files
+  [PASS] clustering skips ≥ 50% files
+  [PASS] vacuum reclaimed bytes
+  [PASS] 3 delta orphans removed
+  [PASS] no delta orphans remain
+  [PASS] checkpoint written
+  [PASS] iceberg expired to 3 snaps
+  [PASS] iceberg stranded files swept
+  [PASS] iceberg data intact
+
+NB6 complete.

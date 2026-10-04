@@ -1,0 +1,61 @@
+{
+  "review_sha256": "5f3353489c9260560459fe5dea33154702026336138dc7328f40d0fcd774cd7b",
+  "authorization_scope": "row_deletions ONLY",
+  "results": [
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_intable",
+      "predicate": "subject_id = 'user_042'",
+      "before": 8,
+      "after": 0,
+      "before_version": 0,
+      "after_version": 1,
+      "prior_version_rows": 2000,
+      "current_rows": 1992,
+      "all_prior_version_files_present": true,
+      "prior_files_current_sha256": {
+        "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_intable\\part-00000-c8e0e068-da29-45bc-b561-45c252bf3d0b-c000.snappy.parquet": "bff6ae7a7f5a9583baa34c78b4d4778099d06d08de5dea9991f538ab91157174"
+      }
+    },
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_cdf",
+      "predicate": "subject_id = 'user_042'",
+      "before": 8,
+      "after": 0,
+      "before_version": 0,
+      "after_version": 1,
+      "prior_version_rows": 2000,
+      "current_rows": 1992,
+      "all_prior_version_files_present": true,
+      "prior_files_current_sha256": {
+        "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_cdf\\part-00000-742a3ca8-6220-41b9-943e-b7140b8ee2b2-c000.snappy.parquet": "d9b0c4b6c57f98c92167a26ce1a6f4c0195bd33a6512abbe7e021a718a579c83"
+      }
+    },
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed",
+      "predicate": "subject_id = 'user_007'",
+      "before": 8,
+      "after": 0,
+      "before_version": 0,
+      "after_version": 1,
+      "prior_version_rows": 2000,
+      "current_rows": 1992,
+      "all_prior_version_files_present": true,
+      "prior_files_current_sha256": {
+        "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed\\provenance_bucket=public_domain\\part-00000-4be0bdaf-d03d-4b44-b937-34716e1e25f3-c000.snappy.parquet": "50717afe5c022b8284ea4d8a19a10ef03b04e3179ec56aac96a8f0765d914c1e",
+        "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed\\provenance_bucket=synthetic\\part-00000-1bc7496e-56e4-422d-a32e-9077618ad003-c000.snappy.parquet": "a7dca70023ea50c820fa28376216ea2083d63c107346a98a1f8d0b4ec3ab2a27",
+        "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed\\provenance_bucket=UNCLASSIFIED\\part-00000-4120402c-476a-41f8-af86-514a1b82de41-c000.snappy.parquet": "a30e4fb243d90f9594f2fd24f88bbf7983b440bfdac19be005c9e3b884a52bf3",
+        "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed\\provenance_bucket=licensed\\part-00000-fe8438dc-0df6-46ff-ab9a-34a7e62b19f9-c000.snappy.parquet": "dde5df197f89fb2099fa13a5a8c5db4e3da9993f65636ca9f9d3249200ef9f50",
+        "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed\\provenance_bucket=scraped_optout_checked\\part-00000-a0033183-aa45-4766-8efe-41f1c3d912c0-c000.snappy.parquet": "eec0ba0f8f22b06b16c287b159bc0c93b48c8c7414caf0be66b17df73cfeecf6"
+      }
+    }
+  ],
+  "NB7_original_assertions": "PASS",
+  "NB8_original_assertions": "PASS",
+  "NB7_current_table_hits": 0,
+  "NB7_stale_external_index_hits": 8,
+  "cdf_delete_events": 8,
+  "physical_file_deletion": false,
+  "vacuum": false,
+  "expiry": false,
+  "recovery_note": "Resume finished all deletions and assertions; final Arrow filter audit hit string/string_view incompatibility. This read-only recovery read whole tables and verified current/prior versions. No deletion rerun."
+}

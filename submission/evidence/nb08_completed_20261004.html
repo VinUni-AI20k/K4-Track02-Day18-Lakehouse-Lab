@@ -1,0 +1,20 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>NB8 — assertion gốc PASS</title><style>body{margin:32px;background:white;color:#17212b;font:17px Arial}h1{font-size:26px}pre{white-space:pre-wrap;font:15px Consolas;line-height:1.4;padding:20px;background:#f5f8fc;border:1px solid #bdccdb}footer{font-size:14px}</style><h1>NB8 — assertion gốc PASS</h1><p>04/10/2026 — Bằng chứng xuất từ output thật; không phải giao diện Jupyter.</p><pre>Rows for user_007: 8 → 0
+Table version: 0 → 1
+
+Note the tension the slide flags: time travel means v0 STILL contains
+the deleted rows. Removing rows from the current version does not remove old
+physical files. Retention and VACUUM must be considered separately (NB6),
+as must any copies or derived artifacts outside this table.
+
+[PASS] silver partitioned by agent_version
+  [PASS] gold covers both policies
+  [PASS] pinned version step count matches
+  [PASS] 5 turns → 1 catalog read
+  [PASS] destructive needs confirmation
+  [PASS] confirmed call proceeds
+  [PASS] tasks poll completes
+  [PASS] all 4 lab buckets present
+  [PASS] unclassified rows found
+  [PASS] erasure removed subject rows
+
+NB8 complete.</pre><footer>Nguồn: submission/notebooks/08_agents_provenance.ipynb</footer></html>

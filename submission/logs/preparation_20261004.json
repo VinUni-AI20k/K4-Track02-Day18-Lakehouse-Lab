@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-04",
+  "delta_rows_unchanged": 100000,
+  "vacuum_candidates": 211,
+  "vacuum_candidate_bytes": 16907742,
+  "vacuum_reclaimed_bytes": 0,
+  "vacuum_executed": false,
+  "planted_orphans": 3,
+  "planted_orphan_bytes": 21702,
+  "aged_unreferenced_count_including_tombstones": 3,
+  "vacuum_dry_run_detected_planted_orphans": false,
+  "iceberg_snapshots": 20,
+  "iceberg_rows": 2000,
+  "expiry_executed": false,
+  "cdf_baseline_rows": 2000,
+  "cdf_delete_executed": false,
+  "subject_rows_before_delete": [
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_intable",
+      "count": 8
+    },
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_cdf",
+      "count": 8
+    },
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed",
+      "count": 8
+    }
+  ],
+  "automatic_checkpoint": {
+    "version": 199,
+    "size": 202,
+    "sizeInBytes": 117588,
+    "numOfAddFiles": 200
+  },
+  "checkpoint_files": [
+    "00000000000000000099.checkpoint.parquet",
+    "00000000000000000199.checkpoint.parquet"
+  ],
+  "manual_checkpoint_executed": false,
+  "ready_to_submit": false
+}

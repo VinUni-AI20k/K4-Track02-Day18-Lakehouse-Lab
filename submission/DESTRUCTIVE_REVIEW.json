@@ -1,0 +1,1326 @@
+{
+  "workspace": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab",
+  "status": "READ-ONLY REVIEW; NO DESTRUCTIVE OPERATIONS EXECUTED",
+  "vacuum": {
+    "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events",
+    "version": 201,
+    "files": [
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c14bccfc-fb67-4205-aa9a-567faee9a9d6-c000.zstd.parquet",
+        "bytes": 603924,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-f048a4d8-947a-4b83-8e6d-8bd42ed627c3-c000.zstd.parquet",
+        "bytes": 601623,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8d19e409-d081-4f5e-9d90-42ad9826fd34-c000.zstd.parquet",
+        "bytes": 603378,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b21d305f-4e1d-4151-b79b-a8e947b72b77-c000.zstd.parquet",
+        "bytes": 605447,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-91c19bab-ea19-4f66-98fe-91a6e20097f6-c000.zstd.parquet",
+        "bytes": 603597,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-5139bacd-6042-48d7-be7c-84abf7d62397-c000.zstd.parquet",
+        "bytes": 603519,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-5e90cef4-0ac1-425c-9dc5-bedbf10d0a46-c000.zstd.parquet",
+        "bytes": 603252,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-10bc8c2e-5d36-4e85-aa13-bb3d117048f1-c000.zstd.parquet",
+        "bytes": 603339,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ee7d3f11-8c94-4993-843a-a94b2a03d850-c000.zstd.parquet",
+        "bytes": 604298,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-94280797-d838-4c2c-96db-308e772a6ec5-c000.zstd.parquet",
+        "bytes": 603218,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-91cea06a-a2a4-442c-a3e6-32318ac3e0b7-c000.zstd.parquet",
+        "bytes": 318046,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-be817352-164f-462c-8e4f-8ab01e2b93e0-c000.snappy.parquet",
+        "bytes": 52745,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-93abe2e7-c427-4916-93f5-dd447bd0339a-c000.snappy.parquet",
+        "bytes": 52739,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ba60e21a-1140-4b4d-8b19-4b9e53ca8163-c000.snappy.parquet",
+        "bytes": 52759,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-28f3d1e0-70c2-45c9-a0fd-8b545fb826f9-c000.snappy.parquet",
+        "bytes": 52761,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-be263749-e049-4504-97b5-2bc0cdf32988-c000.snappy.parquet",
+        "bytes": 52815,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-46c06e34-05a1-4837-94ce-4aae6be35148-c000.snappy.parquet",
+        "bytes": 52773,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-82a74611-b1de-4910-a195-a18059b9da4b-c000.snappy.parquet",
+        "bytes": 52758,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a2872c32-48c3-4477-9f81-8affdad63ba2-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-6588d291-a9b1-4f85-b194-f330e62c615f-c000.snappy.parquet",
+        "bytes": 52760,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-57e9124e-6b5d-42aa-95a9-a0dc1a2dd335-c000.snappy.parquet",
+        "bytes": 52789,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ec1afdea-d70c-4d5b-a788-e6d02d18fa09-c000.snappy.parquet",
+        "bytes": 52774,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c8a162ea-3c42-4606-97a0-b142e9751eea-c000.snappy.parquet",
+        "bytes": 52783,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-49bf2365-9740-4812-ae9f-0e03d7e0b45d-c000.snappy.parquet",
+        "bytes": 52757,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-3e83c9d3-9f57-43aa-83cc-4140103ad0f6-c000.snappy.parquet",
+        "bytes": 52759,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-086a0774-7933-428f-9ca0-9cb97b089844-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-dcac163e-c61d-4a28-8190-0fa63db51145-c000.snappy.parquet",
+        "bytes": 52780,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-1049770c-b960-49b2-8670-6b22a4b17adb-c000.snappy.parquet",
+        "bytes": 52746,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-235eaa69-0bef-4fdf-a533-766d6f8a91af-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-cce78897-dfc7-4b19-a8c9-a1800e02c494-c000.snappy.parquet",
+        "bytes": 52770,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9a6584d8-11d6-4f51-b80d-6bcab7e24e37-c000.snappy.parquet",
+        "bytes": 52758,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-81ce24d9-3338-4818-a9c7-85700a48884a-c000.snappy.parquet",
+        "bytes": 52819,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-aa2711e5-1fe5-40ca-9dfe-1ddaf346c3e8-c000.snappy.parquet",
+        "bytes": 52782,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-0b570aae-749f-494f-a4cf-0f2b5befc834-c000.snappy.parquet",
+        "bytes": 52771,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-deedd2e6-2ceb-4629-b29b-70eccc4ed645-c000.snappy.parquet",
+        "bytes": 52736,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2dc2d3ef-8768-491f-8658-4a5b78272cbf-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-1407e130-e7c8-41ab-ba6f-b820b20bed21-c000.snappy.parquet",
+        "bytes": 52745,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-495b046e-ef0e-4293-95ad-c65b3de300f4-c000.snappy.parquet",
+        "bytes": 52810,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2d884f0d-5941-4871-9be3-aa4a09117cfb-c000.snappy.parquet",
+        "bytes": 52813,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8bb3f7f0-5fb5-47c4-a46f-94f970fb5e06-c000.snappy.parquet",
+        "bytes": 52774,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-bb5a797d-c9a3-46c6-b8e3-c32bfd22a9bf-c000.snappy.parquet",
+        "bytes": 52764,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-089e2cc3-9f18-4b35-a616-913db9a2ffa7-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9c185324-e4ab-42e3-afaa-05c1226a57c8-c000.snappy.parquet",
+        "bytes": 52792,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e6c64688-5920-4cc7-8f68-6c9dfbab228d-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-24d650cf-c3ed-4054-bc6d-9da14b3a322a-c000.snappy.parquet",
+        "bytes": 52815,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ebada507-2026-4e0c-b51d-deab2e9d2e1d-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8edaddcf-92e5-4b7e-8dbd-f79f0ac564ef-c000.snappy.parquet",
+        "bytes": 52738,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-911e46bf-0ab7-4eb0-9aa6-75c887be4ba1-c000.snappy.parquet",
+        "bytes": 52765,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c540bed3-fe29-419f-b9a1-1e36e5bb7ede-c000.snappy.parquet",
+        "bytes": 52775,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-74446420-f0d5-4919-8ae7-19392b3b6283-c000.snappy.parquet",
+        "bytes": 52776,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2d9b93cd-2347-4d7c-8a22-0e20522c1202-c000.snappy.parquet",
+        "bytes": 52775,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-40a4424b-21ec-4445-a2ae-fbd1d009a569-c000.snappy.parquet",
+        "bytes": 52764,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-fa129e71-8cbf-43ad-b0b8-98cffc7f71db-c000.snappy.parquet",
+        "bytes": 52765,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-03c9dbc5-ebf5-48b1-84d4-faa3721d08ea-c000.snappy.parquet",
+        "bytes": 52730,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e88eb458-1864-42d6-a2dd-4b596ba16caf-c000.snappy.parquet",
+        "bytes": 52755,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-d6b96548-d481-4055-abd7-86a623b69a67-c000.snappy.parquet",
+        "bytes": 52748,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-5fb9211c-91a7-4a64-8b7e-66d8620278b3-c000.snappy.parquet",
+        "bytes": 52821,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8f3a9a1f-fffb-4165-9c67-167dc5e16282-c000.snappy.parquet",
+        "bytes": 52766,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8d51e989-cefa-4840-ac0f-76a0cf3e6a0b-c000.snappy.parquet",
+        "bytes": 52762,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-581544ea-7561-4edd-9461-0d48e946bea9-c000.snappy.parquet",
+        "bytes": 52795,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-3d0d1894-026b-42b4-bcd3-0e6ebd8a625d-c000.snappy.parquet",
+        "bytes": 52757,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-4069e2f4-c7e0-45c1-87aa-fe3e500fa3f3-c000.snappy.parquet",
+        "bytes": 52817,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-5075bb3d-b0ea-43a6-969e-2535dd0299b7-c000.snappy.parquet",
+        "bytes": 52792,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b8fa3e3b-73c4-4871-960c-7a51cf2d8067-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-904a2d38-d3bf-4e9c-8b18-d86017656f7b-c000.snappy.parquet",
+        "bytes": 52807,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-f6cf0e7c-7fc7-4abf-9b05-c58e33188f9b-c000.snappy.parquet",
+        "bytes": 52776,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9ee85d7a-76b5-4292-980a-1c4552e88890-c000.snappy.parquet",
+        "bytes": 52819,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-aa53a9fc-7cd9-4143-bb48-2d2b04136a0f-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-29669884-f36c-4191-a3e2-561a57979cec-c000.snappy.parquet",
+        "bytes": 52798,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ca894d13-5e2d-4cc7-95cd-1a368d784391-c000.snappy.parquet",
+        "bytes": 52748,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-49c77e4a-86b2-4525-9a93-48c5736c00f6-c000.snappy.parquet",
+        "bytes": 52757,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-01ed5ad2-7900-4e2b-b791-5c3030a16eb3-c000.snappy.parquet",
+        "bytes": 52808,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a6fb8ba7-ecab-4dc8-bf9f-80030b64185d-c000.snappy.parquet",
+        "bytes": 52770,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-39bc1bb7-3081-4ff9-9484-6758bb8b8f2f-c000.snappy.parquet",
+        "bytes": 52773,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-580b2de8-1076-466f-bb8b-9fd94d7063a7-c000.snappy.parquet",
+        "bytes": 52767,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-cda94466-1eee-4582-8049-bb83d828894a-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-4a0ad82e-d979-4031-b55e-d67001c8f8f6-c000.snappy.parquet",
+        "bytes": 52754,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-6f161567-67e3-49fb-a6d3-b307654ff973-c000.snappy.parquet",
+        "bytes": 52757,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-81c80ed7-56f6-418f-9164-0dc1eb79fd76-c000.snappy.parquet",
+        "bytes": 52781,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-09b3fc42-be27-4954-8a3a-757e9009caf9-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e197945c-2345-4f9a-a87c-df756ef62119-c000.snappy.parquet",
+        "bytes": 52781,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-3ba867fa-a407-4039-b558-1840cb813a3b-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-22384458-d699-42d9-8d32-c7d744d164fc-c000.snappy.parquet",
+        "bytes": 52763,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a4eb3112-b9a0-4746-83b7-a3461bf5e74f-c000.snappy.parquet",
+        "bytes": 52774,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a96cb6ff-f798-4eb3-83a2-32b745d92869-c000.snappy.parquet",
+        "bytes": 52811,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ef863db3-342b-453b-a02d-9d3785c37f01-c000.snappy.parquet",
+        "bytes": 52718,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-657c4655-25f2-4368-95b6-599eb3bfd9c3-c000.snappy.parquet",
+        "bytes": 52761,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-fc663b8a-c484-400b-aa5e-1011f4e94b69-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-952aa37f-b1bf-4455-a2b0-109f058d15e7-c000.snappy.parquet",
+        "bytes": 52819,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9adc3d09-8986-4b7d-b7fe-51c1801fd577-c000.snappy.parquet",
+        "bytes": 52750,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-49b248a2-2450-4800-9f32-2bd7a1822230-c000.snappy.parquet",
+        "bytes": 52739,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-7501bf34-3ba8-4010-9bfe-ab19e6661bfd-c000.snappy.parquet",
+        "bytes": 52760,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b633e634-afb0-49c6-a6e7-88b16898a663-c000.snappy.parquet",
+        "bytes": 52792,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a66cf8c8-c1c6-4d27-91af-95e802312735-c000.snappy.parquet",
+        "bytes": 52747,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-86eabc14-6770-4c53-8223-58fa927b2305-c000.snappy.parquet",
+        "bytes": 52788,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-f68b8166-7129-4e02-84eb-97852c882956-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-0aeaebe5-970d-417b-bc1c-c21f5ffffc73-c000.snappy.parquet",
+        "bytes": 52768,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9b412878-383e-4a41-91b6-ed88f0a14b08-c000.snappy.parquet",
+        "bytes": 52821,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b86368d0-c0da-4a1c-a9ce-d7eca8bf9ebf-c000.snappy.parquet",
+        "bytes": 52771,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2b43512e-7a2d-4df4-8d6a-160ce7468b8c-c000.snappy.parquet",
+        "bytes": 52815,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e2805186-4668-415e-a0b7-53e8bfa09293-c000.snappy.parquet",
+        "bytes": 52822,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b6691116-dd3b-431d-a9d0-55399ea833e3-c000.snappy.parquet",
+        "bytes": 52744,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-38acc37f-cf13-40ec-bac0-9268bab240ab-c000.snappy.parquet",
+        "bytes": 52753,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-dc09be07-f857-4923-b67a-9973b6580afa-c000.snappy.parquet",
+        "bytes": 52754,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-5139134a-f6f2-4bf8-b695-621aeaf79b0f-c000.snappy.parquet",
+        "bytes": 52763,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ccab6622-ac98-4ab5-9243-3498a4251713-c000.snappy.parquet",
+        "bytes": 52764,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-0e3bfc85-20f9-4ca4-a505-1d283389836c-c000.snappy.parquet",
+        "bytes": 52748,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-7f93f9ca-b8de-49b2-a2af-7ce55bdee7f9-c000.snappy.parquet",
+        "bytes": 52748,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-6595f032-5fa6-4e71-be2b-f60d3db399cd-c000.snappy.parquet",
+        "bytes": 52728,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-827821e9-db51-4cd2-bdc5-60ffce285777-c000.snappy.parquet",
+        "bytes": 52818,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-3e8a73b8-9fed-4bf5-8d76-148ab24b797b-c000.snappy.parquet",
+        "bytes": 52736,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-16d3b134-a366-4642-988c-51df88addc66-c000.snappy.parquet",
+        "bytes": 52762,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-edbb3e9b-4351-4679-9d1d-3c0e4c3a9449-c000.snappy.parquet",
+        "bytes": 52765,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-f3fe0285-c7d6-44bc-bf28-5c4f39f2aea1-c000.snappy.parquet",
+        "bytes": 52748,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-953ab9be-d772-402f-8af9-92522f0205e1-c000.snappy.parquet",
+        "bytes": 52760,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-691284de-7f27-4fcb-b4a4-8cb5c23e4de8-c000.snappy.parquet",
+        "bytes": 52757,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-27665206-ca7b-4126-83ef-773943bcdbd1-c000.snappy.parquet",
+        "bytes": 52786,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a72fb7db-c2f0-4bdd-be23-9c73da31f572-c000.snappy.parquet",
+        "bytes": 52789,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-001181f7-0809-42fa-b80c-813f3f9d65c8-c000.snappy.parquet",
+        "bytes": 52734,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-1356edd6-f3a4-48a1-9373-7ba6c27dfd8a-c000.snappy.parquet",
+        "bytes": 52817,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-852363de-9d03-48c4-bd58-468fc77ae2ac-c000.snappy.parquet",
+        "bytes": 52760,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-add302e9-ad31-4642-b4ca-d439d1be55c1-c000.snappy.parquet",
+        "bytes": 52758,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-7f3cc063-fcd6-4db1-9f28-87ba90a4fe62-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-4504aa53-752e-4f8c-b665-fe40f3433757-c000.snappy.parquet",
+        "bytes": 52763,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-bfa0cf79-96ca-4ec8-af87-d1be4a57599f-c000.snappy.parquet",
+        "bytes": 52761,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-19b74315-7100-491b-ba38-c00004174a9f-c000.snappy.parquet",
+        "bytes": 52746,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-0c97b714-9bfd-401b-8cad-b1a7ed012336-c000.snappy.parquet",
+        "bytes": 52776,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e26e9bc6-803a-42f2-9c09-76c38bcb0500-c000.snappy.parquet",
+        "bytes": 52778,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-4c8f5488-bbfe-465d-a68d-84f8fce66928-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b67c1b79-b2da-4a14-9def-d941771803f7-c000.snappy.parquet",
+        "bytes": 52725,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-1d4983a7-af62-49af-a5f6-e362f430be84-c000.snappy.parquet",
+        "bytes": 52764,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8884d7cb-8ed0-4a03-a2d1-fd59a796a29d-c000.snappy.parquet",
+        "bytes": 52748,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-65897486-9152-42e4-a906-4906b96c4f9a-c000.snappy.parquet",
+        "bytes": 52760,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9da61e67-d469-4ab4-af02-5e64f022949b-c000.snappy.parquet",
+        "bytes": 52741,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-278e5a1c-fbcb-4d37-9d77-89842e7edb42-c000.snappy.parquet",
+        "bytes": 52817,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e5fbe848-317b-4322-93b7-1f36f7701ae2-c000.snappy.parquet",
+        "bytes": 52738,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8c89bf57-964c-4288-9f6f-3fee634e0554-c000.snappy.parquet",
+        "bytes": 52749,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a61e36b7-0af2-4eb3-ab38-535ce6b29ac1-c000.snappy.parquet",
+        "bytes": 52813,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-586a3f1e-c7a3-4cbc-b701-87f33f70c5f1-c000.snappy.parquet",
+        "bytes": 52768,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-50a16cfd-34f9-41ed-a810-2d993aada1cc-c000.snappy.parquet",
+        "bytes": 52778,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-f6382ed5-f0d0-4af1-a2ac-7109939c3796-c000.snappy.parquet",
+        "bytes": 52751,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b2cbb10d-6054-48cb-b1d0-c6ba32a9b21c-c000.snappy.parquet",
+        "bytes": 52790,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a9019412-1ec7-4f9e-8ed3-98ad94dd448b-c000.snappy.parquet",
+        "bytes": 52729,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-21804b25-ad0f-4966-a8f8-6ec924f025a2-c000.snappy.parquet",
+        "bytes": 52754,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8988c4bd-23be-4182-acf7-4de7b9d9adc8-c000.snappy.parquet",
+        "bytes": 52740,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a3406516-e9e4-4f69-98a2-e47375f6bbbd-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-22dd4e77-fbac-4ce5-ac48-f325cac92504-c000.snappy.parquet",
+        "bytes": 52818,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ddfb96b7-4fec-4445-9293-f2faadf91eef-c000.snappy.parquet",
+        "bytes": 52759,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-fcd0081c-0694-493e-9f10-7ef13cc9e46f-c000.snappy.parquet",
+        "bytes": 52803,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-22974f52-af76-4279-94d3-ab6f94d1371d-c000.snappy.parquet",
+        "bytes": 52792,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2aa474ee-799e-450a-82a1-6a663c72828d-c000.snappy.parquet",
+        "bytes": 52765,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-eb2eadb0-3417-4173-ad0a-d7519c4f9763-c000.snappy.parquet",
+        "bytes": 52777,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-f0e5a14e-c3fb-4efb-bb3e-ff8e4262004a-c000.snappy.parquet",
+        "bytes": 52765,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-7e926de0-74fa-4149-9368-677c85bc8924-c000.snappy.parquet",
+        "bytes": 52766,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-5551807b-1c0a-4113-961a-a6bef46c21d7-c000.snappy.parquet",
+        "bytes": 52775,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2b22c843-a443-4a14-9fc9-32e2f310b1b7-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-53ebbbb6-852d-4d3f-8acb-7bc47163110d-c000.snappy.parquet",
+        "bytes": 52757,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e9003303-1b47-4825-8865-0dc2bd058443-c000.snappy.parquet",
+        "bytes": 52761,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-19442299-6620-479d-ad1f-5a68a71ab618-c000.snappy.parquet",
+        "bytes": 52770,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-565250e7-a421-47cf-aec5-5c85c69cfb1b-c000.snappy.parquet",
+        "bytes": 52770,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-8cc02d8f-4b73-44db-b217-e0d8f3095b61-c000.snappy.parquet",
+        "bytes": 52816,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-998c98ff-e031-4d3c-aa4f-ec5ad21e3866-c000.snappy.parquet",
+        "bytes": 52782,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-77cac6be-b803-4c15-a056-a32412782772-c000.snappy.parquet",
+        "bytes": 52738,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-1bacbca1-e585-4c07-84ba-81af82cc6b0a-c000.snappy.parquet",
+        "bytes": 52765,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-67370eba-be7d-41bd-a8c7-4a71fbce00cd-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2194e3c5-11a0-4b94-b2b3-33366927474a-c000.snappy.parquet",
+        "bytes": 52744,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-d5904255-8444-474e-a1f6-b4dc75882aa3-c000.snappy.parquet",
+        "bytes": 52821,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a6d947e4-d70e-4dbd-9818-97b7aec94453-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-d0d2a2bf-2f69-4f19-8b99-9303a1eae139-c000.snappy.parquet",
+        "bytes": 52746,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-08fda7c5-8caf-4ab7-ade7-1b70b1920474-c000.snappy.parquet",
+        "bytes": 52781,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ccfb9746-2ac3-4d9b-9aaf-6ce8957ad1d4-c000.snappy.parquet",
+        "bytes": 52760,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-0a72dafb-cad5-4ca4-a20a-5516f14c98fd-c000.snappy.parquet",
+        "bytes": 52782,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9f614c23-33c3-483a-8f08-b4eb64700199-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-02eb4b24-3f86-4f32-9e8e-59e523fad1d2-c000.snappy.parquet",
+        "bytes": 52804,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-3d1cbf48-94e8-4c3c-820f-dc301a12ef07-c000.snappy.parquet",
+        "bytes": 52752,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e84e9055-07ab-4d9f-a684-4d488bccbc69-c000.snappy.parquet",
+        "bytes": 52767,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a4053301-77fc-45f2-8fe4-47ff6fcdae9f-c000.snappy.parquet",
+        "bytes": 52819,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-cef64dfa-f059-4c49-b2f7-752fbc171f1a-c000.snappy.parquet",
+        "bytes": 52749,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-63c7fc01-bcc7-4a18-aa0b-aa5a3513910e-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c6503363-a9df-4a47-8f11-6f34c4a1f5e0-c000.snappy.parquet",
+        "bytes": 52745,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b862ed13-faf3-429a-9a19-222cc0bdb796-c000.snappy.parquet",
+        "bytes": 52752,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a21a296b-de1c-457c-ad71-3ad7e876cf4b-c000.snappy.parquet",
+        "bytes": 52770,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c79dcae5-f83d-4297-9956-b20b632f77da-c000.snappy.parquet",
+        "bytes": 52786,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-98b1eb69-b5f2-40f3-904a-76f3dc20e1fc-c000.snappy.parquet",
+        "bytes": 52815,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-f80a873f-ad5d-435b-ae5b-caefe904cb15-c000.snappy.parquet",
+        "bytes": 52774,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-dfaea4ad-b35e-46e6-aba0-b08283262362-c000.snappy.parquet",
+        "bytes": 52737,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-628a89a5-9aca-4323-8f5a-56c056d59226-c000.snappy.parquet",
+        "bytes": 52772,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-ba418390-a4d4-4235-b814-e0cf3724f482-c000.snappy.parquet",
+        "bytes": 52805,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c8093072-f9f5-4bef-afcf-7749fe1cc20d-c000.snappy.parquet",
+        "bytes": 52766,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2328c9ec-18a9-4e22-a743-c8f9b855448c-c000.snappy.parquet",
+        "bytes": 52818,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c52a1ef0-5b3f-40d8-91bb-1fc079d20a12-c000.snappy.parquet",
+        "bytes": 52752,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-04d9050c-03be-4aea-9645-133dad6ef58e-c000.snappy.parquet",
+        "bytes": 52758,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e04b1549-54de-4750-8822-6f2f79794f62-c000.snappy.parquet",
+        "bytes": 52769,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-80ca651f-30ae-4668-809f-67bfbd17f216-c000.snappy.parquet",
+        "bytes": 52773,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-cb676ff2-99dd-43cd-8a9a-7cce85349908-c000.snappy.parquet",
+        "bytes": 52819,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-9b3c9c47-df09-49a9-820e-adb251235320-c000.snappy.parquet",
+        "bytes": 52761,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a7ace50e-7fd0-434e-a2d0-d1c83b2cbadb-c000.snappy.parquet",
+        "bytes": 52738,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-837bf018-502a-4e09-8604-5cb0b1fbd0a8-c000.snappy.parquet",
+        "bytes": 52816,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-12449ee3-bf8f-46c2-b7b2-f5a78099c1a2-c000.snappy.parquet",
+        "bytes": 52768,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-1b72c47d-e996-4dd1-89c5-fbd8bb1157ae-c000.snappy.parquet",
+        "bytes": 52821,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-1921d751-3cc9-42dc-a51f-c4102958d0f7-c000.snappy.parquet",
+        "bytes": 52771,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-5d7a51f3-3e84-4505-a6fb-92f32139ebc0-c000.snappy.parquet",
+        "bytes": 52756,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-2390e850-5eaf-432e-bf7e-27e2bad0a31f-c000.snappy.parquet",
+        "bytes": 52790,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-85df89e0-7a6f-4d90-ba67-70fb41cab518-c000.snappy.parquet",
+        "bytes": 52813,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-c67a1119-08ac-4d63-b81a-603185722ec6-c000.snappy.parquet",
+        "bytes": 52750,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-e239d4b8-3dc3-4914-9d90-255fd5f8d2d8-c000.snappy.parquet",
+        "bytes": 52761,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-a7511efb-72e7-4dab-ad84-d2eaa8b935ab-c000.snappy.parquet",
+        "bytes": 52812,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-38275ecb-1245-4ed9-93eb-0c0936f19e67-c000.snappy.parquet",
+        "bytes": 52775,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-021bd570-9f67-40f5-b2f7-f17e93a3d495-c000.snappy.parquet",
+        "bytes": 52770,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-07f3f868-fc0d-4603-8c5c-c4cd3d72cf5c-c000.snappy.parquet",
+        "bytes": 52758,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      },
+      {
+        "path": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\maint_events\\part-00000-b8f1d95e-358e-46fe-be8a-8eea6692d33a-c000.snappy.parquet",
+        "bytes": 52781,
+        "tracked": false,
+        "state": "new ignored synthetic file from this session"
+      }
+    ],
+    "total_bytes": 16907742,
+    "effect": "Physical removal would break older Delta versions; forbidden without a specific protection exception.",
+    "alternative": "Keep files; or review exact reversible quarantine destinations before authorizing moves."
+  },
+  "row_deletions": [
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_intable",
+      "version": 0,
+      "predicate": "subject_id = 'user_042'",
+      "count": 8,
+      "doc_ids": [
+        42,
+        292,
+        542,
+        792,
+        1042,
+        1292,
+        1542,
+        1792
+      ],
+      "tracked": false,
+      "state": "new ignored synthetic table from this session",
+      "effect": "Remove only these rows from the current table via a new Delta commit; retain old physical files and version 0.",
+      "recovery": "Delta restore to recorded version 0; no vacuum on these tables."
+    },
+    {
+      "table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\silver\\training_corpus_governed",
+      "version": 0,
+      "predicate": "subject_id = 'user_007'",
+      "count": 8,
+      "doc_ids": [
+        757,
+        7,
+        257,
+        1007,
+        1257,
+        1757,
+        1507,
+        507
+      ],
+      "tracked": false,
+      "state": "new ignored synthetic table from this session",
+      "effect": "Remove only these rows from the current table via a new Delta commit; retain old physical files and version 0.",
+      "recovery": "Delta restore to recorded version 0; no vacuum on these tables."
+    }
+  ],
+  "not_yet_created": {
+    "NB6 Iceberg": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\iceberg\\nb6",
+    "NB7 CDF table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\docs_cdf",
+    "smoke CDF table": "C:\\Users\\Duong Vinh\\K4-Track02-Day18-DuongXuanVinh-2A202602622-Lakehouse-Lab\\_lakehouse\\scratch\\_smoke_cdf"
+  }
+}
