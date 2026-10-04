@@ -1,0 +1,1 @@
+Thật lòng là sao khi đọc bài lab này hơi lú, AI giải thích hơi nhiều là việc của mình là chạy và cố hiểu nó thôi, chưa hiểu được hoàn toàn thì, mấy hôm tới dành thêm thời gian để tiếp tục tìm hiểu về nó vậy, quá rộng quá dài
