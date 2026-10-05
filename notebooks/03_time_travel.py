@@ -120,6 +120,19 @@ print(f"\nTotal versions: {len(final_history)}  (target ≥ 5)")
 # - [ ] MERGE 100K finished in < 60s (likely < 1s on lightweight path)
 # - [ ] RESTORE finished in < 30s and removed bad rows
 
+# %% [markdown]
+# ## Giải thích kết quả
+#
+# Đọc `version=2` chỉ tạo một snapshot view cũ cho riêng truy vấn; trạng thái
+# hiện tại của bảng không đổi và writer tiếp theo vẫn ghi trên version mới nhất.
+# `RESTORE(2)` thì tạo một transaction mới đưa trạng thái hiện tại về tập file
+# của version 2. Vì thế sau restore reader mặc định cũng thấy dữ liệu đã rollback.
+#
+# RESTORE không xóa history vì lịch sử bất biến là audit trail của bảng. Ghi
+# một commit RESTORE mới vừa tránh sửa các commit đã công bố cho concurrent
+# readers, vừa cho phép kiểm toán biết lỗi xảy ra lúc nào và ai đã rollback.
+# Lần chạy này MERGE 100K thành công, history có 5 version và `score < 0` còn 0.
+
 # %%
 ops = [h["operation"] for h in final_history]
 checks = {

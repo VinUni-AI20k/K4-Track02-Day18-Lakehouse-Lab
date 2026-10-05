@@ -422,6 +422,22 @@ print("trigger interval is cheaper than paying someone to clean up after it.")
 # | Orphan removal | 3 planted Delta orphans + all stranded Iceberg manifest lists swept |
 # | Log checkpoint | `*.checkpoint.parquet` + `_last_checkpoint` exist |
 
+# %% [markdown]
+# ## Giải thích kết quả
+#
+# Delta vacuum của `deltalake` lần chạy này dựa vào tombstone trong transaction
+# log. File của writer crash trước commit chưa từng xuất hiện trong log nên cũng
+# không có tombstone; vacuum không biết nó tồn tại. Phải so sánh file vật lý với
+# tập file đang được metadata tham chiếu, kèm age guard để không xóa file của
+# writer còn đang chạy.
+#
+# Tương tự, đường PyIceberg ở đây expire snapshot chỉ thay đổi metadata tham
+# chiếu: số snapshot giảm `20 → 3` nhưng manifest list cũ vẫn nằm trên đĩa.
+# Orphan sweep là job riêng biến việc "không còn tham chiếu" thành bytes thực sự
+# được thu hồi. Retention quá ngắn còn có thể xóa file mà reader cũ đã plan nhưng
+# chưa đọc xong, đồng thời làm mất khả năng time travel; retention 0 chỉ an toàn
+# cho bảng scratch cô lập của lab này.
+
 # %%
 checks = {
     "compaction ≥ 10x fewer files": base["data files"] / max(after_compact["data files"], 1) >= 10,

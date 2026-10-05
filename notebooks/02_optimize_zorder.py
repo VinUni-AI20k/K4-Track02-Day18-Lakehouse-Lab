@@ -163,6 +163,21 @@ print(
 # - [ ] Stats inspection shows ~1 file covers `user_id=4242`
 # - [ ] Screenshot the printed numbers
 
+# %% [markdown]
+# ## Giải thích kết quả
+#
+# Compaction giảm chi phí mở/list file bằng cách ghép nhiều file nhỏ thành ít
+# file lớn hơn. Z-order giải quyết vấn đề khác: sắp các giá trị `user_id` gần
+# nhau để min/max của từng file hẹp hơn, nhờ đó engine loại được file không thể
+# chứa `TARGET_USER`. Trên lần chạy này số file giảm `200 → 55`, còn chỉ 1/55
+# file có range chứa user 4242.
+#
+# Nếu compact thành đúng một file thì truy vấn vẫn chỉ có một file để mở; khi
+# đó không còn nhiều file cho cơ chế pruning lựa chọn, nên lợi ích Z-order khó
+# quan sát. Benchmark thời gian cũng thay đổi theo cache hệ điều hành, SSD, CPU,
+# antivirus và tải nền. Vì vậy pruning ratio từ transaction-log stats là bằng
+# chứng ổn định hơn wall-clock; lab chấp nhận một trong hai ngưỡng.
+
 # %%
 speedup = before / max(after, 1e-6)
 checks = {

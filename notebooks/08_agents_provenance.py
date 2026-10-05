@@ -462,6 +462,23 @@ as must any copies or derived artifacts outside this table.""")
 # | Provenance | all 4 illustrative lab buckets exist as partitions; UNCLASSIFIED excluded |
 # | Erasure | Subject rows = 0 in the current version, and you can say which bucket they were in |
 
+# %% [markdown]
+# ## Giải thích kết quả và giới hạn mô phỏng
+#
+# Pin table version biến "dữ liệu training" thành một snapshot xác định: dù có
+# thêm rollout mới, replay vẫn đọc đúng số step mà run đã thấy. Chỉ lưu tên bảng
+# là chưa đủ vì nội dung của tên đó thay đổi theo commit.
+#
+# Delete ở version hiện tại tạo state mới nhưng version cũ và file phục vụ time
+# travel vẫn còn đến khi hết retention/vacuum. Vì vậy xóa khỏi current table
+# chưa chứng minh dữ liệu biến mất khỏi backup, external index hay model đã train.
+#
+# Mô phỏng MCP này chưa thể dùng làm control production: `confirmed` do caller
+# tự truyền chứ không gắn identity/authorization; destructive call chỉ là no-op;
+# task không có durable worker, retry/cancel hay persistence; cache không xử lý
+# invalidation phân tán; replay mới so row count chứ chưa kiểm tra content/hash.
+# Bốn provenance bucket cũng là quy tắc minh họa, không phải kết luận pháp lý.
+
 # %%
 checks = {
     "silver partitioned by agent_version": len(list(Path(SILVER).glob("agent_version=*"))) == 2,
