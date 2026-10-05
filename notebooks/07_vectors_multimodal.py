@@ -399,7 +399,24 @@ checks = {
     "lifecycle bug reproduced":         in_hits == 0 and ex_hits > 0,
     "CDF emits delete events":          len(deletes) == len(victim_ids),
 }
+print("──── NB7 screenshot summary ────")
+print(f"Random-read amplification: {AMPLIFICATION:.0f}x (target ≥ 5x)")
+print(f"int8 disk reduction:       {du(F32) / max(du(I8), 1):.1f}x (target ≥ 3x)")
+print(f"Recall@10:                 {recall:.3f} (target ≥ 0.80)")
+print(f"Topic fidelity:            {topic_fidelity:.3f} (target ≥ 0.95)")
+print(f"SQL semantic-search topic: {query_topic}; top-5 topics={top_topics}")
+print(f"Lifecycle bug:             lakehouse hits={in_hits}, stale external-index hits={ex_hits}")
+print(f"CDF delete events:         {len(deletes)}")
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB7 incomplete — see FAIL rows above"
 print("\nNB7 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Inline blob không làm tăng đáng kể scan khi projection pushdown hoạt động, nhưng random
+# read bị khuếch đại 200× do phải đọc cả row group. Vector int8 nhỏ hơn 5,8×, vẫn đạt
+# recall@10 = 0,904 và topic fidelity = 1,0. Sau yêu cầu xóa, lakehouse còn 0 hit nhưng
+# external index cũ vẫn trả 8 hit; vì vậy index phải là bản dẫn xuất có thể rebuild và nhận
+# delete event qua CDF.

@@ -434,7 +434,26 @@ checks = {
     "iceberg stranded files swept": len(stranded) > 0 and find_iceberg_orphans(ice) == [],
     "iceberg data intact":          cat.load_table(f"{ns}.maint").scan().to_arrow().num_rows == 2000,
 }
+print("──── NB6 screenshot summary ────")
+print(f"Job 1 compaction:          {base['data files']} → {after_compact['data files']} files "
+      f"({base['data files'] / max(after_compact['data files'], 1):.1f}x fewer)")
+print(f"Job 2 clustering:          {(1 - after_cluster / max(total_files, 1)) * 100:.0f}% files skippable")
+print(f"Job 3 Delta vacuum:        reclaimed {human(before_vacuum - du(TABLE))}")
+print(f"Job 3 Iceberg expiry:      {ice_before['snapshots']} → {ice_after['snapshots']} snapshots")
+print(f"Job 4 Delta orphans:       {len(found)} found and removed")
+print(f"Job 4 Iceberg sweep:       {len(stranded)} stranded lists, reclaimed {human(reclaimed_ice)}")
+print(f"Job 5 checkpoint:          {ckpt[0].name if ckpt else 'NONE'}; _last_checkpoint="
+      f"{(log_dir / '_last_checkpoint').exists()}")
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB6 incomplete — see FAIL rows above"
 print("\nNB6 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Compaction giảm 200 file xuống 11 và clustering giúp bỏ qua 90% file cho point query.
+# Delta VACUUM chỉ xử lý file đã được tombstone, nên orphan chưa từng commit phải được tìm
+# bằng phép hiệu tập hợp. Tương tự, Iceberg giảm từ 20 xuống 3 snapshot nhưng cần quét tiếp
+# 17 manifest list bị bỏ lại. Checkpoint rút ngắn việc đọc log; năm job này bổ sung cho nhau
+# và không nên được xem là một thao tác cleanup duy nhất.

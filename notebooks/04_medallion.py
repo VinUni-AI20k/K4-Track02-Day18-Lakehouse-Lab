@@ -155,3 +155,35 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %%
+print("──── NB4 screenshot summary ────")
+print(f"Storage tables present:    Bronze={Path(BRONZE).exists()}, "
+      f"Silver={Path(SILVER).exists()}, Gold={Path(GOLD).exists()}")
+print(f"Bronze rows:              {bronze_n:,}")
+print(f"Silver rows:              {silver_n:,}")
+print(f"Duplicates removed:       {bronze_n - silver_n:,}")
+print(f"Gold coverage:            {n_dates} dates × {n_models} models = {gold_df.height} rows")
+print("Gold metrics present:     p50_latency_ms, p95_latency_ms, cost_usd, error_rate")
+print("Gold sample (actual values):")
+print(gold_df.select(
+    "date", "model", "p50_latency_ms", "p95_latency_ms", "cost_usd", "error_rate"
+).sort("date", "model").head(3))
+checks = {
+    "Silver < Bronze": silver_n < bronze_n,
+    "Gold covers ≥ 7 dates": n_dates >= 7,
+    "Gold covers 3 models": n_models == 3,
+    "Gold row count = dates × models": gold_df.height == n_dates * n_models,
+}
+for k, v in checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(checks.values()), "NB4 incomplete — see FAIL rows above"
+print("\nNB4 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Bronze giữ 200.000 sự kiện thô; Silver còn 190.052 dòng sau khi loại 9.948 bản ghi lặp.
+# Gold tạo đủ 24 nhóm cho 8 ngày và 3 model, kèm p50, p95, chi phí và tỷ lệ lỗi. Cách tách
+# tầng này giữ dữ liệu gốc để truy vết, chuẩn hóa chất lượng ở Silver và cung cấp metric ổn
+# định cho dashboard ở Gold.
