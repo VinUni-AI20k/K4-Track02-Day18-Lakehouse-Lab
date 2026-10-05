@@ -1,7 +1,11 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
 # ---
 
 # %% [markdown]
@@ -479,3 +483,21 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB8 incomplete — see FAIL rows above"
 print("\nNB8 complete.")
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# | Check | Output thực tế |
+# |---|---|
+# | Silver agent versions | policy-v2 và policy-v3 |
+# | Gold policies | 2 |
+# | Training pin/replay | version 0: 1.578 bước; sau append version 1: 1.978; replay version 0: 1.578 |
+# | Catalog cache | 5 list_tables calls, 1 catalog read |
+# | Destructive simulation | chưa xác nhận: input_required |
+# | Async task | completed, 300 rows |
+# | Provenance | 4 bucket minh họa + UNCLASSIFIED; trainable 1.666/2.000 |
+# | Xóa subject hiện tại | user_007: 8→0 rows |
+#
+# Pin version gắn training run với đúng snapshot dữ liệu đã dùng, tránh replay vô tình đọc thêm dữ liệu đến muộn. Notebook chỉ so số bước, chưa so nội dung từng row. Xóa ở version hiện tại tạo version mới nhưng version cũ vẫn giữ dữ liệu qua time travel; retention, vacuum và mọi external copy phải được xử lý riêng.
+#
+# Mô phỏng MCP không phải ranh giới bảo mật production: confirmed do caller truyền, cache chỉ đo list_tables chứ không phải tools/list, và task chạy giả lập cục bộ. Provenance mapping cũng chỉ là minh họa: CC-BY có điều kiện ghi công nhưng bị gán public_domain; consent không chứng minh đã kiểm tra opt-out. Không dùng các bucket này để kết luận quyền sử dụng hoặc tuân thủ pháp lý. UNCLASSIFIED bị loại khỏi trainable set theo quy tắc lab, không phải chứng nhận legal.

@@ -1,7 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
+#   kernelspec:
+#     display_name: ''
+#     name: ''
 # ---
 
 # %% [markdown]
@@ -132,3 +139,10 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB3 incomplete — see FAIL rows above"
 print("\nNB3 complete.")
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# MERGE nhận 100.000 source rows: 50.000 customer được update, 50.000 customer được insert; history ghi nhận MERGE ở version 2. Sau đó cell bad-write thêm 50 dòng score âm ở version 3. RESTORE về version 2 tạo version 4; bảng hiện tại có 0 dòng score < 0 và history có đủ 5 version gồm RESTORE.
+#
+# Đọc version cũ chỉ tạo một view truy vấn của snapshot tại thời điểm đó; current table không đổi. RESTORE ghi transaction mới để current snapshot trở lại nội dung của version 2. Giữ version 3 và ghi version 4 là cần thiết để audit ai đã ghi dữ liệu lỗi, khi rollback xảy ra và snapshot nào đang hiện hành. Xóa history sẽ làm mất khả năng giải thích và tái tạo trạng thái trước đó.

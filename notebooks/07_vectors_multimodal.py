@@ -1,7 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
+#   kernelspec:
+#     display_name: ''
+#     name: ''
 # ---
 
 # %% [markdown]
@@ -403,3 +410,19 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB7 incomplete — see FAIL rows above"
 print("\nNB7 complete.")
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# | Metric | Kết quả |
+# |---|---:|
+# | Inline random-read amplification | 200× (12,5 MB row group / 64 KB blob) |
+# | int8 so với float32 | 5,8× nhỏ hơn, tiết kiệm 83% |
+# | Recall@10 theo doc ID | 0,904 |
+# | Topic fidelity của top-10 | 1,000 |
+# | Sau xóa user_042 | Lakehouse: 0 hits; external index cũ: 8 hits |
+# | CDF | 8 delete events |
+#
+# Pointer tránh đọc cả Parquet row group khi lấy một blob; với analytical query có projection, scan topic/count chỉ đọc khoảng 1,2 KB từ cả hai layout. Do đó pointer giảm random-read amplification, nhưng không làm tổng số bytes biến mất: blob objects vẫn chiếm khoảng 12,5 MB.
+#
+# Quantization int8 cắt kích thước embedding nhưng có thể đổi thứ hạng các vector gần nhau. Recall@10 hỏi có giữ nguyên đúng document IDs không; topic fidelity hỏi kết quả còn cùng chủ đề không. 0,904 và 1,000 lần lượt cho thấy một số ID đổi nhưng kết quả vẫn đúng chủ đề trên corpus tổng hợp này. External index phải xử lý CDF delete (và update/upsert khi metadata/vector đổi), xóa theo doc_id một cách retry-idempotent; nếu chỉ upsert, dữ liệu đã xóa vẫn có thể xuất hiện trong retrieval.

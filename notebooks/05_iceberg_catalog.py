@@ -1,7 +1,15 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
 # ---
 
 # %% [markdown]
@@ -299,3 +307,12 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB5 incomplete — see FAIL rows above"
 print("\nNB5 complete.")
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# Catalog SQLite tạo bảng lake.llm_events với spec day(ts). Sau 10 append có 5.000 rows, 10 data files và 10 snapshots. plan_files đọc 10 files ở full scan và 1 file khi lọc một ngày bằng ts: pruning 10×. Metadata là 137,0 KB so với 47,3 KB data (289,7%) vì mỗi file chỉ có 500 rows trong lab; với file 512 MB, tỷ lệ minh họa trong notebook còn khoảng 0,1%.
+#
+# Rename latency_ms thành latency_millis giữ field_id = 4, vì Iceberg định danh cột bằng field ID thay vì vị trí/tên vật lý. Old rows vẫn đọc được; cột tier mới NULL trên 5.000 rows cũ do rename/schema update không backfill dữ liệu. Hai spec ID [1, 2] cùng tồn tại sau partition evolution và toàn bảng đọc được 5.500 rows.
+#
+# Hidden partitioning cho phép filter trên cột nguồn ts; Iceberg suy ra partition day(ts) lúc lập kế hoạch. Khi đổi spec, file cũ giữ layout/spec cũ, file mới dùng spec mới. Reader dùng spec tương ứng từng file nên không cần rewrite toàn bộ dữ liệu trong một đợt. Đây là lab dùng catalog cục bộ và client-side planning, không phải benchmark catalog server production.

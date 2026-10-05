@@ -1,7 +1,11 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
 # ---
 
 # %% [markdown]
@@ -176,3 +180,18 @@ print(f"\n  (speedup={speedup:.1f}x, pruning={pruned_ratio:.1f}x — the slide a
 print("   wall-clock is noisy on a laptop, which is why file-pruning is the fallback.)")
 assert all(checks.values()), "NB2 incomplete — see FAIL rows above"
 print("\nNB2 complete.")
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# | Metric | Trước | Sau compaction + Z-order |
+# |---|---:|---:|
+# | Data files | 200 | 55 |
+# | Median query | 123,9 ms | 13,1 ms |
+# | Speedup | — | 9,5× |
+# | File chứa user_id=4242 | — | 1/55 |
+# | Pruning ratio | — | 55× |
+#
+# Compaction gộp small files để giảm số lần mở file và metadata cần lập kế hoạch. Z-order sắp xếp dữ liệu theo user_id để min/max của từng file hẹp hơn; point query chỉ cần mở file có range 3696–5534. Hai phép tối ưu giải quyết hai chi phí khác nhau.
+#
+# Nếu gộp thành một file duy nhất, số file cần mở sẽ nhỏ nhưng cũng chỉ còn một file để đọc, nên file-pruning ratio không thể chứng minh khả năng bỏ qua phần lớn files; query còn mất song song và có thể phải đọc lượng lớn dữ liệu. Thời gian benchmark phụ thuộc CPU, filesystem, cache nóng/lạnh, scheduling và nhiễu đo. Vì vậy số đo 9,5× là kết quả lần chạy này; số file bị prune là bằng chứng layout ổn định hơn giữa các máy.

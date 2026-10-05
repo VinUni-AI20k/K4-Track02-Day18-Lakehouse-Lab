@@ -1,7 +1,11 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
 # ---
 
 # %% [markdown]
@@ -15,6 +19,8 @@
 
 # %%
 import _setup  # noqa: F401  -- adds scripts/ to sys.path (file-relative)
+from pathlib import Path
+
 import polars as pl
 from deltalake import DeltaTable, write_deltalake
 from lakehouse import path, reset
@@ -46,6 +52,11 @@ print(pl.from_arrow(dt.to_pyarrow_table()))
 print("\nHistory:")
 for h in dt.history():
     print(f"  v{h['version']}  {h['operation']}  {h.get('operationMetrics', {})}")
+
+# %%
+commit_file = Path(table_path) / "_delta_log" / "00000000000000000000.json"
+print(f"Commit JSON: {commit_file}")
+print(commit_file.read_text(encoding="utf-8"))
 
 # %% [markdown]
 # ## 3. Schema enforcement — try to write a wrong schema
@@ -110,3 +121,12 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB1 incomplete — see FAIL rows above"
 print("\nNB1 complete.")
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# **Số đo thực tế:** bảng có hai commit JSON: v0 ghi 3 dòng, v1 ghi thêm 1 dòng có tier. Cell ngay phía trên đọc trực tiếp commit JSON v0; log cho biết operation WRITE, engine delta-rs, metadata/schema và file Parquet được thêm cùng thống kê 3 bản ghi. Ghi age = "thirty" bị chặn với lỗi cast string sang Int64. Sau schema merge, schema có tier; DuckDB đếm premium = 1 và NULL = 3.
+#
+# **Enforcement và evolution:** enforcement kiểm tra dữ liệu mới theo schema hiện tại và từ chối giá trị không ép được sang kiểu đã khai báo. Nó không tự thay đổi hợp đồng schema. Evolution là thay đổi schema đã được cho phép rõ ràng; opt-in giúp tránh việc cột mới hoặc thay đổi ngoài ý muốn làm hỏng consumer, query và chính sách dữ liệu.
+#
+# **Transaction log:** commit JSON ghi lại metadata/protocol, operation metrics và danh sách file được thêm hoặc gỡ. Reader dựng snapshot từ các commit có thứ tự nên một lần ghi có thể được kiểm tra và truy vấn nhất quán qua history/time travel. Cell lỗi cho thấy bad write không tạo commit mới; cờ tổng kết cuối notebook chỉ là kiểm tra phụ.

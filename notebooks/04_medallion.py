@@ -1,7 +1,11 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
 # ---
 
 # %% [markdown]
@@ -155,3 +159,16 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# | Layer | Dòng | Vị trí |
+# |---|---:|---|
+# | Bronze | 200.000 | _lakehouse/bronze/llm_calls_raw |
+# | Silver | 190.052 | _lakehouse/silver/llm_calls |
+# | Gold | 21 | _lakehouse/gold/llm_daily_metrics |
+#
+# Silver giảm 9.948 dòng (4,97%) nhờ chọn một bản theo request_id và bỏ record không parse được model. Gold có 7 ngày × 3 model; kiểm tra trực tiếp bảng cho thấy p50 ≤ p95 ở cả 21 nhóm, cost_usd tối thiểu 44,59 và error_rate nằm trong 0,0451–0,0615.
+#
+# Dedup ở Silver loại retries/duplicate request_id trước khi chúng làm phồng counts, tokens và chi phí. Gold là tập metric nhỏ, có schema rõ, nên dashboard tránh parse và quét payload Bronze lặp lại. Query tính latency bằng percentile liên tục; error_rate là trung bình cờ status != "ok", tương đương tỷ lệ request lỗi nếu status luôn có giá trị; cost_usd cộng input/output tokens theo giá minh họa của lab. Giá này không phải báo giá hiện hành. Với dữ liệu production, cần xử lý status NULL như unknown/error thay vì mặc định không lỗi, và cập nhật bảng giá theo model/version.
