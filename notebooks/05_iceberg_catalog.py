@@ -287,6 +287,19 @@ print("\nTwo layouts, one table, zero rewrites. This is the feature.")
 # | Schema evolved, field IDs stable | `latency_millis` keeps `field_id=4` |
 # | Partition evolution | ≥ 2 distinct `spec_id`s, table still fully readable |
 
+# %% [markdown]
+# ## Giải thích kết quả
+#
+# Hidden partitioning lưu transform `day(ts)` trong metadata. Người dùng lọc
+# cột nguồn `ts`; planner tự chiếu khoảng thời gian sang partition value và chỉ
+# chọn file phù hợp, nên không cần biết hay nhớ thêm predicate `ts_day`.
+#
+# Iceberg đọc cột bằng field ID ổn định thay vì chỉ dựa vào tên/vị trí. Vì vậy
+# đổi `latency_ms` thành `latency_millis` chỉ cập nhật metadata và field 4 trong
+# file cũ vẫn được hiểu đúng. Với partition evolution, mỗi data file ghi lại
+# `spec_id` đã tạo ra nó; planner dùng đúng spec cho file cũ và mới. Do đó hai
+# layout `[1, 2]` cùng tồn tại mà không cần rewrite toàn bộ dữ liệu ngay lập tức.
+
 # %%
 checks = {
     "pruning ratio ≥ 5x":        PRUNE_RATIO >= 5,

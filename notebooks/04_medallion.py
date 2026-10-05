@@ -155,3 +155,34 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %% [markdown]
+# ## Giải thích và kiểm tra đầy đủ Gold
+#
+# Dedup ở Silver loại retry trùng `request_id`, tránh tính một request nhiều lần
+# trong traffic, token, error rate và chi phí. Dashboard đọc Gold vì bảng đã có
+# đúng grain `(date, model)` và metric dựng sẵn; nó không phải parse JSON hoặc
+# scan hàng trăm nghìn event cho mỗi lần refresh.
+#
+# `error_rate` là tỷ lệ dòng có `status != 'ok'`, nên phải nằm trong `[0, 1]`.
+# `cost_usd` nhân tổng input/output token với đơn giá minh họa theo một triệu
+# token. Công thức phù hợp với schema đầu vào, nhưng bảng giá này không phải giá
+# production và cần được version hóa nếu dùng thật.
+
+# %%
+from pathlib import Path as _Path
+
+gold_checks = {
+    "bronze/silver/gold exist": all(_Path(p).exists() for p in (BRONZE, SILVER, GOLD)),
+    "silver dedup dropped rows": silver_n < bronze_n,
+    "gold covers ≥7 dates": n_dates >= 7,
+    "gold covers exactly 3 models": n_models == 3,
+    "every date-model combination exists": gold_df.height == n_dates * n_models,
+    "p50 ≤ p95": bool((gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all()),
+    "cost is positive": bool((gold_df["cost_usd"] > 0).all()),
+    "error_rate is in [0,1]": bool(gold_df["error_rate"].is_between(0, 1, closed="both").all()),
+}
+for k, v in gold_checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(gold_checks.values()), "NB4 incomplete — see FAIL rows above"
+print("\nNB4 complete.")

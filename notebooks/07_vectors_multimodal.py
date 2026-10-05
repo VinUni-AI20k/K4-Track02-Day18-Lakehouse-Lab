@@ -386,6 +386,20 @@ and the lifecycle is enforced by the table itself.
 # | Lifecycle bug reproduced | 0 hits in-table, > 0 hits in the external index |
 # | CDF emits delete events | ≥ 1 `delete` in the change feed |
 
+# %% [markdown]
+# ## Giải thích kết quả
+#
+# Int8 giảm độ chính xác mỗi thành phần vector để đổi lấy file nhỏ hơn; lần chạy
+# này giảm `5.8×`, recall@10 theo đúng doc ID còn `0.904`. Recall doc ID phạt cả
+# trường hợp một tài liệu bị thay bằng tài liệu gần như tương đương. Topic
+# fidelity chỉ hỏi kết quả còn đúng chủ đề cho RAG hay không và đạt `1.000`, nên
+# hai metric trả lời hai câu hỏi chất lượng khác nhau.
+#
+# External index là bản sao dẫn xuất nên delete ở system-of-record không tự xóa
+# vector bên ngoài: bảng còn 0 victim nhưng index cũ vẫn trả 8. Để hết trả dữ
+# liệu đã xóa, consumer phải nhận và áp dụng sự kiện `delete` (ở đây CDF phát đủ
+# 8), đồng thời xử lý retry/idempotency và checkpoint tiến độ trong production.
+
 # %%
 top_topics = [h[2] for h in hits]
 query_topic = docs.column("topic")[7].as_py()
