@@ -473,6 +473,7 @@ checks = {
     "tasks poll completes":                st["status"] == "completed",
     "all 4 lab buckets present":           len([x for x in parts if "UNCLASSIFIED" not in x]) == 4,
     "unclassified rows found":             unclassified > 0,
+    "UNCLASSIFIED excluded from training": trainable == governed.num_rows - unclassified,
     "erasure removed subject rows":        after == 0 and before > 0,
 }
 for k, v in checks.items():

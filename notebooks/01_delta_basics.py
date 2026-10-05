@@ -52,12 +52,22 @@ for h in dt.history():
 
 # %%
 bad = pl.DataFrame({"id": [4], "name": ["dan"], "age": ["thirty"], "city": ["Hue"]})
+schema_enforcement_blocked = False
+version_before_bad_write = DeltaTable(table_path).version()
+rows_before_bad_write = DeltaTable(table_path).count()
 try:
     write_deltalake(table_path, bad.to_arrow(), mode="append")
     print("UNEXPECTED: bad write succeeded — schema enforcement broken")
 except Exception as e:
+    schema_enforcement_blocked = True
     msg = str(e).splitlines()[0][:120]
     print(f"BLOCKED by schema enforcement (expected): {type(e).__name__}: {msg}")
+
+assert schema_enforcement_blocked, "The invalid age=str write must fail"
+failed_write_version_unchanged = DeltaTable(table_path).version() == version_before_bad_write
+assert failed_write_version_unchanged
+assert DeltaTable(table_path).count() == rows_before_bad_write
+print("Failed write preserved the table version and row count.")
 
 # %% [markdown]
 # ## 4. Schema evolution (opt-in)
@@ -92,17 +102,22 @@ print(tier_counts)
 # - [ ] Schema enforcement blocked the bad write
 # - [ ] schema_mode="merge" added the `tier` column
 # - [ ] DuckDB query returned 2 tier groups
-# The final schema-enforcement flag is hardcoded; inspect the actual error
-# from the bad-write cell rather than treating that PASS line as proof.
+# The enforcement check records the actual exception and verifies that the
+# failed write did not commit a version or add rows.
 
 # %%
 from pathlib import Path as _Path  # noqa: E402
 
 _log = sorted(_Path(table_path).glob("_delta_log/*.json"))
 _cols = DeltaTable(table_path).schema().to_arrow().names
+print("Transaction log commits:")
+for commit in _log:
+    print(f"  {commit.name}")
+print(f"\nFirst commit JSON ({_log[0].name}):")
+print(_log[0].read_text(encoding="utf-8"))
 checks = {
     "_delta_log/ has JSON commits": len(_log) >= 2,
-    "schema enforcement blocked bad write": True,   # placeholder; inspect the bad-write output
+    "schema enforcement blocked bad write": schema_enforcement_blocked,
     "tier column added via schema_mode=merge": "tier" in _cols,
     "duckdb sees 2 tier groups": len(tier_counts) == 2,
 }

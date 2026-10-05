@@ -1,0 +1,18 @@
+{
+  "notebooks\\01_delta_basics.ipynb": "676d2f572b95798adc10d11f6d34bca25c8c65b8bf4200bc78de6651a49b40ff",
+  "screenshots\\01_delta_basics.png": "6dea87488d46167fa54e7e85fb685d55d116ec76712bae5e751cd22621ebab05",
+  "notebooks\\02_optimize_zorder.ipynb": "f083c090cdce7274913a916fbbd35ffca1d69b59c0b9b50c991fcd67e9e99dca",
+  "screenshots\\02_optimize_zorder.png": "f8f9e1145f722c119d345859b5f52299ced185f0cf2c519074671831217d9236",
+  "notebooks\\03_time_travel.ipynb": "6c72d3779580308de12bb5c1acba71232bfdf3dd28f5e295a9eb923100a8899d",
+  "screenshots\\03_time_travel.png": "f884675e781b303de958080e869fee05118a2d4cd4c500565720dd60ced756ef",
+  "notebooks\\04_medallion.ipynb": "2e4a65331abc2c621ab8f6dd96f764ed1770203d7ef0b35846bd4236eec10ce6",
+  "screenshots\\04_medallion.png": "d60c1565b3c14bfa428cbc1bfd27b510734ef700ae3ef22018c55fd548ca6491",
+  "notebooks\\05_iceberg_catalog.ipynb": "1edeca990e5229bde6d0ea626d11f51c6dd42d4fdc13d66680cd6c7f478d13ae",
+  "screenshots\\05_iceberg_catalog.png": "af7c77e0f51550a56cd6e334035c97ef547d2be584b20120a25fc71bc5cce548",
+  "notebooks\\06_maintenance.ipynb": "b36916b891de0a7e5c93714e743246d0f2f77b3dd785fb9e1dee3e696f474eca",
+  "screenshots\\06_maintenance.png": "da15d0953c7ce1184fa9ba08e7f664c44f282e0ace1994b52a27ed4c8a46463e",
+  "notebooks\\07_vectors_multimodal.ipynb": "13e7f88cadc77686657202f17b4474e67826d9ad20e602685d65f805320fe334",
+  "screenshots\\07_vectors_multimodal.png": "877f16be2b46b9b5b2a40c1d0b67d14890375d529882875e996bf0a176037eeb",
+  "notebooks\\08_agents_provenance.ipynb": "b7dd3c710f18d16805c8b716125a9bcadb0acdab25d6a0dc19ba1a305a25b61b",
+  "screenshots\\08_agents_provenance.png": "2416d04c5aeed7c08dff081f393c6b31c1a54f080571bfea413c995d54cea909"
+}

@@ -1,0 +1,26 @@
+{
+  "checked_at_utc": "2026-10-05T05:30:30.320095+00:00",
+  "status": "PASS",
+  "problem_statement_words_whitespace": 139,
+  "pdf_pages": 6,
+  "diagrams": 1,
+  "decisions": 6,
+  "minimum_rejected_alternatives_per_decision": 2,
+  "failure_modes": 6,
+  "poc_source_lines": 112,
+  "poc_code_cells_executed": 3,
+  "executed_notebook_matches_source": true,
+  "poc_result": {
+    "crash_after_commit": true,
+    "replay_added_rows": 0,
+    "stale_revision_ignored": true,
+    "conflicting_revision_blocked": true,
+    "request_count": 2,
+    "final_cost_micro_usd": 350,
+    "old_snapshot_cost_micro_usd": 300,
+    "repeated_gold_equal": true
+  },
+  "storage_month_31_usd": "4971.562908871968587239583333",
+  "sensitivity_failures_reported": 4,
+  "limitation": "Structure/arithmetic/output checks, not rubric grading or AWS load/security validation"
+}

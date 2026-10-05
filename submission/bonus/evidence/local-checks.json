@@ -1,0 +1,25 @@
+{
+  "checked_at_utc": "2026-10-05T05:05:17.906398+00:00",
+  "checks": [
+    {
+      "name": "clean-environment",
+      "exit_code": 0
+    },
+    {
+      "name": "required-smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "required-pytest",
+      "exit_code": 0
+    },
+    {
+      "name": "required-headless",
+      "exit_code": 0
+    },
+    {
+      "name": "required-artifacts",
+      "exit_code": 0
+    }
+  ]
+}

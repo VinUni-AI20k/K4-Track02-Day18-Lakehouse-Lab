@@ -1,0 +1,8 @@
+........................                                                 [100%]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\_pytest\cacheprovider.py:469
+  D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\_pytest\cacheprovider.py:469: PytestCacheWarning: could not create cache path D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.pytest_cache\v\cache\nodeids: [WinError 5] Access is denied: 'D:\\AI_Thucchien\\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\\pytest-cache-files-_eirpzwm' -> 'D:\\AI_Thucchien\\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\\.pytest_cache'
+    config.cache.set("cache/nodeids", sorted(self.cached_nodeids))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+24 passed, 1 warning in 5.68s

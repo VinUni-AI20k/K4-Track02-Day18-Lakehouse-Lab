@@ -1,0 +1,19 @@
+Command: D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\_lakehouse\bonus-clean-venv\Scripts\python.exe -X utf8 D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\submission\bonus\poc\replay_safe.py
+
+STDOUT
+Injected crash: commit succeeded, checkpoint not saved
+{
+  "crash_after_commit": true,
+  "replay_added_rows": 0,
+  "stale_revision_ignored": true,
+  "conflicting_revision_blocked": true,
+  "request_count": 2,
+  "final_cost_micro_usd": 350,
+  "old_snapshot_cost_micro_usd": 300,
+  "repeated_gold_equal": true
+}
+BONUS_RESULT_JSON={"crash_after_commit": true, "replay_added_rows": 0, "stale_revision_ignored": true, "conflicting_revision_blocked": true, "request_count": 2, "final_cost_micro_usd": 350, "old_snapshot_cost_micro_usd": 300, "repeated_gold_equal": true}
+
+STDERR
+D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\_lakehouse\bonus-clean-venv\Lib\site-packages\pyiceberg\table\__init__.py:721: UserWarning: Delete operation did not match any records
+  self.delete(

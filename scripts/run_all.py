@@ -6,6 +6,7 @@ prove every rubric criterion, and this runner does not save .ipynb outputs.
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import time
@@ -21,11 +22,15 @@ def main() -> int:
         print("No notebooks found.")
         return 1
 
+    # Force UTF-8 encoding for subprocess stdout/stderr to avoid
+    # UnicodeEncodeError on Windows cp1252 consoles.
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+
     print(f"Running {len(notebooks)} notebooks with {sys.executable}\n")
     failures, total = [], 0.0
     for nb in notebooks:
         t0 = time.perf_counter()
-        proc = subprocess.run([sys.executable, str(nb)], capture_output=True, text=True)
+        proc = subprocess.run([sys.executable, str(nb)], capture_output=True, text=True, env=env, encoding="utf-8")
         dt = time.perf_counter() - t0
         total += dt
         if proc.returncode == 0:
