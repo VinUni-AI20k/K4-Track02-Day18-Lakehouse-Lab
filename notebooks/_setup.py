@@ -15,6 +15,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+# Keep individual notebook runs usable in Windows terminals configured with an
+# ANSI code page such as cp1252.  Table renderers and lesson text contain
+# Unicode box-drawing characters and symbols.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+
 _HERE = Path(__file__).resolve().parent
 _DOCKER = Path("/workspace/scripts")
 _LOCAL = _HERE.parent / "scripts"

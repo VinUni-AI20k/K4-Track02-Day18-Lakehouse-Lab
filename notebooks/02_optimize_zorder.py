@@ -140,21 +140,38 @@ with open(os.path.join(log_dir, last_log)) as fh:
                 ranges.append((mn, mx))
                 if mn <= TARGET_USER <= mx:
                     hits += 1
-for mn, mx in sorted(ranges):
-    marker = " ← contains target" if mn <= TARGET_USER <= mx else ""
-    print(f"  file user_id range: [{mn:>6}, {mx:>6}]{marker}")
+ordered_ranges = sorted(ranges)
 
+# %% [markdown]
+# ## Evidence summary for screenshot
+
+# %%
 # Slide-5 deliverable allows EITHER metric — print both so the student can
 # pick whichever the grader screenshots:
 #   Speedup ≥ 3×              (wall-clock, noisy on local SSD)
 #   Files-pruned ratio ≥ 10×  (deterministic, the truer Z-order metric)
 pruned_ratio = files_after / max(hits, 1)
 print(
-    f"\n──── Z-order deliverable metrics ────\n"
+    f"\n──── NB2 evidence summary ────\n"
+    f"  Files:                    {files_before} → {files_after}  "
+    f"({files_before/max(files_after, 1):.0f}× fewer)\n"
     f"  Speedup (wall-clock):   {before/max(after, 1e-6):>5.1f}×   (target ≥ 3×)\n"
     f"  Files-pruned ratio:     {pruned_ratio:>5.1f}×   (target ≥ 10×)   "
     f"[{hits} of {files_after} files cover user_id={TARGET_USER}]"
 )
+
+print("\nMin/max evidence after Z-order (representative ranges):")
+display_ranges = ordered_ranges[:2] + [
+    r for r in ordered_ranges if r[0] <= TARGET_USER <= r[1]
+] + ordered_ranges[-2:]
+seen_ranges = set()
+for mn, mx in display_ranges:
+    if (mn, mx) in seen_ranges:
+        continue
+    seen_ranges.add((mn, mx))
+    marker = " ← contains target" if mn <= TARGET_USER <= mx else ""
+    print(f"  file user_id range: [{mn:>6}, {mx:>6}]{marker}")
+print(f"  ... {len(ordered_ranges)} file ranges inspected in total")
 
 # %% [markdown]
 # ## ✅ Deliverable check

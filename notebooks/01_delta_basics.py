@@ -47,6 +47,16 @@ print("\nHistory:")
 for h in dt.history():
     print(f"  v{h['version']}  {h['operation']}  {h.get('operationMetrics', {})}")
 
+# Preserve concrete evidence for the submission screenshot: list the commits and
+# show the first records from the initial transaction-log JSON file.
+from pathlib import Path
+
+log_files = sorted(Path(table_path).glob("_delta_log/*.json"))
+print("\nDelta log commits:", [p.name for p in log_files])
+print("First commit JSON (first 3 records):")
+for line in log_files[0].read_text(encoding="utf-8").splitlines()[:3]:
+    print(line)
+
 # %% [markdown]
 # ## 3. Schema enforcement — try to write a wrong schema
 

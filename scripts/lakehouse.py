@@ -9,6 +9,8 @@ the same data. This is the value of an open table format.
 from __future__ import annotations
 
 import os
+import uuid
+import warnings
 from pathlib import Path
 
 # Repo-local lakehouse — easy to inspect, easy to wipe.
@@ -50,6 +52,7 @@ def reset(*paths: str) -> None:
 
 ICEBERG_ROOT = ROOT / "iceberg"
 _CATALOG_ENGINES: dict[Path, list] = {}
+_CATALOG_DIR_OVERRIDES: dict[str, Path] = {}
 
 
 def _catalog_dir(name: str) -> Path:
@@ -61,7 +64,7 @@ def _catalog_dir(name: str) -> Path:
     — an intermittent failure that looks like a corrupt install, not a race.
     Isolation by name makes cross-notebook interference structurally impossible.
     """
-    return ICEBERG_ROOT / name
+    return _CATALOG_DIR_OVERRIDES.get(name, ICEBERG_ROOT / name)
 
 
 def catalog(name: str = "lab"):
@@ -102,8 +105,20 @@ def reset_catalog(name: str = "lab") -> None:
     for engine in _CATALOG_ENGINES.pop(d.resolve(), []):
         engine.dispose()
     if d.exists():
-        # Report a failed reset rather than silently reusing stale data.
-        shutil.rmtree(d)
+        try:
+            shutil.rmtree(d)
+        except PermissionError as exc:
+            # A Jupyter/VS Code kernel can legitimately still have the prior
+            # SQLite catalog open. Windows does not allow unlinking an open
+            # database file, so use a fresh process-scoped catalog rather
+            # than failing the whole lab or reusing stale metadata.
+            fresh = ICEBERG_ROOT / f"{name}-{os.getpid()}-{uuid.uuid4().hex[:8]}"
+            _CATALOG_DIR_OVERRIDES[name] = fresh
+            warnings.warn(
+                f"Catalog '{name}' is in use ({exc.filename}); using {fresh.name} for this run.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
 
 def namespace(cat, ns: str = "lake"):
