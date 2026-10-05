@@ -299,3 +299,29 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB5 incomplete — see FAIL rows above"
 print("\nNB5 complete.")
+
+# %% [markdown]
+# ## Giải thích kết quả (NB5)
+#
+# * **Catalog là control plane.** Bảng `lake.llm_events` được tạo qua `SqlCatalog`
+#   (SQLite) chứ không phải ghi thẳng vào thư mục. Catalog giữ con trỏ tới
+#   `metadata.json` hiện tại; mỗi commit là một phép compare-and-swap con trỏ đó, nên
+#   reader/writer mọi engine đều thấy cùng một "phiên bản hiện tại". Partition spec là
+#   `1000: ts_day: day(2)` — transform `day` trên field id 2 (`ts`).
+# * **Hidden partitioning, pruning 10× (≥ 5×).** 10 commit × 500 dòng, mỗi ngày một file.
+#   Filter viết trên `ts` (không nhắc tới `ts_day`), nhưng `plan_files()` chỉ trả **1/10
+#   file**: Iceberg áp cùng transform `day()` lên predicate rồi so với giá trị partition
+#   lưu trong manifest. Với partition kiểu Hive, người dùng phải nhớ thêm `WHERE dt = ...`;
+#   quên thì đọc cả 10 file — ở quy mô 512 MB/file và 10K query/ngày, đó là ~$220/ngày
+#   (phép tính trong notebook). Iceberg loại bỏ khả năng quên predicate.
+# * **Ba tầng metadata:** `metadata.json` (tầng 1: schema, spec, danh sách snapshot)
+#   → 10 manifest list (tầng 2, mỗi snapshot một file) → 10 manifest (tầng 3: liệt kê
+#   data file kèm partition value và stats) → 10 data file. Metadata 137.2 KB so với data
+#   47.3 KB = **290%**: ở lab mỗi file chỉ 500 dòng nên metadata lấn át; với file 512 MB
+#   tỷ lệ chỉ ~0.1%. Small files phạt hai lần: nhiều data file *và* nhiều metadata để plan.
+# * **Field ID bền qua rename.** `latency_ms → latency_millis` giữ `field_id = 4`; thêm
+#   `tier` nhận id mới 6. Iceberg ánh xạ cột theo field id chứ không theo tên, nên rename là
+#   thao tác metadata-only, không rewrite byte dữ liệu nào; 5 000 dòng cũ đọc lên `tier = NULL`.
+# * **Partition evolution:** thêm `identity(model)` tạo spec mới; data file cũ vẫn mang
+#   `spec_id = 1`, file mới mang `spec_id = 2`. Hai layout cùng tồn tại, planner xử lý
+#   từng file theo spec của nó, và cả **5 500 dòng** vẫn đọc được — không cần migration.

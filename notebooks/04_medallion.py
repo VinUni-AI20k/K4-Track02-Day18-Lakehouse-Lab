@@ -57,6 +57,11 @@ reset(SILVER)
 # autoloads an extension over the network; Arrow registration is offline and
 # zero-copy, so the lab works on a locked-down machine.
 con = duckdb.connect()
+# `ts` is TIMESTAMPTZ in UTC. DuckDB's CAST(ts AS DATE) uses the session time
+# zone, which defaults to the machine's local zone — on a UTC+7 laptop that
+# shifts every day boundary by 7 hours (8 partial "days" instead of 7 UTC
+# days). Pin the session to UTC so `date` means the UTC calendar day.
+con.sql("SET TimeZone = 'UTC'")
 con.register("bronze", DeltaTable(BRONZE).to_pyarrow_table())
 
 silver_arrow = con.sql(f"""
@@ -132,8 +137,9 @@ DeltaTable(GOLD).optimize.z_order(["model"])
 # ## Verify Gold
 
 # %%
-gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table())
-print(gold_df)
+gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table()).sort(["date", "model"])
+with pl.Config(tbl_rows=30, tbl_width_chars=160, fmt_str_lengths=20):
+    print(gold_df)
 
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
@@ -155,3 +161,67 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %% [markdown]
+# ## Gold quality checks
+#
+# The original notebook asserts only the date count. These checks make the rest
+# of the Gold contract explicit: every (date, model) cell present, p50 ≤ p95,
+# positive cost, error_rate within [0, 1], and all three layers on disk.
+
+# %%
+silver_dates = pl.from_arrow(DeltaTable(SILVER).to_pyarrow_table()).group_by("date").len().sort("date")
+print("Silver rows per UTC date:")
+for d, n in silver_dates.iter_rows():
+    print(f"  {d}  {n:>7,}")
+
+per_date_models = gold_df.group_by("date").agg(pl.col("model").n_unique().alias("models"))
+layers = {name: (Path(p) / "_delta_log").exists() for name, p in
+          [("bronze", BRONZE), ("silver", SILVER), ("gold", GOLD)]}
+checks = {
+    "bronze/silver/gold all on disk":      all(layers.values()),
+    "silver < bronze (dedup)":             silver_n < bronze_n,
+    "gold >= 7 dates":                     n_dates >= 7,
+    "3 models":                            n_models == 3,
+    "every date has all 3 models":         per_date_models["models"].min() == 3,
+    "p50 <= p95 everywhere":               (gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all(),
+    "cost_usd > 0 everywhere":             (gold_df["cost_usd"] > 0).all(),
+    "error_rate in [0, 1]":                gold_df["error_rate"].is_between(0, 1).all(),
+}
+for k, v in checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+
+print()
+print("Weekly cost by model (illustrative prices):")
+print(gold_df.group_by("model").agg(
+    pl.col("cost_usd").sum().round(2).alias("cost_usd_7d"),
+    pl.col("p95_latency_ms").mean().round(0).alias("avg_daily_p95_ms"),
+    pl.col("error_rate").mean().round(4).alias("avg_error_rate"),
+).sort("cost_usd_7d", descending=True))
+assert all(checks.values()), "NB4 Gold incomplete — see FAIL rows above"
+print()
+print("NB4 complete.")
+
+# %% [markdown]
+# ## Giải thích kết quả (NB4)
+#
+# * **Ba lớp trên storage:** `_lakehouse/bronze/llm_calls_raw`, `_lakehouse/silver/llm_calls`
+#   (partition theo `date`) và `_lakehouse/gold/llm_daily_metrics` đều là bảng Delta có
+#   `_delta_log/`. Bronze giữ nguyên `raw_json` như lúc ingest để có thể parse lại khi
+#   logic Silver thay đổi.
+# * **Silver < Bronze:** 200 000 → 190 052 dòng (bỏ 9 948). Generator cố ý chèn các
+#   bản retry trùng `request_id`; Silver giữ bản đầu tiên theo `ts`
+#   (`ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY ts) = 1`). Không dedup thì
+#   mọi chỉ số Gold đều bị thổi phồng: token và chi phí bị đếm ~5% hai lần.
+# * **Gold = 7 ngày UTC × 3 model = 21 dòng.** p50 luôn ≤ p95, `cost_usd > 0`,
+#   `error_rate` ≈ 0.05 (nằm trong [0, 1]; gồm cả `error` và `rate_limited`).
+#   Opus có p50 ≈ 3 000 ms, Sonnet ≈ 1 370 ms, Haiku ≈ 560 ms; Sonnet tốn nhiều tiền
+#   nhất dù đơn giá thấp hơn Opus vì có lượng token lớn nhất (giá chỉ là minh họa).
+# * **Lỗi múi giờ đã sửa.** Lần chạy đầu cho ra **8 ngày**: 04-01 chỉ có 19 271 dòng và
+#   04-08 có 7 915 dòng, trong khi dữ liệu nằm trọn trong 04-01 00:00 → 04-07 23:59 UTC.
+#   Nguyên nhân: `CAST(ts AS DATE)` trên `TIMESTAMPTZ` dùng múi giờ phiên DuckDB,
+#   mặc định là múi giờ máy (UTC+7), nên ranh giới ngày lệch 7 giờ — ngày đầu thiếu
+#   7 giờ, ngày thứ 8 "ảo" chứa 7 giờ cuối. Notebook gốc vẫn PASS (8 ≥ 7) nhưng p95 và
+#   cost theo ngày của hai ngày biên sai. Sửa bằng `SET TimeZone = 'UTC'` trước khi
+#   dựng Silver; giờ mỗi ngày có ~27 100 dòng. Đây là loại bug Gold mà assertion về số
+#   lượng không bắt được — phải kiểm tra phân bố.

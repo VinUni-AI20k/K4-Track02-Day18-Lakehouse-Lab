@@ -403,3 +403,31 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB7 incomplete — see FAIL rows above"
 print("\nNB7 complete.")
+
+# %% [markdown]
+# ## Giải thích kết quả (NB7)
+#
+# * **Inline blob vs pointer.** Tổng byte gần như bằng nhau (12.5 MB inline vs 4.7 KB bảng
+#   + 12.5 MB object) — byte phải nằm ở đâu đó. Với scan phân tích `GROUP BY topic`,
+#   cả hai layout chỉ đọc ~1.2 KB nhờ projection pushdown: Parquet lưu theo cột, cột blob
+#   không bị chạm.
+# * **Random-read amplification 200× (≥ 5×).** File inline chỉ có **1 row group** chứa cả
+#   200 dòng (12.5 MB). Đơn vị đọc nhỏ nhất của Parquet là column chunk trong một row group,
+#   nên lấy 1 frame (64 KB) buộc phải đọc cả chunk 12.5 MB: 12.5 MB / 64 KB ≈ 200×.
+#   Pointer layout chỉ cần 1 GET 64 KB. Đây là lý do GPU bị "đói" khi data loader
+#   random-access ảnh/video inline; các format như Lance tổ chức lại để random read ≈ 1 dòng.
+# * **int8 quantization: 5.8× nhỏ hơn trên đĩa (≥ 3×).** Lý thuyết là 4× (1 byte vs 4 byte
+#   mỗi chiều); trên đĩa đạt 5.8× vì float32 có mantissa gần như ngẫu nhiên nên nén kém,
+#   còn int8 có ít giá trị phân biệt nên nén tốt hơn.
+#   **recall@10 = 0.904 (≥ 0.80)** và **topic fidelity = 1.000 (≥ 0.95)**: int8 đánh mất
+#   ~10% ID chính xác trong top-10, nhưng 100% kết quả vẫn đúng topic — các "miss" là hoán
+#   đổi giữa các hàng xóm gần tương đương, nên recall theo ID đánh giá thấp chất lượng cho RAG.
+# * **Semantic search bằng SQL.** DuckDB `array_cosine_similarity` trên cột `emb` (cast từ
+#   `list<float>` về `FLOAT[256]` vì đường Delta không giữ kiểu fixed-size list) trả top-5
+#   đều thuộc topic `storage`. Brute-force ~16 ms cho 2 000 vector; ngoại suy tuyến tính
+#   ~8 s cho 1 triệu vector — không phải serving path. Vì vậy vector DB là *derived index*
+#   rebuild được, còn lakehouse là system-of-record.
+# * **Lifecycle bug tái hiện được.** Erasure cho `user_042`: bảng 2 000 → 1 992 dòng;
+#   tìm lại 8 doc đã xoá trong bảng → **0 hit**, nhưng external index (sync một chiều)
+#   vẫn trả **8 hit** — dữ liệu đã xoá vẫn có thể lọt vào prompt RAG. Cách sửa: index
+#   subscribe Change Data Feed; CDF từ v1 phát đúng **8 delete event** kèm `doc_id` cần evict.
