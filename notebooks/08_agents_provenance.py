@@ -479,3 +479,23 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB8 incomplete — see FAIL rows above"
 print("\nNB8 complete.")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB8
+#
+# - **Trajectory medallion:** 1.578 step (300 session). Silver partition theo `agent_version` → 2 thư mục
+#   `policy-v2`, `policy-v3`; Gold có 2 dòng (success 0,760 vs 0,753, ~5,26 step, ~$0,069/trajectory). Partition theo
+#   policy cho phép drop/retrain một policy mà không chạm dữ liệu policy kia.
+# - **Version pin:** run ghi `table_version=0`, `n_steps_seen=1578`. Sau khi có thêm rollout (v1, 1.978 step), replay tại
+#   v0 vẫn trả **1.578 step — khớp**. Giới hạn: replay chỉ so số dòng, chưa so nội dung (hash) từng bước.
+# - **Lớp MCP mô phỏng (offline, không phải server thật):** 5 lượt `list_tables` → **1 lần đọc catalog** (TTL cache 60 s;
+#   đây là cache của `list_tables`, không phải `tools/list`). `delete_rows` chưa xác nhận trả **`input_required`**;
+#   có `confirmed=True` thì trả `ok` — nhưng cờ này do bên gọi tự truyền nên không phải ranh giới phân quyền.
+#   `submit_scan` → poll `tasks/get` → `completed` (300 dòng) sau 2 lần `working`.
+# - **Provenance:** 4 bucket minh hoạ (licensed 675, public_domain 333, synthetic 331, scraped_optout_checked 327) và
+#   **UNCLASSIFIED 334** đều là partition; tập trainable = **1.666/2.000**, loại 334 dòng `license=unknown`.
+#   Hạn chế của mapping lab: CC-BY-4.0 là giấy phép yêu cầu ghi công, không phải public domain; `user-owned + consent`
+#   không chứng minh đã kiểm tra opt-out. Không dùng mapping này để kết luận quyền dữ liệu thật.
+# - **Xoá subject `user_007`:** 8 dòng (5 UNCLASSIFIED, mỗi bucket còn lại 1) → 0 ở version hiện tại (v0 → v1).
+#   Nhưng v0 vẫn chứa dữ liệu qua time travel; muốn xoá vật lý phải kết hợp retention + VACUUM (NB6) và xử lý các bản sao
+#   bên ngoài (index, backup, model đã train).

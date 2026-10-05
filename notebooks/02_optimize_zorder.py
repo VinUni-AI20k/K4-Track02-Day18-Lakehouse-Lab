@@ -176,3 +176,17 @@ print(f"\n  (speedup={speedup:.1f}x, pruning={pruned_ratio:.1f}x — the slide a
 print("   wall-clock is noisy on a laptop, which is why file-pruning is the fallback.)")
 assert all(checks.values()), "NB2 incomplete — see FAIL rows above"
 print("\nNB2 complete.")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB2
+#
+# - **Small-file problem:** 200 lần append → **200 file** (mỗi file 5K dòng). Mỗi truy vấn phải mở/đọc footer của cả 200 file.
+# - **Sau compact + Z-order (target 256 KB): 200 → 55 file.** Không gộp về 1 file là cố ý — nếu chỉ còn 1 file thì
+#   stats không thể loại bỏ file nào.
+# - **Files-pruned ratio = 55× (1/55 file chứa `user_id=4242`)** — vượt ngưỡng 10×. Đây là chỉ số tất định: sau Z-order,
+#   khoảng `[min,max]` của `user_id` trong mỗi file gần như không chồng lấn (`[3696, 5534]` là file duy nhất chứa 4242),
+#   nên delta-rs đọc stats trong log và bỏ qua 54 file còn lại mà không cần mở chúng.
+# - **Speedup wall-clock** dao động 6–9× qua các lần chạy của mình (bản lưu trong notebook này: 6,4×, median 3 lần đo). Con số này phụ thuộc
+#   vào cache OS, SSD, tải CPU; vì vậy rubric cho phép dùng pruning ratio thay thế — pruning không phụ thuộc máy.
+# - Trước Z-order, `user_id` ngẫu nhiên trong mọi batch nên file nào cũng có range xấp xỉ [1, 100000] → stats vô dụng.
+#   Z-order (sắp xếp theo đường cong lấp đầy không gian) mới là thứ làm cho stats "có ích".
