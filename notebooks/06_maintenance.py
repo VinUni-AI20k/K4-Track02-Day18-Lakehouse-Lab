@@ -213,6 +213,14 @@ print(f"Parquet files on disk:      {count_files(TABLE)}")
 print(f"Parquet files in the log:   {len(dt.file_uris())}")
 print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and cannot see")
 
+# Added for the submission: count_files() counts every *.parquet, including
+# checkpoints delta-rs writes automatically into _delta_log/ every 100 commits.
+# Separate those from data files so the orphan count is exact.
+_log_parquet = sorted(p.name for p in (Path(TABLE) / "_delta_log").glob("*.parquet"))
+_data_on_disk = [p for p in Path(TABLE).rglob("*.parquet") if "_delta_log" not in p.parts]
+print(f"\n  of which in _delta_log/ (auto checkpoints): {len(_log_parquet)}  {_log_parquet}")
+print(f"  data-dir parquet not in the log (orphans):  {len(_data_on_disk) - len(dt.file_uris())}")
+
 # %% [markdown]
 # ### Measured finding: `VACUUM` alone does **not** catch these
 #
@@ -280,6 +288,11 @@ ckpt = list(log_dir.glob("*.checkpoint.parquet"))
 print(f"JSON log entries a cold reader would replay: {json_before}")
 print(f"Checkpoint written: {ckpt[0].name if ckpt else 'NONE'}")
 print(f"_last_checkpoint present: {(log_dir / '_last_checkpoint').exists()}")
+# Added for the submission: the glob above returns checkpoints in name order, so
+# ckpt[0] is the oldest one. _last_checkpoint names the one readers start from.
+print(f"All checkpoints: {sorted(p.name for p in ckpt)}")
+print(f"_last_checkpoint: {(log_dir / '_last_checkpoint').read_text().strip()}")
+print(f"Current table version: {DeltaTable(TABLE).version()}")
 print("\nA reader now loads 1 checkpoint + the few JSONs after it, not all 200.")
 print("For CDC/streaming tables this is the difference between a 200 ms and a")
 print("20 s cold start — and it is why the slide calls it the 5th job.")

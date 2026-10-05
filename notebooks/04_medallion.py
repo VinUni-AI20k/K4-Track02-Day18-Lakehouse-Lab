@@ -155,3 +155,38 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+#
+# Added for the submission: the cells above only assert Silver < Bronze and
+# ≥ 7 dates. The cell below asserts the rest of the Gold contract and prints
+# the full Gold table in a stable (date, model) order.
+
+# %%
+gold_sorted = gold_df.sort(["date", "model"])
+with pl.Config(tbl_rows=-1, tbl_cols=-1, tbl_width_chars=140, fmt_str_lengths=20):
+    print(gold_sorted.select("date", "model", "p50_latency_ms", "p95_latency_ms",
+                             "error_rate", "cost_usd"))
+
+# CAST(ts AS DATE) on a TIMESTAMPTZ uses DuckDB's session time zone, so the
+# day boundaries follow this machine's zone, not UTC.
+tz = con.sql("SELECT current_setting('TimeZone')").fetchone()[0]
+rows_per_date = (pl.from_arrow(DeltaTable(SILVER).to_pyarrow_table())
+                   .group_by("date").len().sort("date"))
+print(f"\nDuckDB session TimeZone: {tz}")
+print("Silver rows per date:", dict(zip(rows_per_date["date"].cast(pl.Utf8), rows_per_date["len"])))
+
+models_per_date = gold_df.group_by("date").agg(pl.col("model").n_unique().alias("n"))
+gold_checks = {
+    "Bronze, Silver, Gold exist on disk": all(Path(p, "_delta_log").exists() for p in (BRONZE, SILVER, GOLD)),
+    "Silver < Bronze (dedup)":            silver_n < bronze_n,
+    "≥ 7 dates":                          n_dates >= 7,
+    "3 models":                           n_models == 3,
+    "every date has all 3 models":        models_per_date["n"].min() == 3,
+    "p50 ≤ p95 on every row":             (gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all(),
+    "cost_usd > 0 on every row":          (gold_df["cost_usd"] > 0).all(),
+    "error_rate within [0, 1]":           gold_df["error_rate"].is_between(0, 1).all(),
+    "error_rate populated (> 0)":         (gold_df["error_rate"] > 0).all(),
+}
+for k, v in gold_checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(gold_checks.values()), "NB4 Gold incomplete — see FAIL rows above"
+print("\nNB4 complete.")
