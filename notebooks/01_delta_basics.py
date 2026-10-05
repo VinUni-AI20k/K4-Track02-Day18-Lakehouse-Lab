@@ -47,6 +47,12 @@ print("\nHistory:")
 for h in dt.history():
     print(f"  v{h['version']}  {h['operation']}  {h.get('operationMetrics', {})}")
 
+from pathlib import Path as _P
+_commit0 = sorted(_P(table_path).glob("_delta_log/*.json"))[0]
+print(f"\nTransaction log commit file: {_commit0.name}")
+print("Commit JSON content:")
+print(_commit0.read_text(encoding="utf-8").strip())
+
 # %% [markdown]
 # ## 3. Schema enforcement — try to write a wrong schema
 
