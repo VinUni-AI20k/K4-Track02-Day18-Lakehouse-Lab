@@ -448,6 +448,25 @@ Note the tension the slide flags: time travel means v{corpus_version} STILL cont
 the deleted rows. Removing rows from the current version does not remove old
 physical files. Retention and VACUUM must be considered separately (NB6),
 as must any copies or derived artifacts outside this table.""")
+# %% [markdown]
+# ## 📝 Báo cáo phân tích và giải thích (NB8)
+#
+# ### 1. Version Pinning giải quyết vấn đề gì?
+# - **Bản chất của Trajectory Data trong RL/Agent:** Dữ liệu hành trình agent (trajectory rollouts) được sinh ra liên tục theo thời gian thực và append vào bảng Lakehouse. Phân phối dữ liệu liên tục dịch chuyển (distribution shift) theo mức độ tiến hóa của policy.
+# - **Thách thức về tính tái lập (Reproducibility & Auditability):** Nếu một đợt huấn luyện (training run) chỉ trỏ tới tên bảng chung chung hoặc đọc phiên bản `latest`, thì sau vài ngày hoặc vài tuần khi có thêm hàng triệu bước hành động mới được nạp vào, bạn sẽ hoàn toàn không thể biết mô hình đã được huấn luyện trên dữ liệu nào. Điều này vi phạm trực tiếp các tiêu chuẩn quản trị AI (như yêu cầu Data Governance & Documentation của EU AI Act, Điều 10).
+# - **Giải pháp Version Pinning:** Khóa cứng số phiên bản của bảng Delta (`table_version`, ví dụ version 1) và đính kèm vào siêu dữ liệu Model Card/MLflow run. Nhờ cơ chế Time Travel của Delta Lake, bất kỳ ai cũng có thể truy vấn `DeltaTable(path, version=pinned_version)` để tái hiện chính xác 100% tập dữ liệu huấn luyện nguyên bản về số dòng và cấu trúc.
+#
+# ### 2. Vì sao xóa ở Version hiện tại chưa xóa dữ liệu ở bản cũ?
+# - **Nguyên lý Immutable Append-Only Ledger:** Thao tác xóa `DELETE WHERE subject_id = 'user_007'` trong Lakehouse chỉ tạo ra một commit giao dịch mới (v2). Commit mới này ghi nhận các file Parquet mới (đã loại bỏ dòng của `user_007`) và đánh dấu tombstone các file Parquet của v1.
+# - Dữ liệu cũ trong file Parquet của v1 **vẫn tồn tại nguyên vẹn trên storage** nhằm phục vụ tính năng Time Travel và bảo vệ các reader đang truy cập. Do đó, nếu ai đó truy vấn lại version cũ (`version=1`), dữ liệu của `user_007` vẫn hiển thị.
+# - Để xóa hoàn toàn dữ liệu vật lý khỏi toàn bộ các phiên bản, hệ thống bắt buộc phải kết hợp chính sách xóa có kiểm soát (GDPR Right to Erasure pipeline), hết hạn snapshot và kích hoạt `VACUUM` với retention phù hợp, hoặc định kỳ rewrite lại lịch sử bảng.
+#
+# ### 3. Những điểm nào khiến mô phỏng này chưa phù hợp làm cơ chế kiểm soát Production?
+# - 1. **Cờ xác nhận (`confirmed`) do bên gọi tự truyền:** Trong mô phỏng này, cờ `_meta: {"confirmed": True}` được truyền trực tiếp từ client/agent. Đây là mô phỏng giao thức, không phải là một ranh giới bảo mật phân quyền (Authorization Boundary). Trong thực tế production, việc phê duyệt các thao tác phá hủy (destructive actions như `DELETE`/`DROP`) phải được ký số bởi hệ thống quản lý danh tính (IAM/OAuth2) hoặc cổng phê duyệt của con người độc lập (Human-in-the-loop Approval Portal).
+# - 2. **Replay mới chỉ so sánh số bước:** Kiểm tra replay trong notebook chỉ kiểm tra số lượng dòng (`pinned.count() == training_run["n_steps_seen"]`), chưa thực hiện so khớp checksum nội dung chi tiết từng dòng.
+# - 3. **Phân loại Provenance chỉ mang tính minh họa:** Bốn nhóm provenance trong lab là quy tắc giả định cho bài thực hành:
+#   - Lab quy định gán nhãn `CC-BY-4.0` vào `public_domain`, nhưng thực tế giấy phép CC-BY-4.0 đòi hỏi bắt buộc phải ghi công tác giả (attribution), hoàn toàn khác với Public Domain (CC0).
+#   - Việc gán nhãn `user-owned` kèm `consent_train` cũng chưa chứng minh được hệ thống đã kiểm tra đầy đủ các cờ từ chối thu thập dữ liệu (Robots.txt / AI scraping opt-out).
 
 # %% [markdown]
 # ## ✅ NB8 pass criteria

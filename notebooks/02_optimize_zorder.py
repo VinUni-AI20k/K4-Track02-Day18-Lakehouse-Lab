@@ -157,6 +157,25 @@ print(
 )
 
 # %% [markdown]
+# ## 📝 Báo cáo phân tích và giải thích (NB2)
+#
+# ### 1. Compaction và Z-order tác động khác nhau thế nào?
+# - **Compaction (`dt.optimize.compact()`):** Tác động lên **kích thước và số lượng file vật lý**. Mục tiêu là giải quyết vấn đề "Small-File Problem" phát sinh từ streaming ingestion bằng cách gộp hàng trăm/nghìn file nhỏ thành các file lớn có kích thước tối ưu (ví dụ: 128 MB – 512 MB trong production, 256 KB trong lab). Compaction giúp giảm chi phí quản lý metadata của transaction log và giảm số lượng request I/O (`GET`/`LIST`) lên Cloud Object Storage. Tuy nhiên, compaction đơn thuần **không sắp xếp lại thứ tự dữ liệu**; các giá trị vẫn bị phân tán ngẫu nhiên trên toàn bộ các file, khiến dải min/max của mỗi file đều rất rộng và chồng chéo nhau.
+# - **Z-Order (`dt.optimize.z_order(["user_id"])`):** Tác động lên **cách tổ chức và sắp xếp thứ tự dữ liệu (clustering)** dựa trên đường cong Z-order (Morton curve). Z-order gom các bản ghi có giá trị gần nhau (ví dụ cùng `user_id`) vào chung một hoặc một số ít file liền kề. Nhờ đó, dải `[min, max]` của `user_id` trong mỗi file trở nên cực kỳ hẹp (tight) và không chồng lấn. Khi truy vấn point-query (`WHERE user_id = 4242`), engine đọc thống kê min/max từ transaction log và bỏ qua đại đa số các file không chứa giá trị mục tiêu (**File Pruning / Data Skipping**), mang lại hiệu năng truy vấn vượt trội.
+#
+# ### 2. Vì sao gộp thành một file lớn có thể làm khó quan sát file pruning?
+# - Đơn vị cơ bản của Data Skipping ở tầng Table Format (Delta Lake / Iceberg) là **File**. Thống kê min/max được thu thập và lưu trữ theo từng file riêng biệt.
+# - Nếu compaction gộp toàn bộ 1,000,000 dòng vào **duy nhất 1 file Parquet lớn**, thì file đó bắt buộc phải chứa dải min/max từ `1` đến `100,000`. Khi thực hiện bất kỳ truy vấn lọc nào, file duy nhất này luôn thỏa điều kiện và engine buộc phải quét toàn bộ file đó (pruning ratio = 1×, không có file nào bị skip).
+# - Để quan sát và đo lường được hiệu quả của file pruning, bảng bắt buộc phải có **nhiều file** (trong notebook đặt `TARGET_SIZE = 256 * 1024` để giữ khoảng 30–50 files sau compaction), giúp Z-order cô lập `user_id=4242` vào đúng 1 file duy nhất và prune thành công toàn bộ các file còn lại.
+#
+# ### 3. Vì sao thời gian benchmark biến động giữa các máy?
+# - Phép đo thời gian thực tế (**Wall-clock Speedup**) trên môi trường máy tính cá nhân (laptop/PC) bị ảnh hưởng bởi nhiều yếu tố phi tất định:
+#   1. **Hệ điều hành File Caching (OS Page Cache / RAM Cache):** Sau lần quét đầu tiên, các trang nhớ của file Parquet đã nằm trên RAM, khiến các lần quét sau nhanh đột biến mà không phản ánh đúng chi phí I/O vật lý.
+#   2. **CPU Throttling và tiến trình nền:** Sự can thiệp của phần mềm chống virus, xung đột luồng CPU, hoặc cơ chế tiết kiệm điện năng của laptop.
+#   3. **Độ trễ I/O trên ổ cứng SSD/NVMe:** Dữ liệu lab tương đối nhỏ (vài chục MB), nên thời gian I/O chỉ mất vài mili-giây, dẫn đến overhead khởi tạo của runtime chiếm tỷ trọng lớn.
+# - Do đó, chỉ số **Files-Pruned Ratio** (tỷ lệ số file được bỏ qua dựa trên metadata min/max) là một thước đo **xác định (deterministic)**, đo lường chính xác hiệu quả thuật toán mà không phụ thuộc vào cấu hình phần cứng.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] Speedup ≥ 3× **or** files-pruned ratio ≥ 10× (slide §6 allows either)
 # - [ ] File count dropped substantially after compact()

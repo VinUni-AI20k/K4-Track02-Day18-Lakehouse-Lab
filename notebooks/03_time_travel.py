@@ -115,6 +115,18 @@ for h in final_history:
 print(f"\nTotal versions: {len(final_history)}  (target ≥ 5)")
 
 # %% [markdown]
+# ## 📝 Báo cáo phân tích và giải thích (NB3)
+#
+# ### 1. Đọc version cũ (Time-Travel) khác RESTORE thế nào?
+# - **Đọc version cũ (`DeltaTable(path, version=2)` / `versionAsOf`):** Là thao tác **chỉ đọc (read-only query)**. Nó cho phép người dùng hoặc pipeline phân tích truy xuất snapshot dữ liệu tại một thời điểm chính xác trong quá khứ mà **không làm thay đổi trạng thái hiện tại (`HEAD`)** của bảng. Các writer và reader khác vẫn tiếp tục làm việc bình thường trên phiên bản mới nhất.
+# - **RESTORE (`dt.restore(2)`):** Là thao tác **ghi thay đổi trạng thái (state modification)**. Nó đưa trạng thái hoạt động chính thức của bảng quay ngược về snapshot của version 2, làm cho mọi truy vấn mặc định sau đó sẽ chỉ đọc dữ liệu ở trạng thái version 2 (loại bỏ hoàn toàn ảnh hưởng của dữ liệu lỗi ở v3).
+#
+# ### 2. Vì sao RESTORE tạo transaction mới thay vì xóa lịch sử?
+# - **Tính bất biến của Audit Trail (Immutable Ledger):** Trong kiến trúc Lakehouse hiện đại, lịch sử giao dịch phải luôn trung thực và có thể kiểm toán (tamper-evident audit log). Việc tạo commit mới (v4 - `RESTORE`) ghi nhận rõ ràng: *ai đã thực hiện rollback, vào thời điểm nào, từ version nào*. Nếu xóa lịch sử, hệ thống sẽ mất dấu vết nguyên nhân phát sinh lỗi và hành động khắc phục sự cố.
+# - **An toàn cho Concurrent Readers:** Các tiến trình đọc dài hạn (long-running readers/streaming jobs) đang xử lý ở các phiên bản trước sẽ không bị lỗi `FileNotFoundException` do file bị xóa đột ngột.
+# - **Phục hồi tức thì với Zero Data Copy:** RESTORE chỉ ghi thêm 1 commit metadata JSON mới trỏ lại danh sách các Parquet files hợp lệ của version 2, hoàn thành chỉ trong vài mili-giây mà không cần copy hay viết lại gigabyte dữ liệu vật lý.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] history() shows ≥ 5 versions (incl. RESTORE itself)
 # - [ ] MERGE 100K finished in < 60s (likely < 1s on lightweight path)

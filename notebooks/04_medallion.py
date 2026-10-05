@@ -138,16 +138,40 @@ print(gold_df)
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
 n_models = gold_df.select("model").n_unique()
+p50_le_p95 = (gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all()
+all_positive_cost = (gold_df["cost_usd"] > 0).all()
+valid_error_rate = ((gold_df["error_rate"] >= 0.0) & (gold_df["error_rate"] <= 1.0)).all()
+
 print(
     f"\n──── Gold deliverable metrics ────\n"
-    f"  Distinct dates:   {n_dates:>3}   (target ≥ 7)\n"
-    f"  Distinct models:  {n_models:>3}\n"
-    f"  Total Gold rows:  {gold_df.height:>3}   (= dates × models)"
+    f"  Distinct dates:     {n_dates:>3}   (target ≥ 7)\n"
+    f"  Distinct models:    {n_models:>3}\n"
+    f"  Total Gold rows:    {gold_df.height:>3}   (= dates × models)\n"
+    f"  p50 <= p95 latency: {p50_le_p95}\n"
+    f"  Cost > 0:           {all_positive_cost}\n"
+    f"  0 <= Error Rate <=1:{valid_error_rate}"
 )
 assert n_dates >= 7, (
     f"Gold has only {n_dates} dates — slide deliverable requires ≥ 7. "
     "Re-run `make data` (the generator spreads across 7 UTC days)."
 )
+assert p50_le_p95 and all_positive_cost and valid_error_rate, "Gold metric validation failed"
+
+# %% [markdown]
+# ## 📝 Báo cáo phân tích và giải thích (NB4)
+#
+# ### 1. Deduplication ở Silver giải quyết vấn đề nào?
+# - **Bản chất của Distributed Ingestion:** Các hệ thống thu thập log/event phân tán (Kafka, Fluentbit, Kinesis, Webhook, client retries) luôn hoạt động theo cơ chế **At-least-once delivery**. Khi xảy ra sự cố mạng chập chờn, gateway timeout hoặc producer retry, một lượt gọi LLM (`request_id`) có thể bị gửi trùng lặp nhiều lần vào tầng Bronze (trong dữ liệu sinh ra, Bronze có 200,000 dòng nhưng chỉ có 190,052 unique `request_id`, tương ứng 9,948 bản ghi trùng lặp).
+# - **Trách nhiệm của tầng Silver:** Tầng Silver đảm nhiệm vai trò làm sạch và chuẩn hóa (data cleansing & deduplication). Bằng cách áp dụng window function `ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY ts)`, Silver giữ lại duy nhất 1 bản ghi đầu tiên hợp lệ và loại bỏ các bản sao thừa. Việc này đảm bảo tính **Idempotence** và **Exactly-once semantics** cho downstream analytics, ngăn ngừa việc tính đội chi phí token, sai lệch số lượng người dùng hay số lượt gọi thực tế.
+#
+# ### 2. Vì sao Dashboard nên đọc bảng Gold thay vì Silver?
+# - **Hiệu năng truy vấn (Query Latency):** Bảng Silver lưu trữ chi tiết từng request riêng lẻ (granularity cấp transaction), có thể lên tới hàng chục triệu bản ghi. Nếu dashboard truy vấn trực tiếp Silver, mỗi lần mở trang dashboard hoặc đổi bộ lọc sẽ phải quét toàn bộ bảng và thực hiện aggregate phức tạp (quantile, sum, group by), mất nhiều giây hoặc phút. Bảng Gold đã được tính toán sẵn (pre-aggregated) theo chiều `(date, model)` chỉ gồm 21 dòng (7 ngày × 3 model), giúp dashboard phản hồi tức thì (< 50ms).
+# - **FinOps & Chi phí quét dữ liệu:** Các query engine tính phí theo dung lượng quét (ví dụ AWS Athena $5/TB, BigQuery $6.25/TB). Truy vấn Gold chỉ quét vài KB thay vì hàng chục GB ở Silver, tiết kiệm hàng nghìn USD chi phí cloud mỗi tháng.
+# - **Tính nhất quán của Metric (Single Source of Truth):** Đặt logic tính p50/p95, error rate và cost model cố định ở pipeline Gold ngăn chặn việc các data analyst hoặc team khác nhau tự viết query với logic percentile/cost sai lệch.
+#
+# ### 3. Cách tính Error Rate và Chi Phí trong query có phù hợp với dữ liệu đầu vào không?
+# - **Error Rate (`AVG(CASE WHEN status <> 'ok' THEN 1.0 ELSE 0.0 END)`):** Hoàn toàn phù hợp. Câu lệnh này ánh xạ trạng thái thành biến nhị phân 0/1 và lấy trung bình theo nhóm, cho ra tỷ lệ lỗi chuẩn xác toán học nằm trong khoảng `[0.0, 1.0]`.
+# - **Chi phí (`(SUM(prompt_tokens) * c_in + SUM(completion_tokens) * c_out) / 1e6`):** Hoàn toàn chuẩn xác và khớp với mô hình định giá token thực tế của các nhà cung cấp mô hình (như OpenAI, Anthropic), với đơn giá USD tính trên 1 triệu token phân tách riêng giữa input (prompt) và output (completion). Chi phí luôn dương và tỷ lệ thuận với khối lượng token thực tế.
 
 # %% [markdown]
 # ## ✅ Deliverable check
@@ -155,3 +179,22 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %%
+from lakehouse import count_files  # noqa: E402
+
+checks = {
+    "bronze exists on storage": Path(BRONZE).exists() and count_files(BRONZE) > 0,
+    "silver exists on storage": Path(SILVER).exists() and count_files(SILVER) > 0,
+    "gold exists on storage":   Path(GOLD).exists() and count_files(GOLD) > 0,
+    "silver dedup reduced rows": silver_n < bronze_n,
+    "gold spans ≥ 7 dates":     n_dates >= 7,
+    "gold covers 3 models":     n_models == 3,
+    "p50 <= p95 latency":       p50_le_p95,
+    "cost is positive":         all_positive_cost,
+    "error rate in [0, 1]":     valid_error_rate,
+}
+for k, v in checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(checks.values()), "NB4 incomplete — see FAIL rows above"
+print("\nNB4 complete.")
