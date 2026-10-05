@@ -438,3 +438,29 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB6 incomplete — see FAIL rows above"
 print("\nNB6 complete.")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB6
+#
+# - **Job 1 – Compaction: 200 → 11 file (18×).** Dung lượng data tạm *tăng* 10,1 → 16,1 MB vì file mới được ghi trước,
+#   file cũ chỉ bị *tombstone* (`remove` trong log) — chưa xoá vật lý cho tới Job 3.
+# - **Job 2 – Clustering:** truy vấn điểm `user_id=12345` phải mở 11/11 file trước Z-order, **1/10 file sau → skip 90%**.
+#   Đo bằng min/max stats trong add actions, không bằng đồng hồ — trước clustering mọi file có range chồng lấn nên stats
+#   không loại được gì.
+# - **Job 3 – Expiry:** Delta `VACUUM` (retention 0, chỉ dùng cho dữ liệu scratch) thu hồi **16,1 MB**; 211 file
+#   tombstoned bị xoá và time travel về v0 không còn. (Dòng "0 B" ở dry-run là vì dry-run trả về đường dẫn tương đối nên
+#   `du()` không thấy file — số reclaim thật 16,1 MB đo bằng dung lượng thư mục trước/sau.)
+#   Iceberg: **20 → 3 snapshot**, dữ liệu 2.000 dòng nguyên vẹn.
+# - **Job 4 – Orphans:** cài 3 file "crashed writer" 30 ngày tuổi. `VACUUM` của `deltalake` **không** thấy chúng vì nó chỉ
+#   xoá file đã từng bị tombstone trong log; file chưa từng commit thì log không biết nó tồn tại.
+#   Phép hiệu tập hợp *file trên đĩa − file được tham chiếu* (kèm age guard 24h) tìm và xoá đúng **3 orphan (21,2 KB)**.
+#   Lưu ý: dòng "5 files you pay for" đếm cả 2 checkpoint `...099/...199.checkpoint.parquet` mà delta-rs tự tạo mỗi
+#   100 commit — chúng không phải orphan, và `find_orphans` đúng khi bỏ qua `_delta_log/`.
+#   Iceberg: `expire_snapshots` trong PyIceberg là thao tác **chỉ metadata** — avro trên đĩa vẫn 40 → 40, metadata còn
+#   tăng (338 → 346 KB). Sweep manifest list không còn snapshot nào trỏ tới xoá **17 file (~37 KB)**, còn 23 avro.
+#   ⇒ Job 3 và Job 4 phải đi theo cặp, nếu không sẽ "expire snapshot nhưng hoá đơn S3 không giảm".
+# - **Job 5 – Checkpoint:** log có 204 JSON; `create_checkpoint()` ghi `00000000000000000203.checkpoint.parquet` và
+#   `_last_checkpoint` (dòng in `...099` là file đầu tiên theo glob — checkpoint tự động cũ hơn). Reader lạnh chỉ cần đọc
+#   checkpoint + vài JSON sau nó thay vì replay 204 commit.
+# - **FinOps:** 200 file × 50K truy vấn/ngày = 10M GET ≈ $4/ngày chỉ riêng request; managed compaction 500 GB / 2M file
+#   ≈ $990/tháng, trong đó 24% đến từ *số lượng file* chứ không phải dung lượng.

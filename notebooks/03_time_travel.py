@@ -132,3 +132,16 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB3 incomplete — see FAIL rows above"
 print("\nNB3 complete.")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB3
+#
+# - **MERGE 100K dòng** hoàn tất dưới 1 giây; metrics trong `history()` khớp ý đồ:
+#   `num_source_rows=100000`, `num_target_rows_updated=50000` (id 50K–99K), `num_target_rows_inserted=50000`
+#   (id 100K–149K), `num_output_rows=150000`. MERGE là một commit duy nhất → upsert nguyên tử.
+# - **Time travel:** `version=0` trả về 100.000 dòng; `version=1` có schema `[customer_id, status, score, tier]`.
+#   Không có bản sao dữ liệu — delta-rs replay log tới version yêu cầu và chỉ đọc các file thuộc version đó.
+# - **RESTORE(2)** loại bỏ ảnh hưởng của v3 (50 dòng `score=-1`): sau restore có **0 dòng `score < 0`**.
+# - **History sau restore có 5 version: v0 WRITE, v1 WRITE, v2 MERGE, v3 WRITE (dữ liệu lỗi), v4 RESTORE.**
+#   RESTORE không xoá lịch sử: nó là commit mới (v4) `remove` file của v3 và `add` lại file của v2.
+#   Vì vậy v3 vẫn time-travel được để điều tra sự cố — audit trail đầy đủ.

@@ -403,3 +403,21 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB7 incomplete — see FAIL rows above"
 print("\nNB7 complete.")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB7
+#
+# - **Inline blob vs pointer:** tổng dung lượng gần như bằng nhau (12,5 MB) — byte phải nằm ở đâu đó.
+#   Truy vấn phân tích `SELECT topic, count(*)` chỉ đọc **1,2 KB** ở cả hai layout nhờ column pruning (đo từ footer Parquet).
+# - **Random-access amplification = 200×.** File inline có **1 row group 12,5 MB** chứa cả 200 frame; Parquet đọc và giải
+#   nén theo đơn vị column chunk của row group, nên lấy 1 frame 64 KB phải đọc 12,5 MB. Pointer chỉ cần 1 GET 64 KB.
+#   Đây là nguyên nhân GPU bị "đói" khi đọc ngẫu nhiên — lý do các format như Lance tổ chức lại file.
+# - **int8 quantization:** lý thuyết 4× (1.024 B → 256 B/vector, dim 256); trên đĩa **5,8× nhỏ hơn** (2,6 MB → 452 KB)
+#   vì int8 còn nén tốt hơn float32. **recall@10 = 0,904** (≥ 0,80), **topic fidelity = 1,000** (≥ 0,95): ~10% ID bị hoán
+#   đổi giữa các láng giềng gần tương đương, nhưng 100% kết quả vẫn đúng chủ đề — với RAG đây là chỉ số quan trọng hơn.
+# - **Semantic search bằng SQL:** `array_cosine_similarity(emb::FLOAT[256], ...)` trả top-5 đều topic `storage`
+#   (sim 0,77–1,0). Phải cast vì Delta đọc `fixed_size_list` thành `list<float>`. Filter `consent_train`/`license` nằm
+#   cùng câu SQL. Brute-force ~49 ms/2K vector → ~2,4 s ở 100K: hợp cho phân tích/offline, không phải serving.
+# - **Lifecycle bug tái hiện:** xoá `user_042` (8 doc) ở lakehouse → **0 hit trong bảng nhưng 8 hit ở external index** —
+#   index cũ vẫn có thể đưa dữ liệu đã xoá vào prompt RAG. CDF (`delta.enableChangeDataFeed`) phát **8 sự kiện `delete`**
+#   mang `doc_id` cần evict; index phải subscribe delete thay vì sync upsert một chiều.

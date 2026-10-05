@@ -299,3 +299,20 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB5 incomplete — see FAIL rows above"
 print("\nNB5 complete.")
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB5
+#
+# - **Tạo bảng qua catalog** (SqlCatalog/SQLite): mình không chọn đường dẫn — catalog quyết định `location` và giữ con trỏ
+#   tới `metadata.json` hiện hành. Partition spec `1000: ts_day: day(2)` = transform `day` áp lên field id 2 (`ts`).
+# - **Hidden partitioning: pruning 10× (10 file → 1 file), filter trên `ts`, không phải `ts_day`.** `plan_files()` chiếu
+#   predicate trên `ts` qua transform `day()` lưu trong metadata, so với partition value của từng file trong manifest
+#   và loại 9 file. Người dùng Hive quên `WHERE dt=...` sẽ đọc cả 10 file; ở quy mô 512 MB/file, $5/TB, 10K truy vấn/ngày,
+#   đó là ~4,5 GB thừa mỗi truy vấn ≈ **$220/ngày**.
+# - **Cây metadata 3 tầng:** metadata.json → 10 manifest list (1/snapshot) → 10 manifest → 10 data file.
+#   **Metadata = 286% dung lượng data** (135 KB vs 47 KB) vì mỗi file chỉ 500 dòng — small files bị phạt 2 lần:
+#   nhiều file data *và* nhiều metadata phải lập kế hoạch. Ở 512 MB/file tỷ lệ này chỉ ~0,1%.
+# - **Schema evolution theo field ID:** `latency_ms → latency_millis` giữ **field_id = 4**; `tier` nhận id mới 6.
+#   Rename chỉ đổi metadata, không file nào bị viết lại; 5.000 dòng cũ đọc ra `tier = NULL`.
+# - **Partition evolution:** thêm `identity(model)` → dữ liệu ngày 11 ghi theo spec mới. Data file dùng
+#   **spec_id {1, 2}** cùng lúc và cả **5.500 dòng** vẫn đọc được — mỗi file nhớ spec đã ghi ra nó, không cần rewrite.

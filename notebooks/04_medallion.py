@@ -150,8 +150,53 @@ assert n_dates >= 7, (
 )
 
 # %% [markdown]
+# ## Gold quality checks
+#
+# The rubric grades Gold on p50/p95, cost and error_rate, not just on the
+# number of dates. Assert those properties explicitly instead of eyeballing.
+
+# %%
+gold_checks = {
+    "Bronze/Silver/Gold on disk":   all(Path(p, "_delta_log").exists() for p in (BRONZE, SILVER, GOLD)),
+    "Silver < Bronze (dedup)":      silver_n < bronze_n,
+    "≥ 7 dates":                    n_dates >= 7,
+    "3 models":                     n_models == 3,
+    "every date has all 3 models":  gold_df.group_by("date").len()["len"].min() == 3,
+    "p50 ≤ p95 on every row":       (gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all(),
+    "cost_usd > 0 on every row":    (gold_df["cost_usd"] > 0).all(),
+    "error_rate within [0, 1]":     gold_df["error_rate"].is_between(0, 1).all(),
+}
+print(gold_df.group_by("model").agg(
+    pl.col("p50_latency_ms").mean().round(0).alias("avg_p50_ms"),
+    pl.col("p95_latency_ms").mean().round(0).alias("avg_p95_ms"),
+    pl.col("error_rate").mean().round(4).alias("avg_error_rate"),
+    pl.col("cost_usd").sum().round(2).alias("total_cost_usd"),
+).sort("model"))
+print(f"date range: {gold_df['date'].min()} → {gold_df['date'].max()}")
+for k, v in gold_checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(gold_checks.values()), "NB4 Gold incomplete — see FAIL rows above"
+print("\nNB4 complete.")
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] All three tables exist under `_lakehouse/{bronze,silver,gold}/`
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %% [markdown]
+# ## 📝 Giải thích kết quả NB4
+#
+# - **Bronze 200.000 dòng → Silver 190.052 dòng** (giảm 9.948 = đúng số retry trùng `request_id` mà generator cài vào).
+#   Silver dedup bằng `ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY ts)` giữ bản ghi sớm nhất, đồng thời
+#   parse JSON thô thành cột có kiểu và loại dòng không có `model`.
+# - **Gold: 24 dòng = 8 ngày × 3 model.** Ô "Gold quality checks" xác nhận p50 ≤ p95 ở mọi dòng, `cost_usd > 0`,
+#   `error_rate ∈ [0,1]` (~4,8–5,3%), và ngày nào cũng đủ 3 model.
+# - **Đọc số liệu:** latency tăng theo cỡ model (p50 trung bình: haiku ≈565 ms, sonnet ≈1.384 ms, opus ≈3.032 ms;
+#   p95 ≈ 2× p50). Chi phí không tỉ lệ với giá đơn vị: sonnet có tổng chi phí cao nhất (~$2.419) vì lưu lượng token lớn
+#   nhất, dù opus đắt gấp 5× mỗi token (~$2.014). Giá trong `COST_TABLE` là giá minh hoạ của lab.
+# - **Vì sao 8 ngày chứ không phải 7:** dữ liệu trải đúng 7 ngày UTC (2026-04-01 → 04-07), nhưng `CAST(ts AS DATE)` trong
+#   DuckDB dùng múi giờ phiên của máy (Asia/Bangkok, UTC+7). Vì vậy ngày 04-01 và 04-08 (giờ địa phương) chỉ có một
+#   phần dữ liệu (~19K và ~8K dòng thay vì ~27K). Production nên cố định múi giờ (`SET TimeZone='UTC'`) để partition
+#   `date` không phụ thuộc máy chạy job.
