@@ -52,12 +52,18 @@ for h in dt.history():
 
 # %%
 bad = pl.DataFrame({"id": [4], "name": ["dan"], "age": ["thirty"], "city": ["Hue"]})
+version_before_bad = DeltaTable(table_path).version()
 try:
     write_deltalake(table_path, bad.to_arrow(), mode="append")
+    bad_write_blocked = False
     print("UNEXPECTED: bad write succeeded — schema enforcement broken")
 except Exception as e:
+    bad_write_blocked = True
     msg = str(e).splitlines()[0][:120]
     print(f"BLOCKED by schema enforcement (expected): {type(e).__name__}: {msg}")
+# A blocked write must not leave a commit behind: the version stays the same.
+bad_write_blocked = bad_write_blocked and DeltaTable(table_path).version() == version_before_bad
+print(f"Table version before/after the bad write: {version_before_bad} → {DeltaTable(table_path).version()}")
 
 # %% [markdown]
 # ## 4. Schema evolution (opt-in)
@@ -87,13 +93,49 @@ tier_counts = con.sql("SELECT tier, count(*) AS n FROM users GROUP BY 1 ORDER BY
 print(tier_counts)
 
 # %% [markdown]
+# ## 6. Evidence: the `_delta_log/` commits on disk
+#
+# Added for the submission: list the JSON commits and show what each one
+# records. v0 carries `protocol` + `metaData` (schema) + `add`; the schema-merge
+# commit carries a new `metaData` whose schema now includes `tier`.
+
+# %%
+import json  # noqa: E402
+from pathlib import Path as _P  # noqa: E402
+
+log_dir = _P(table_path) / "_delta_log"
+for f in sorted(log_dir.glob("*.json")):
+    actions = [json.loads(line) for line in f.read_text().splitlines() if line.strip()]
+    print(f"{f.name}  ({f.stat().st_size} B)  actions={[next(iter(a)) for a in actions]}")
+
+print("\n--- 00000000000000000000.json (first commit) ---")
+for line in (log_dir / "00000000000000000000.json").read_text().splitlines():
+    a = json.loads(line)
+    kind = next(iter(a))
+    if kind == "metaData":
+        fields = json.loads(a["metaData"]["schemaString"])["fields"]
+        print("metaData.schema:", [(fl["name"], fl["type"]) for fl in fields])
+    elif kind == "add":
+        print("add:", {k: a["add"][k] for k in ("path", "size", "dataChange")})
+        print("add.stats:", a["add"]["stats"])
+    else:
+        print(f"{kind}:", a[kind])
+
+last_commit = sorted(log_dir.glob("*.json"))[-1]
+for line in last_commit.read_text().splitlines():
+    a = json.loads(line)
+    if "metaData" in a:
+        fields = json.loads(a["metaData"]["schemaString"])["fields"]
+        print(f"\n{last_commit.name} metaData.schema:", [(fl["name"], fl["type"]) for fl in fields])
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] `_delta_log/` contains JSON files
 # - [ ] Schema enforcement blocked the bad write
 # - [ ] schema_mode="merge" added the `tier` column
 # - [ ] DuckDB query returned 2 tier groups
-# The final schema-enforcement flag is hardcoded; inspect the actual error
-# from the bad-write cell rather than treating that PASS line as proof.
+# The schema-enforcement flag is set by the bad-write cell: True only if the
+# write raised AND the table version did not move.
 
 # %%
 from pathlib import Path as _Path  # noqa: E402
@@ -102,7 +144,7 @@ _log = sorted(_Path(table_path).glob("_delta_log/*.json"))
 _cols = DeltaTable(table_path).schema().to_arrow().names
 checks = {
     "_delta_log/ has JSON commits": len(_log) >= 2,
-    "schema enforcement blocked bad write": True,   # placeholder; inspect the bad-write output
+    "schema enforcement blocked bad write": bad_write_blocked,
     "tier column added via schema_mode=merge": "tier" in _cols,
     "duckdb sees 2 tier groups": len(tier_counts) == 2,
 }
