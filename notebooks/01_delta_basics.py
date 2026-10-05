@@ -73,6 +73,16 @@ dt = DeltaTable(table_path)
 print(pl.from_arrow(dt.to_pyarrow_table()).sort("id"))
 
 # %% [markdown]
+# ## Interpretation
+#
+# Schema enforcement rejects writes that do not match the existing schema.
+# Schema evolution changes the schema, but only when explicitly enabled with
+# `schema_mode="merge"`. Adding a column requires opt-in to prevent accidental
+# schema changes from silently affecting downstream readers. The transaction
+# log records table metadata, schema changes, and added or removed data files
+# for each committed write, providing an auditable history of the table.
+
+# %% [markdown]
 # ## 5. Query with DuckDB via Arrow (part of the required notebook)
 
 # %%

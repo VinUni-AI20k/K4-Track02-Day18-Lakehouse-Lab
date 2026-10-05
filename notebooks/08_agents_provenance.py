@@ -450,6 +450,16 @@ physical files. Retention and VACUUM must be considered separately (NB6),
 as must any copies or derived artifacts outside this table.""")
 
 # %% [markdown]
+# ## Interpretation
+#
+# Pinning a table version makes a training run reproducible because replay uses
+# the same input rows even after new data arrives. Deleting a subject from the
+# current version does not remove that subject from older time-travel versions.
+# This simulation is not production control because confirmation is supplied by
+# the caller, the MCP layer is local and offline, replay checks step counts
+# rather than full content, and the provenance buckets are illustrative.
+
+# %% [markdown]
 # ## ✅ NB8 pass criteria
 #
 # | Check | Target |

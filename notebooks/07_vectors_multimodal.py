@@ -374,6 +374,16 @@ and the lifecycle is enforced by the table itself.
 """)
 
 # %% [markdown]
+# ## Interpretation
+#
+# Int8 quantization saves storage but can change the exact nearest documents.
+# Exact doc-ID recall measures whether the same documents are returned, while
+# topic fidelity measures whether the results remain relevant to the query.
+# For RAG, topic fidelity can remain high even when exact-ID recall drops.
+# External indexes must consume delete events, such as Delta Change Data Feed
+# records, so deleted vectors are removed instead of remaining retrievable.
+
+# %% [markdown]
 # ## ✅ NB7 pass criteria
 #
 # | Check | Target |

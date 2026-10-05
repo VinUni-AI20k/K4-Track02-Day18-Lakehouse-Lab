@@ -412,6 +412,16 @@ print("it is driven by FILE COUNT, not data volume. Fixing your writer's")
 print("trigger interval is cheaper than paying someone to clean up after it.")
 
 # %% [markdown]
+# ## Interpretation
+#
+# Delta VACUUM removes files that were committed and later removed from the
+# table log. An orphan created before a commit is invisible to VACUUM because
+# it was never recorded. In this PyIceberg path, snapshot expiry removes old
+# metadata references but does not delete the physical files, so a separate
+# orphan sweep is required. Short retention saves storage but can break readers
+# that still need older snapshots or time-travel versions.
+
+# %% [markdown]
 # ## ✅ NB6 pass criteria
 #
 # | Check | Target |
