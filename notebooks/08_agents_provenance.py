@@ -85,8 +85,9 @@ silver = to_arrow(con.sql("""
 # rollouts without touching the other's.
 write_deltalake(SILVER, silver, mode="overwrite", partition_by=["agent_version"])
 con.register("silver", DeltaTable(SILVER).to_pyarrow_table())
+silver_partitions = sorted(p.name for p in Path(SILVER).glob("agent_version=*"))
 print(f"Silver: {silver.num_rows:,} steps, partitioned by agent_version")
-print(f"  partitions on disk: {sorted(p.name for p in Path(SILVER).glob('agent_version=*'))}")
+print(f"  partitions on disk: {silver_partitions}")
 
 # %%
 gold = to_arrow(con.sql("""
@@ -109,6 +110,7 @@ gold = to_arrow(con.sql("""
     FROM per_traj GROUP BY 1 ORDER BY 1
 """))
 write_deltalake(GOLD, gold, mode="overwrite")
+gold_policies = set(gold.column("agent_version").to_pylist())
 print(pl.from_arrow(gold))
 
 # %% [markdown]
@@ -130,14 +132,17 @@ print(json.dumps(training_run, indent=2, default=str))
 
 # The world moves on: new rollouts land.
 write_deltalake(SILVER, silver.slice(0, 400), mode="append", partition_by=["agent_version"])
-print(f"\nAfter more rollouts land — table version {DeltaTable(SILVER).version()}, "
-      f"{DeltaTable(SILVER).count():,} steps")
+current_silver = DeltaTable(SILVER)
+print(f"\nAfter more rollouts land — table version {current_silver.version()}, "
+      f"{current_silver.count():,} steps")
 
 # Six months later, an auditor asks what the run actually saw.
 pinned = DeltaTable(SILVER, version=training_run["table_version"])
-print(f"Replay at pinned version {training_run['table_version']}: {pinned.count():,} steps")
-print(f"Matches what training saw: {pinned.count() == training_run['n_steps_seen']}")
+replayed_steps = pinned.count()
+print(f"Replay at pinned version {training_run['table_version']}: {replayed_steps:,} steps")
+print(f"Matches what training saw: {replayed_steps == training_run['n_steps_seen']}")
 print("\nThat one integer is the difference between a reproducible run and a story.")
+print("Replay scope in this lab: row count only; content hashes and full row equality are not checked.")
 
 # %% [markdown]
 # ## Part 2 — MCP: the shape of the agent ↔ lakehouse boundary
@@ -385,13 +390,18 @@ governed = to_arrow(con.sql(f"""
 write_deltalake(GOVERNED, governed, mode="overwrite", partition_by=["provenance_bucket"])
 
 parts = sorted(p.name for p in Path(GOVERNED).glob("provenance_bucket=*"))
+partition_buckets = {p.split("=", 1)[1] for p in parts}
 print("Partitions on disk:")
 for p_ in parts:
     print(f"  {p_}")
 
 con.register("governed", DeltaTable(GOVERNED).to_pyarrow_table())
-trainable = con.sql("""SELECT count(*) FROM governed
-                       WHERE provenance_bucket <> 'UNCLASSIFIED'""").fetchone()[0]
+trainable_rows = to_arrow(con.sql("""SELECT provenance_bucket FROM governed
+                                     WHERE provenance_bucket <> 'UNCLASSIFIED'"""))
+trainable = trainable_rows.num_rows
+trainable_unclassified = sum(
+    value.as_py() == "UNCLASSIFIED" for value in trainable_rows.column("provenance_bucket")
+)
 print(f"\nRows selected by the lab's training filter: {trainable:,} / {governed.num_rows:,}")
 print(f"Excluded as UNCLASSIFIED:  {governed.num_rows - trainable:,}")
 
@@ -441,8 +451,16 @@ after_dt = DeltaTable(GOVERNED)
 con.register("governed_after", after_dt.to_pyarrow_table())
 after = con.sql(f"SELECT count(*) FROM governed_after WHERE subject_id = '{SUBJECT}'").fetchone()[0]
 
+old_dt = DeltaTable(GOVERNED, version=corpus_version)
+con.register("governed_old", old_dt.to_pyarrow_table())
+old_version_subject_rows = con.sql(
+    f"SELECT count(*) FROM governed_old WHERE subject_id = '{SUBJECT}'"
+).fetchone()[0]
+
 print(f"\nRows for {SUBJECT}: {before} → {after}")
 print(f"Table version: {corpus_version} → {after_dt.version()}")
+print(f"Rows for {SUBJECT} when reading old version v{corpus_version}: "
+      f"{old_version_subject_rows}")
 print(f"""
 Note the tension the slide flags: time travel means v{corpus_version} STILL contains
 the deleted rows. Removing rows from the current version does not remove old
@@ -464,18 +482,49 @@ as must any copies or derived artifacts outside this table.""")
 
 # %%
 checks = {
-    "silver partitioned by agent_version": len(list(Path(SILVER).glob("agent_version=*"))) == 2,
-    "gold covers both policies":           gold.num_rows == 2,
-    "pinned version step count matches":   pinned.count() == training_run["n_steps_seen"],
-    "5 turns → 1 catalog read":            mcp.catalog_reads == 1,
-    "destructive needs confirmation":      attempt["resultType"] == "input_required",
-    "confirmed call proceeds":             approved["resultType"] == "ok",
-    "tasks poll completes":                st["status"] == "completed",
-    "all 4 lab buckets present":           len([x for x in parts if "UNCLASSIFIED" not in x]) == 4,
+    "silver partitioned by agent_version": set(silver_partitions) == {
+        "agent_version=policy-v2", "agent_version=policy-v3"
+    },
+    "gold covers both policies":           gold_policies == {"policy-v2", "policy-v3"},
+    "pinned version step count matches":   replayed_steps == training_run["n_steps_seen"],
+    "current version advanced":            current_silver.version() > training_run["table_version"],
+    "5 turns → 1 catalog read":            mcp.catalog_reads == 1 and mcp.meter["list_tables"]["calls"] == 5,
+    "destructive needs confirmation":      attempt["resultType"] == "input_required"
+                                                and attempt["_meta"]["requiresConfirmation"],
+    "confirmed call proceeds":             approved["resultType"] == "ok"
+                                                and approved["result"]["deleted"] == 0,
+    "tasks poll completes":                st["status"] == "completed"
+                                                and st["result"]["rows"] == 300,
+    "all provenance partitions present":   partition_buckets == {
+        "licensed", "public_domain", "scraped_optout_checked",
+        "synthetic", "UNCLASSIFIED"
+    },
     "unclassified rows found":             unclassified > 0,
-    "erasure removed subject rows":        after == 0 and before > 0,
+    "training filter excludes UNCLASSIFIED": trainable == governed.num_rows - unclassified
+                                                and trainable_unclassified == 0,
+    "erasure removed current rows":        after == 0 and before > 0,
+    "old version still has subject":       old_version_subject_rows == before,
 }
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB8 incomplete — see FAIL rows above"
 print("\nNB8 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Silver có đúng hai partition policy và Gold so sánh đủ hai phiên bản. Training run
+# pin version 0 với 1.578 bước nên vẫn replay đúng số bước đó sau khi bảng hiện tại tăng
+# lên version 1 với 1.978 bước. Version pin cố định snapshot đầu vào để tái lập/audit;
+# lab mới so row count, chưa chứng minh nội dung, code, config hay môi trường đều giống.
+#
+# Lớp MCP mô phỏng giảm 5 lượt list_tables xuống 1 catalog read, trả input_required
+# trước delete và poll task đến completed. Nó chưa phù hợp production vì không có network
+# protocol/authentication/authorization thật; confirmed do caller tự truyền; delete là
+# no-op; cache chỉ nằm trong process và task không bền vững, không có retry/cancel/audit.
+#
+# Bốn bucket minh họa cùng partition UNCLASSIFIED đều tồn tại; 334 dòng UNCLASSIFIED bị
+# loại khỏi tập trainable đã materialize. Mapping chỉ là fixture và không chứng minh quyền
+# sử dụng hay tuân thủ pháp luật. Delete tạo version mới với 0 dòng subject, còn version 0
+# vẫn đọc được 8 dòng vì snapshot cũ vẫn tham chiếu file cũ; expiry/VACUUM, backup, external
+# index và model đã train là các lifecycle riêng cần xử lý.
