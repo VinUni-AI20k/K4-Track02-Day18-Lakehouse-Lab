@@ -59,4 +59,6 @@ Notebook nộp trong `submission/notebooks/` được sinh bằng `jupytext --to
 - Screenshots: [`submission/screenshots/`](screenshots/) — render trực tiếp từ output đã lưu trong các `.ipynb`
 - Reflection: [`submission/REFLECTION.md`](REFLECTION.md)
 - Khai báo AI: [`submission/AI_USAGE.md`](AI_USAGE.md)
-- Bonus: không làm
+- Bonus: [`submission/bonus/ARCHITECTURE.md`](bonus/ARCHITECTURE.md) — Topic A, LLM observability 1B req/ngày;
+  PoC [`submission/bonus/poc/`](bonus/poc/) (PII tokenization trước Bronze + retention 7 ngày xoá vật lý,
+  7/7 check PASS). Chạy lại PoC: `.\.venv\Scripts\python.exe submission/bonus/poc/poc_pii_retention.py`

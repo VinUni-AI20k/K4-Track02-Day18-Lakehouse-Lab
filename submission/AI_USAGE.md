@@ -13,6 +13,9 @@
     `SET TimeZone = 'UTC'`; thêm kiểm tra chất lượng Gold.
 - Viết nháp Markdown "Giải thích kết quả" cho từng notebook, `INFO.md` và reflection.
 - Render screenshots từ output đã lưu trong `.ipynb` (không gõ tay số liệu).
+- **Bonus:** viết nháp `bonus/ARCHITECTURE.md` (chọn topic, quyết định, failure modes, mô hình chi phí)
+  và PoC `bonus/poc/poc_pii_retention.py`. Kết quả PoC trong tài liệu lấy từ lần chạy thật; đơn giá cloud
+  là giả định tham chiếu bảng giá công khai, đã ghi rõ trong tài liệu.
 
 ## AI không làm gì
 
