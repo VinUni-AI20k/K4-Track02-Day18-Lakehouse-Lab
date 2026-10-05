@@ -438,3 +438,41 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB6 incomplete — see FAIL rows above"
 print("\nNB6 complete.")
+
+# %% [markdown]
+# ## Giải thích kết quả (NB6)
+#
+# * **Job 1 — Compaction: 200 → 11 file (18×, ≥ 10×).** 200 micro-batch (~51 KB/file)
+#   được gộp theo `target_size = 1 MB`. Data bytes tạm *tăng* (10.1 → 16.1 MB) vì
+#   OPTIMIZE ghi file mới trước, file cũ chỉ bị tombstone (`remove` trong log) và vẫn
+#   nằm trên đĩa cho tới VACUUM — phải tính dung lượng này khi lên lịch compaction.
+# * **Job 2 — Clustering: skip 90% (≥ 50%).** Trước Z-order, khoảng min/max `user_id`
+#   của cả 11 file đều chồng nhau nên point query `user_id = 12345` phải mở 11/11 file.
+#   Sau `z_order(["user_id"])` chỉ còn **1/10 file** có khoảng chứa 12345. Đây là bằng
+#   chứng từ stats trong log, không phụ thuộc đồng hồ.
+# * **Job 3 — Expiry.**
+#   *Delta:* `vacuum(retention_hours=0)` xoá vật lý các file đã tombstone, thu hồi
+#   **16.1 MB** (16.1 → 6.2 MB data). Cái giá: không còn time travel về v0.
+#   Dòng "211 tombstoned files (0 B)" in 0 B vì `vacuum()` trả đường dẫn *tương đối*
+#   so với thư mục bảng, còn `du()` chạy từ thư mục notebook nên không tìm thấy file;
+#   số byte thật là phép đo `du(TABLE)` trước/sau.
+#   *Iceberg:* `expire_snapshots` giảm **20 → 3 snapshot** nhưng số file avro vẫn
+#   **40 → 40** và metadata còn *tăng* (344 → 352 KB, thêm một metadata.json): với
+#   PyIceberg 0.12 trong lab, expiry chỉ sửa metadata, không xoá file vật lý.
+# * **Job 4 — Orphans.** Ba file `part-9999x-crashed-writer` mô phỏng job crash trước
+#   commit. Bảng vẫn báo 100 000 dòng (orphan vô hình), và VACUUM của `deltalake` **không**
+#   thấy chúng ở bất kỳ retention nào — nó chỉ dọn file có tombstone trong log; file chưa
+#   từng commit thì chưa từng bị tombstone. Phép hiệu tập hợp *file trên đĩa − file log
+#   tham chiếu* (có age guard 24h) tìm đúng **3 orphan (21.2 KB)** và xoá.
+#   Lưu ý khi đọc số: "15 trên đĩa vs 10 trong log → 5" gồm 3 orphan + **2 checkpoint
+#   Parquet** (`...099.checkpoint.parquet`, `...199.checkpoint.parquet`) mà delta-rs tự ghi
+#   mỗi 100 commit — `count_files()` đếm cả `_delta_log/`. Sau khi dọn: 12 = 10 data +
+#   2 checkpoint, tức không còn orphan dữ liệu. `find_orphans()` bỏ qua `_delta_log/`
+#   nên không xoá nhầm checkpoint.
+#   *Iceberg:* 17 manifest list bị expiry bỏ lại (37.1 KB) được sweep, avro 40 → 23,
+#   dữ liệu vẫn đủ 2 000 dòng. Job 3 và Job 4 là một cặp: expire mà không sweep thì
+#   hoá đơn storage không giảm.
+# * **Job 5 — Checkpoint.** `create_checkpoint()` ghi `00000000000000000203.checkpoint.parquet`
+#   và cập nhật `_last_checkpoint`. Cell in tên `...099...` vì nó lấy phần tử đầu tiên của danh
+#   sách checkpoint (đã có sẵn từ auto-checkpoint); thư mục log có checkpoint ở v99, v199
+#   và v203. Reader lạnh đọc checkpoint mới nhất + các JSON sau nó thay vì replay 204 JSON.

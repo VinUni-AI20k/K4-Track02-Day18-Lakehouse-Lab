@@ -479,3 +479,29 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB8 incomplete — see FAIL rows above"
 print("\nNB8 complete.")
+
+# %% [markdown]
+# ## Giải thích kết quả (NB8)
+#
+# * **Trajectory qua medallion.** 1 578 step (300 session) đi từ Bronze vào Silver partition
+#   theo `agent_version` (`policy-v2`, `policy-v3`); Gold so sánh 2 policy: 150 trajectory
+#   mỗi bên, success rate 0.760 vs 0.753, chi phí gần bằng nhau. Partition theo version
+#   cho phép đọc/xoá/so sánh một policy mà không quét policy kia.
+# * **Version pin.** Training run ghi `table_version = 0` và `n_steps_seen = 1578`. Sau khi
+#   append thêm 400 step (bảng lên v1, 1 978 step), replay tại v0 vẫn trả **1 578** — khớp.
+#   Giới hạn: lab chỉ so số bước, không so nội dung từng dòng (production nên lưu thêm
+#   checksum/hash của tập dữ liệu).
+# * **Lớp MCP mô phỏng (offline).** 5 lượt `list_tables` chỉ đọc catalog **1 lần** (lượt 0
+#   miss, 4 lượt sau hit cache TTL 60 s) — cache đo ở `list_tables`, không phải `tools/list`.
+#   `delete_rows` chưa xác nhận trả `resultType: input_required`; có `confirmed=True` mới
+#   chạy (cờ do bên gọi truyền, không phải ranh giới phân quyền thật). `submit_scan` trả
+#   task handle, poll `tasks/get` 3 lần thì `completed`.
+# * **Provenance bucket.** Cả 4 bucket minh họa (`licensed` 675, `public_domain` 333,
+#   `synthetic` 331, `scraped_optout_checked` 327) cùng `UNCLASSIFIED` 334 đều là partition
+#   trên đĩa. Tập trainable chọn 1 666/2 000 dòng, loại 334 dòng `UNCLASSIFIED`
+#   (`license = unknown`). UNCLASSIFIED là phát hiện audit, không được mặc định gán vào
+#   bucket nào. Mapping chỉ là quy tắc của lab: CC-BY-4.0 bị gán vào `public_domain` dù có
+#   điều kiện ghi công; `user-owned` + consent chưa chứng minh đã kiểm tra opt-out.
+# * **Erasure.** `user_007` có 8 dòng (5 trong số đó UNCLASSIFIED) → 0 ở version hiện tại
+#   (v0 → v1). Nhưng v0 vẫn chứa các dòng đó cho tới khi VACUUM (NB6) xoá file cũ — xoá
+#   logic và xoá vật lý là hai bước khác nhau.

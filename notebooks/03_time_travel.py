@@ -132,3 +132,24 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB3 incomplete — see FAIL rows above"
 print("\nNB3 complete.")
+
+# %% [markdown]
+# ## Giải thích kết quả (NB3)
+#
+# * **Lịch sử version:** v0 `WRITE` 100K dòng → v1 `WRITE` (overwrite + thêm cột `tier`)
+#   → v2 `MERGE` → v3 `WRITE` (append 50 dòng lỗi `score = -1`) → v4 `RESTORE`.
+#   Tổng **5 version, có cả dòng RESTORE** — RESTORE là một transaction mới chứ không
+#   xoá/ghi đè lịch sử, nên v3 (dữ liệu lỗi) vẫn còn để điều tra (audit trail).
+# * **MERGE 100K dòng thành công:** metrics của v2 ghi `num_source_rows = 100000`,
+#   `num_target_rows_updated = 50000` (customer_id 50 000–99 999 đã tồn tại) và
+#   `num_target_rows_inserted = 50000` (100 000–149 999 là khách hàng mới), `num_output_rows = 150000`.
+#   Đây là upsert atomic: hoặc toàn bộ 100K thay đổi được commit, hoặc không gì cả.
+#   Lưu ý `num_target_files_scanned = 1`: MERGE phải rewrite file chứa các dòng khớp
+#   (copy-on-write), nên trên bảng lớn chi phí MERGE tỉ lệ với số file bị chạm.
+# * **Time travel:** `DeltaTable(path, version=0)` vẫn đọc được 100 000 dòng và schema
+#   v1 có `tier` — vì file cũ chưa bị VACUUM, log chỉ đánh dấu chúng là `remove`.
+# * **RESTORE:** `restore(2)` tạo v4 có tập file giống hệt v2, nên số dòng `score < 0`
+#   trong version hiện tại = **0**. Thao tác chỉ tốn vài chục ms vì không copy dữ liệu —
+#   nó chỉ ghi các action `add`/`remove` để trỏ lại đúng file của v2.
+#   Giới hạn: RESTORE chỉ hoạt động khi file của version đích còn trên đĩa; nếu đã
+#   VACUUM với retention ngắn (xem NB6) thì không thể quay lại.
