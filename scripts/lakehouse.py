@@ -96,14 +96,42 @@ def reset_catalog(name: str = "lab") -> None:
 
     Scoped to `name` on purpose — see `_catalog_dir`.
     """
+    import gc
     import shutil
+    import sqlite3
+    import time
 
     d = _catalog_dir(name)
     for engine in _CATALOG_ENGINES.pop(d.resolve(), []):
-        engine.dispose()
+        try:
+            engine.dispose()
+        except Exception:
+            pass
+    gc.collect()
+
     if d.exists():
-        # Report a failed reset rather than silently reusing stale data.
-        shutil.rmtree(d)
+        # Try rmtree; on Windows open file handles may briefly delay or require retry/fallback
+        for attempt in range(5):
+            try:
+                shutil.rmtree(d)
+                break
+            except OSError:
+                gc.collect()
+                time.sleep(0.1)
+                if attempt == 4:
+                    db_path = d / "catalog.db"
+                    if db_path.exists():
+                        try:
+                            con = sqlite3.connect(str(db_path))
+                            for tbl in [row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")]:
+                                con.execute(f"DROP TABLE IF EXISTS {tbl}")
+                            con.execute("VACUUM")
+                            con.close()
+                        except Exception:
+                            pass
+                    warehouse_dir = d / "warehouse"
+                    if warehouse_dir.exists():
+                        shutil.rmtree(warehouse_dir, ignore_errors=True)
 
 
 def namespace(cat, ns: str = "lake"):
