@@ -57,6 +57,10 @@ reset(SILVER)
 # autoloads an extension over the network; Arrow registration is offline and
 # zero-copy, so the lab works on a locked-down machine.
 con = duckdb.connect()
+# `ts` is a UTC timestamp. Without this, CAST(ts AS DATE) uses the machine's
+# local time zone (Asia/Saigon here): the 7 UTC days become 8 local dates with
+# partial first/last days, and Gold changes depending on who runs it.
+con.sql("SET TimeZone = 'UTC'")
 con.register("bronze", DeltaTable(BRONZE).to_pyarrow_table())
 
 silver_arrow = con.sql(f"""
@@ -132,8 +136,9 @@ DeltaTable(GOLD).optimize.z_order(["model"])
 # ## Verify Gold
 
 # %%
-gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table())
-print(gold_df)
+gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table()).sort(["date", "model"])
+with pl.Config(tbl_rows=30, tbl_width_chars=140, fmt_str_lengths=20):
+    print(gold_df)
 
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
@@ -155,3 +160,39 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %%
+gold_stats = gold_df.select(
+    pl.col("p50_latency_ms").min().alias("p50_min"),
+    pl.col("p95_latency_ms").max().alias("p95_max"),
+    pl.col("cost_usd").min().alias("cost_min"),
+    pl.col("cost_usd").sum().alias("cost_total"),
+    pl.col("error_rate").min().alias("err_min"),
+    pl.col("error_rate").max().alias("err_max"),
+).row(0, named=True)
+print("Gold value ranges:", {k: round(v, 4) for k, v in gold_stats.items()})
+
+per_model = (gold_df.group_by("model")
+             .agg(pl.col("date").n_unique().alias("dates"),
+                  pl.col("p50_latency_ms").mean().round(0).alias("avg_p50"),
+                  pl.col("p95_latency_ms").mean().round(0).alias("avg_p95"),
+                  pl.col("error_rate").mean().round(4).alias("avg_error_rate"),
+                  pl.col("cost_usd").sum().round(2).alias("cost_usd_7d"))
+             .sort("model"))
+print(per_model)
+
+checks = {
+    "bronze/silver/gold on disk":      all((Path(p) / "_delta_log").exists() for p in (BRONZE, SILVER, GOLD)),
+    "silver < bronze (dedup)":         silver_n < bronze_n,
+    "gold ≥ 7 dates":                  n_dates >= 7,
+    "gold has 3 models":               n_models == 3,
+    "every model on every date":       gold_df.height == n_dates * n_models,
+    "p50 ≤ p95 on every row":          gold_df.filter(pl.col("p50_latency_ms") > pl.col("p95_latency_ms")).height == 0,
+    "cost_usd > 0 on every row":       gold_df.filter(pl.col("cost_usd") <= 0).height == 0,
+    "error_rate in [0, 1]":            gold_df.filter(~pl.col("error_rate").is_between(0, 1)).height == 0,
+    "no nulls in Gold metrics":        gold_df.null_count().sum_horizontal().item() == 0,
+}
+for k, v in checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+assert all(checks.values()), "NB4 incomplete — see FAIL rows above"
+print("\nNB4 complete.")

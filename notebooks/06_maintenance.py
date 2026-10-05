@@ -179,8 +179,9 @@ print("and the engine must read everything. Clustering is what makes stats USEFU
 # %%
 dt = DeltaTable(TABLE)
 doomed = dt.vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
+# vacuum() returns paths relative to the table root, so resolve them before sizing.
 print(f"VACUUM would reclaim {len(doomed)} tombstoned files "
-      f"({human(sum(du(f) for f in doomed))})")
+      f"({human(sum(du(Path(TABLE) / f) for f in doomed))})")
 
 before_vacuum = du(TABLE)
 dt.vacuum(retention_hours=0, dry_run=False, enforce_retention_duration=False)
@@ -207,11 +208,19 @@ for i in range(3):
     old = time.time() - 30 * 86400          # 30 days old — well past any retention
     os.utime(orphan, (old, old))
 
+def data_files_on_disk(table_path: str = TABLE) -> int:
+    """Data Parquet files only. `_delta_log/` also holds Parquet: delta-rs writes
+    an automatic checkpoint every 100 commits, so a plain rglob over-counts."""
+    return sum(1 for f in Path(table_path).rglob("*.parquet") if "_delta_log" not in f.parts)
+
+
+auto_ckpts = sorted(p.name for p in (Path(TABLE) / "_delta_log").glob("*.checkpoint.parquet"))
 dt = DeltaTable(TABLE)
 print(f"Rows reported by the table: {dt.count():,}   (orphans are invisible)")
-print(f"Parquet files on disk:      {count_files(TABLE)}")
+print(f"Data Parquet files on disk: {data_files_on_disk()}")
 print(f"Parquet files in the log:   {len(dt.file_uris())}")
-print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and cannot see")
+print(f"→ {data_files_on_disk() - len(dt.file_uris())} files you pay for and cannot see")
+print(f"(Not counted: automatic log checkpoints in _delta_log/: {auto_ckpts})")
 
 # %% [markdown]
 # ### Measured finding: `VACUUM` alone does **not** catch these
@@ -220,8 +229,12 @@ print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and can
 
 # %%
 still = DeltaTable(TABLE).vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
-print(f"VACUUM dry-run now finds: {len(still)} files")
-print(f"Orphans still on disk:    {count_files(TABLE) - len(DeltaTable(TABLE).file_uris())}")
+still_on_disk = [f for f in still if (Path(TABLE) / f).exists()]
+orphans_in_vacuum_list = [f for f in still if "crashed-writer" in f]
+print(f"VACUUM dry-run now lists: {len(still)} paths "
+      f"({len(still_on_disk)} still exist on disk — tombstones whose files were already deleted)")
+print(f"Planted orphans in that list: {len(orphans_in_vacuum_list)}")
+print(f"Orphans still on disk:    {data_files_on_disk() - len(DeltaTable(TABLE).file_uris())}")
 print("""
 `deltalake` (the Rust/Python implementation used here) reclaims files the
 transaction log has TOMBSTONED. A file that was never committed was never
@@ -260,7 +273,7 @@ for f in found:
     print(f"  {os.path.basename(f)}")
     os.remove(f)
 
-print(f"\nAfter removal — on disk: {count_files(TABLE)}, in log: {len(DeltaTable(TABLE).file_uris())}")
+print(f"\nAfter removal — data files on disk: {data_files_on_disk()}, in log: {len(DeltaTable(TABLE).file_uris())}")
 print("\n⚠️ The age guard is not optional. Without it you will delete files that a")
 print("   concurrent writer has written but not yet committed, and corrupt the table.")
 
@@ -271,15 +284,22 @@ print("   concurrent writer has written but not yet committed, and corrupt the t
 # learn the current state. A checkpoint collapses that into one Parquet file.
 
 # %%
+import json  # noqa: E402
+
 log_dir = Path(TABLE) / "_delta_log"
 json_before = len(list(log_dir.glob("*.json")))
+ckpt_before = sorted(p.name for p in log_dir.glob("*.checkpoint.parquet"))
+current_version = DeltaTable(TABLE).version()
 
 DeltaTable(TABLE).create_checkpoint()
 
-ckpt = list(log_dir.glob("*.checkpoint.parquet"))
-print(f"JSON log entries a cold reader would replay: {json_before}")
-print(f"Checkpoint written: {ckpt[0].name if ckpt else 'NONE'}")
-print(f"_last_checkpoint present: {(log_dir / '_last_checkpoint').exists()}")
+ckpt = sorted(log_dir.glob("*.checkpoint.parquet"))
+new_ckpt = [p.name for p in ckpt if p.name not in ckpt_before]
+last_ckpt = json.loads((log_dir / "_last_checkpoint").read_text())
+print(f"JSON log entries on disk: {json_before}   (table version v{current_version})")
+print(f"Checkpoints before (automatic, every 100 commits): {ckpt_before}")
+print(f"Checkpoint written by create_checkpoint(): {new_ckpt or 'NONE'}")
+print(f"_last_checkpoint: {last_ckpt}")
 print("\nA reader now loads 1 checkpoint + the few JSONs after it, not all 200.")
 print("For CDC/streaming tables this is the difference between a 200 ms and a")
 print("20 s cold start — and it is why the slide calls it the 5th job.")
@@ -429,7 +449,8 @@ checks = {
     "vacuum reclaimed bytes":       before_vacuum > du(TABLE),
     "3 delta orphans removed":      len(found) == 3,
     "no delta orphans remain":      find_orphans(TABLE) == [],
-    "checkpoint written":           bool(ckpt) and (log_dir / "_last_checkpoint").exists(),
+    "vacuum did not list orphans":  orphans_in_vacuum_list == [],
+    "checkpoint written":           bool(new_ckpt) and last_ckpt["version"] == current_version,
     "iceberg expired to 3 snaps":   len(ice.snapshots()) == KEEP_LAST,
     "iceberg stranded files swept": len(stranded) > 0 and find_iceberg_orphans(ice) == [],
     "iceberg data intact":          cat.load_table(f"{ns}.maint").scan().to_arrow().num_rows == 2000,

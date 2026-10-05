@@ -443,6 +443,11 @@ after = con.sql(f"SELECT count(*) FROM governed_after WHERE subject_id = '{SUBJE
 
 print(f"\nRows for {SUBJECT}: {before} → {after}")
 print(f"Table version: {corpus_version} → {after_dt.version()}")
+
+# Measure the tension instead of only stating it: time travel to the pinned version.
+still_in_old_version = (DeltaTable(GOVERNED, version=corpus_version)
+                        .to_pyarrow_table(filters=[("subject_id", "=", SUBJECT)]).num_rows)
+print(f"Rows for {SUBJECT} still readable at v{corpus_version} via time travel: {still_in_old_version}")
 print(f"""
 Note the tension the slide flags: time travel means v{corpus_version} STILL contains
 the deleted rows. Removing rows from the current version does not remove old

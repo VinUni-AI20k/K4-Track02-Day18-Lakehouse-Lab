@@ -92,6 +92,9 @@ print(f"v1 schema:    {v1_cols}")
 # history — restore is itself a transaction, fully auditable.
 
 # %%
+bad_before_restore = DeltaTable(table_path).to_pyarrow_table(filters=[("score", "<", 0)]).num_rows
+print(f"Rows with score<0 at v3 (before restore): {bad_before_restore}")
+
 t0 = time.time()
 dt = DeltaTable(table_path)
 dt.restore(2)
@@ -104,6 +107,11 @@ print(f"RESTORE → v2: {time.time()-t0:.2f}s   (target < 30s)")
 dt_after = DeltaTable(table_path)
 bad_count = dt_after.to_pyarrow_table(filters=[("score", "<", 0)]).num_rows
 print(f"Rows with score<0 after restore: {bad_count}  (expected 0)")
+print(f"Current rows: {dt_after.to_pyarrow_table().num_rows:,}  (= v2 after MERGE)")
+
+# RESTORE is a new commit, not a rewrite of history: v3 is still readable.
+v3_bad = DeltaTable(table_path, version=3).to_pyarrow_table(filters=[("score", "<", 0)]).num_rows
+print(f"Time travel to v3 still shows the bad rows: {v3_bad}")
 
 # %% [markdown]
 # ## 5. history() — final audit trail (now includes the RESTORE)
