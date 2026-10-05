@@ -450,6 +450,36 @@ physical files. Retention and VACUUM must be considered separately (NB6),
 as must any copies or derived artifacts outside this table.""")
 
 # %% [markdown]
+# ## Phân tích kết quả (học viên)
+#
+# **Trajectories qua medallion.** 1,578 step thuộc 300 session. Silver được partition theo `agent_version`
+# thành 2 thư mục `policy-v2` và `policy-v3`, nên có thể retrain hoặc drop rollout của một policy mà không chạm
+# policy kia. Gold có 2 dòng: success_rate 0.760 (v2) so với 0.753 (v3), cùng 5.26 step trung bình và chi phí gần
+# như bằng nhau. Trên dữ liệu synthetic này, v3 **chưa** tốt hơn v2. Đó là loại kết luận Gold sinh ra để trả lời.
+#
+# **Version pin.** Training run ghi `table_version = 0` và `n_steps_seen = 1,578`. Sau đó có thêm rollout làm
+# bảng lên v1 với 1,978 step. Replay tại v0 trả lại đúng **1,578** step, khớp với lúc train. *Giới hạn:* phép kiểm
+# chỉ so **số dòng**, chưa so nội dung (ví dụ hash từng dòng).
+#
+# **Lớp MCP mô phỏng (offline, không phải MCP server).**
+# - Cache `list_tables`: 5 lượt agent chỉ đọc catalog **1** lần (lượt 0 `cached=False`, lượt 1–4 `cached=True`).
+#   Cache được đo ở `list_tables`, không phải `tools/list`.
+# - Gọi `delete_rows` lần đầu trả về `resultType: input_required` trước khi làm gì. *Giới hạn:* cờ `confirmed`
+#   do chính bên gọi truyền vào, nên agent có thể tự xác nhận. Đây không phải ranh giới phân quyền thật,
+#   và `delete_rows` là no-op.
+# - Task: `submit_scan` trả handle `working`, sau vài lần poll (lần chạy này: lần thứ 3) thì `completed` với 300 dòng. Việc trì hoãn
+#   được giả lập cục bộ, không có job nền thật.
+#
+# **Provenance.** Cả 4 bucket minh họa đều tồn tại thành partition (licensed 675, public_domain 333,
+# synthetic 331, scraped_optout_checked 327), cùng partition `UNCLASSIFIED` (334 dòng `license = unknown`).
+# Tập trainable chỉ lấy 1,666/2,000 dòng và loại UNCLASSIFIED. *Giới hạn của mapping:* CC-BY-4.0 bị gán vào
+# `public_domain`, trong khi đây là giấy phép yêu cầu ghi công. `user-owned` + consent cũng chưa chứng minh đã
+# kiểm tra opt-out. Đây là quy tắc của lab, không phải kết luận pháp lý.
+#
+# **Xóa subject.** `user_007` có 8 dòng (5 trong số đó là UNCLASSIFIED) và bị xóa còn 0 ở v1. Nhưng v0 **vẫn chứa**
+# 8 dòng đó qua time travel, cho đến khi bị VACUUM (NB6). Đây cũng là lý do PoC bonus phải expire và sweep.
+
+# %% [markdown]
 # ## ✅ NB8 pass criteria
 #
 # | Check | Target |

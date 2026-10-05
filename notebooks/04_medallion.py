@@ -150,8 +150,53 @@ assert n_dates >= 7, (
 )
 
 # %% [markdown]
-# ## ✅ Deliverable check
-# - [ ] All three tables exist under `_lakehouse/{bronze,silver,gold}/`
+# ### Kiểm tra chất lượng Gold (học viên thêm — notebook gốc chưa assert các điều kiện này)
+
+# %%
+import os as _os  # noqa: E402
+
+layers = {name: _os.path.isdir(_os.path.join(p, "_delta_log")) for name, p in
+          [("bronze", BRONZE), ("silver", SILVER), ("gold", GOLD)]}
+grid = gold_df.group_by("date").agg(pl.col("model").n_unique().alias("models"))
+gold_checks = {
+    "bronze/silver/gold all on disk":        all(layers.values()),
+    "silver < bronze (dedup)":               silver_n < bronze_n,
+    "≥ 7 dates":                             n_dates >= 7,
+    "every date has all 3 models":           grid["models"].min() == 3 and n_models == 3,
+    "p50 ≤ p95 on every row":                (gold_df["p50_latency_ms"] <= gold_df["p95_latency_ms"]).all(),
+    "cost_usd > 0 on every row":             (gold_df["cost_usd"] > 0).all(),
+    "error_rate ∈ [0, 1] on every row":      gold_df["error_rate"].is_between(0, 1).all(),
+}
+for k, v in gold_checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+print("\nPer-model summary across all Gold dates:")
+print(gold_df.group_by("model").agg(
+    pl.col("p50_latency_ms").median().alias("p50_ms"),
+    pl.col("p95_latency_ms").median().alias("p95_ms"),
+    pl.col("error_rate").mean().round(4).alias("error_rate"),
+    pl.col("cost_usd").sum().round(2).alias("cost_usd_total"),
+).sort("model"))
+assert all(gold_checks.values()), "Gold quality check failed — see FAIL rows above"
+
+# %% [markdown]
+# ## Phân tích kết quả (học viên)
+#
+# **Bronze → Silver.** Bronze có **200,000** dòng raw JSON. Generator cố ý chèn 9,948 bản trùng `request_id`
+# để mô phỏng SDK retry khi timeout. Silver parse JSON, chuẩn hóa kiểu dữ liệu và giữ dòng đầu tiên của mỗi
+# `request_id` (`ROW_NUMBER() ... rn = 1`), còn lại **190,052** dòng: Silver < Bronze đúng bằng số bản trùng.
+# Nếu không dedup, mỗi lần retry sẽ bị tính tiền và đếm latency hai lần trong Gold.
+#
+# **Gold.** 24 dòng = **8 ngày × 3 model** (ngưỡng ≥ 7 × 3). Generator trải đúng 7×24h từ 2026-04-01 00:00 **UTC**,
+# nhưng lại ra 8 ngày. Lý do: `CAST(ts AS DATE)` của DuckDB đổi `timestamptz` theo **múi giờ của máy** (Asia/Ho_Chi_Minh,
+# UTC+7). Vì thế ngày 04-01 chỉ có ~17h dữ liệu (19,271 dòng), ngày 04-08 có ~7h (7,915 dòng), còn các ngày giữa
+# có ~27.1K dòng. Đây là một bẫy production thật: Gold chạy trên máy ở múi giờ khác sẽ ra số khác. Nên chốt
+# `CAST(ts AT TIME ZONE 'UTC' AS DATE)` hoặc ghi rõ múi giờ báo cáo. Tất cả kiểm tra đều PASS: p50 ≤ p95, `cost_usd > 0`, `error_rate ∈ [0, 1]` (~5%).
+# Số liệu hợp lý: opus chậm nhất (p50 ~3 s, p95 ~6 s), haiku nhanh nhất (~560 ms). Chi phí theo ngày cao nhất
+# ở sonnet vì có nhiều token nhất (~33M input/ngày đầy đủ), dù đơn giá thấp hơn opus. Bảng giá là minh họa của lab.
+#
+# **Vì sao chia 3 tầng.** Bronze giữ bản gốc để replay khi logic parse sai. Silver là nguồn sự thật đã làm sạch.
+# Gold nhỏ (24 dòng thay vì 190K) nên dashboard đọc nhanh, và được Z-order theo `model` cho filter phổ biến.
+
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero

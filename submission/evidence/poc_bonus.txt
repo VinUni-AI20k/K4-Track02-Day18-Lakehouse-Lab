@@ -1,0 +1,15 @@
+[1] Bronze rows=10,000  snapshots=5
+    sample prompt: Call me at <PHONE:442343a8d40a> or mail <EMAIL:4217e40a32ab> about order 1517
+    PII regex hits in Parquet on disk: 0
+[2] REJECTED: schema contract violation, unknown columns ['user_email'] → DLQ
+[3] Gold rows=36  (12 buckets × 3 tenants expected)
+    (datetime.datetime(2026, 10, 4, 3, 0), 'acme', 283, 643.0, 1327.8999999999999, 2.7869, 214)
+    (datetime.datetime(2026, 10, 4, 3, 0), 'globex', 322, 645.0, 1416.3999999999999, 3.1318, 231)
+    (datetime.datetime(2026, 10, 4, 3, 0), 'initech', 273, 624.0, 1433.399999999999, 2.8608, 213)
+[4] leak committed (snapshot 3460215314595197216); detector finds 1000 PII hits
+    after rollback: current=5672863098025099940 rows=10,000
+    but on disk (time-travel history) still: 1000 hits  ← rollback alone is NOT enough
+    expired snapshot 3460215314595197216; swept 3 unreferenced files
+    PII regex hits on disk after sweep: 0
+
+PoC PASS: tokenized ingest, contract rejection, Gold 5m, leak → rollback → expire → sweep → 0 PII on disk.

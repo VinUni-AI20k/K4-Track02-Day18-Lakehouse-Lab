@@ -115,6 +115,22 @@ for h in final_history:
 print(f"\nTotal versions: {len(final_history)}  (target ≥ 5)")
 
 # %% [markdown]
+# ## Phân tích kết quả (học viên)
+#
+# **MERGE 100K.** Metrics của v2 ghi `num_source_rows=100000`, `num_target_rows_updated=50000` (id 50K–99,999
+# đã tồn tại) và `num_target_rows_inserted=50000` (id 100K–149,999 mới), tổng `num_output_rows=150000`.
+# MERGE chạy dưới 1 giây vì bảng chỉ có 1 file. Delta rewrite file bị chạm (`files_removed=1, files_added=1`)
+# trong **một** commit atomic, nên không reader nào thấy trạng thái "update xong nửa chừng".
+#
+# **Time travel.** `DeltaTable(path, version=0)` vẫn đọc được 100,000 dòng gốc, và v1 có thêm cột `tier`.
+# Cơ chế: version cũ chỉ là replay log đến commit N, còn các file cũ vẫn nằm trên đĩa cho đến khi bị VACUUM (NB6).
+#
+# **RESTORE.** v3 append 50 dòng `score = -1`. `restore(2)` không xóa v3. Nó tạo **commit mới v4** trỏ lại
+# đúng tập file của v2. Vì vậy history có 5 version `WRITE, WRITE, MERGE, WRITE, RESTORE` (≥ 5, có RESTORE),
+# số dòng `score < 0` = 0, và vẫn audit được ai ghi dữ liệu xấu lúc nào. Rollback mất dưới 0.1 s (lần chạy này 0.04 s) vì đây là thao tác
+# metadata, không copy dữ liệu. Ở production, đây là cách gỡ một batch lỗi lúc 3 giờ sáng mà không cần restore backup.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] history() shows ≥ 5 versions (incl. RESTORE itself)
 # - [ ] MERGE 100K finished in < 60s (likely < 1s on lightweight path)

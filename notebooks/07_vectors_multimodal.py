@@ -374,6 +374,35 @@ and the lifecycle is enforced by the table itself.
 """)
 
 # %% [markdown]
+# ## Phân tích kết quả (học viên)
+#
+# **Inline blob vs pointer.** Tổng dung lượng gần như bằng nhau (12.5 MB), vì byte phải nằm ở đâu đó.
+# Với query phân tích `GROUP BY topic`, cả hai layout chỉ đọc **1.2 KB**: Parquet là columnar, nên column chunk
+# `blob` không bao giờ được đọc (projection pushdown, đo trực tiếp từ footer).
+#
+# **Random-access amplification 200× (ngưỡng ≥ 5×).** File inline có 1 row group gồm 200 dòng, 12.5 MB.
+# Đơn vị I/O và giải nén của Parquet là **row group**, không phải dòng. Muốn lấy 1 frame 64 KB thì phải đọc cả
+# 12.5 MB, tức 12.5 MB / 64 KB = 200×. Pointer chỉ cần một GET đúng 64 KB. Đây là lý do việc nạp dữ liệu cho GPU
+# với random read cần layout như Lance, hoặc dùng pointer kèm object store.
+#
+# **int8 quantization.** Trong bộ nhớ, int8 nhỏ đúng 4× (1,024 B → 256 B/vector ở dim 256). Trên đĩa, int8 nhỏ
+# **5.8×** (2.6 MB → 452 KB, ngưỡng ≥ 3×), vì float32 ngẫu nhiên gần như không nén được, còn int8 có ít giá trị
+# phân biệt nên nén tốt hơn. **recall@10 = 0.904** (≥ 0.80): khoảng 10% ID đúng bị thay bằng hàng xóm gần tương
+# đương. **Topic fidelity = 1.000** (≥ 0.95): mọi kết quả int8 vẫn cùng topic. Với RAG, fidelity là metric sát
+# chất lượng hơn, vì đổi chỗ giữa hai tài liệu gần như ngang nhau không làm câu trả lời tệ đi.
+#
+# **Semantic search bằng SQL.** `array_cosine_similarity` trong DuckDB core trả về top-5 đều thuộc topic
+# `storage`, giống query. Vì cột Delta đọc lên là `list<float>` (Delta không có kiểu vector độ dài cố định),
+# ta phải cast `emb::FLOAT[256]`. Brute-force ~20 ms cho 2K vector, ngoại suy ra ~10 s cho 1M vector,
+# nên đây là đường phân tích offline, không phải đường serve online.
+#
+# **Lifecycle bug (bug quan trọng nhất).** Sau yêu cầu xóa của `user_042`, lakehouse còn **0** dòng của user này
+# (2,000 → 1,992), nhưng external index vẫn trả về **8** tài liệu đã xóa. Một pipeline RAG đọc index này sẽ đưa
+# dữ liệu đã bị yêu cầu xóa vào prompt, tức là lỗi tuân thủ chứ không chỉ là dữ liệu cũ. Change Data Feed phát
+# đúng 8 event `delete` kèm `doc_id`. Index phải subscribe CDF thay vì upsert một chiều. Tốt nhất là giữ vector
+# ngay trong bảng để vòng đời của vector đi theo dòng dữ liệu.
+
+# %% [markdown]
 # ## ✅ NB7 pass criteria
 #
 # | Check | Target |

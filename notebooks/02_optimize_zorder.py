@@ -157,6 +157,25 @@ print(
 )
 
 # %% [markdown]
+# ## Phân tích kết quả (học viên)
+#
+# **Small-file problem.** 200 lần append mỗi lần 5K dòng tạo đúng **200 file** (≥ 100 theo rubric).
+# Đây là hình dạng dữ liệu mà streaming ingestion tạo ra. Mỗi query phải mở 200 file, và mỗi file tốn thêm
+# một lần đọc footer và một request I/O.
+#
+# **OPTIMIZE + Z-ORDER.** Số file giảm **200 → 55** (≈ 4×). Không gộp về 1 file vì `target_size = 256 KB`
+# được chọn có chủ đích. Nếu chỉ còn 1 file thì không còn gì để prune, và Z-order mất tác dụng.
+#
+# **Vì sao nhanh hơn.** Sau Z-order, mỗi file chứa một khoảng `user_id` hẹp và gần như không chồng lấn
+# (ví dụ `[3696, 5534]`). Delta lưu min/max của mỗi file trong action `add` của log. Với predicate
+# `user_id = 4242`, engine đọc stats và loại 54/55 file **mà không cần mở chúng**. Đó là **files-pruned ratio 55×**
+# (ngưỡng ≥ 10×). Trước Z-order, user_id là ngẫu nhiên nên mọi file đều có khoảng [~1, ~100000], stats không loại được file nào.
+#
+# **Speedup wall-clock** đo được 25.8× trong lần chạy được lưu ở đây, nhưng chỉ 10.3× ở lần chạy trước trên cùng máy (ngưỡng ≥ 3×). Con số này dao động theo
+# SSD, cache của OS và tải CPU, nên mỗi lần chạy có thể khác. Pruning ratio thì deterministic vì chỉ phụ thuộc
+# layout dữ liệu, nên đó là metric đáng tin hơn. Ở production, mỗi file bị prune tiết kiệm một GET S3 và vài trăm MB đọc.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] Speedup ≥ 3× **or** files-pruned ratio ≥ 10× (slide §6 allows either)
 # - [ ] File count dropped substantially after compact()

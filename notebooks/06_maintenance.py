@@ -412,6 +412,42 @@ print("it is driven by FILE COUNT, not data volume. Fixing your writer's")
 print("trigger interval is cheaper than paying someone to clean up after it.")
 
 # %% [markdown]
+# ## Phân tích kết quả (học viên)
+#
+# **Job 1 — Compaction: 200 → 11 file (18×, ngưỡng ≥ 10×).** File trung bình chỉ 51.5 KB, quá nhỏ so với
+# mục tiêu production 128–512 MB. Sau OPTIMIZE, dung lượng data trên đĩa **tăng** từ 10.1 lên 16.1 MB, vì
+# compaction ghi file mới trước, còn file cũ chỉ bị tombstone chứ chưa bị xóa. Phải dự trù dung lượng cho giai đoạn này.
+#
+# **Job 2 — Clustering: skip 90% (ngưỡng ≥ 50%).** Trước Z-order, khoảng min/max `user_id` của cả 11 file đều
+# chứa 12,345, nên stats không loại được file nào (phải đọc 11/11). Sau Z-order chỉ còn 1/10 file. Con số này
+# lấy từ stats trong `get_add_actions()`, không phải đo thời gian, nên deterministic.
+#
+# **Job 3 — Expiry/VACUUM: thu hồi 16.1 MB.** Đây là các file bị tombstone bởi compaction và Z-order.
+# Dòng "211 tombstoned files (0 B)" là do `vacuum()` trả về đường dẫn **tương đối** so với thư mục bảng,
+# còn `du()` nhận đường dẫn tương đối theo cwd nên không tìm thấy file và báo 0 B. Số byte thực sự thu hồi
+# được đo bằng `du(TABLE)` trước/sau. Đánh đổi là time travel về v0 không còn. Retention 0 chỉ dùng cho dữ liệu scratch.
+#
+# **Job 4 — Orphans.** Có 3 file do "writer crash" để lại, không nằm trong log và có mtime 30 ngày trước.
+# **VACUUM không thấy chúng**: dry-run lần hai vẫn liệt kê 211 tombstone cũ (file đã bị xóa nhưng log vẫn còn ghi)
+# và không hề nhắc tới 3 orphan. deltalake chỉ xóa những gì log đã tombstone, mà file chưa từng commit thì
+# chưa từng bị tombstone. Hàm `find_orphans` (lấy file trên đĩa trừ file được tham chiếu, kèm age guard 24h)
+# tìm đúng 3 file và xóa chúng.
+# *Ghi chú số liệu:* dòng "5 files you pay for" gồm 3 orphan + 2 checkpoint `00..099` / `00..199.checkpoint.parquet`
+# mà deltalake tự ghi mỗi 100 commit vào `_delta_log/`. Đó là metadata hợp lệ, không phải rác. `find_orphans`
+# bỏ qua `_delta_log` nên chỉ đếm 3.
+#
+# **Job 5 — Checkpoint.** `create_checkpoint()` ghi thêm checkpoint ở v203, và `_last_checkpoint` trỏ tới
+# version 203. Output in ra tên `..099` chỉ vì `glob` trả về checkpoint đầu tiên. Reader lạnh giờ chỉ cần đọc
+# 1 Parquet thay vì replay 204 JSON.
+#
+# **Iceberg: expiry chỉ là thao tác metadata.** Số snapshot giảm 20 → 3 nhưng số file avro vẫn là 40 → 40,
+# và metadata thậm chí **tăng** (338 → 346 KB) vì expiry ghi thêm một metadata.json. Với PyIceberg 0.12 dùng trong
+# lab, `expire_snapshots` chỉ làm 17 manifest list trở thành "unreferenced" mà không xóa file vật lý. Phải chạy
+# sweep (lấy file trên đĩa trừ file các snapshot còn sống trỏ tới) mới thu hồi được 37 KB, sau đó còn 23 avro
+# và dữ liệu vẫn nguyên 2,000 dòng. Job 3 và Job 4 phải chạy thành cặp. Đây là hành vi của phiên bản thư viện
+# này; Spark `expire_snapshots` thường tự xóa file luôn.
+
+# %% [markdown]
 # ## ✅ NB6 pass criteria
 #
 # | Check | Target |

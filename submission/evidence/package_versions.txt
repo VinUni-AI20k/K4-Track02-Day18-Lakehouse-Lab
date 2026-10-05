@@ -1,0 +1,11 @@
+
+deltalake                 1.6.6
+duckdb                    1.5.6
+jupytext                  1.19.5
+nbconvert                 7.17.1
+numpy                     2.5.3
+polars                    1.44.2
+pyarrow                   25.0.1
+pyiceberg                 0.12.0
+pytest                    9.1.1
+

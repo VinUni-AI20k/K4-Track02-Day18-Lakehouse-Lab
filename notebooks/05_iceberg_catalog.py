@@ -278,6 +278,32 @@ print(f"Total rows readable across BOTH specs: {tbl.scan().to_arrow().num_rows:,
 print("\nTwo layouts, one table, zero rewrites. This is the feature.")
 
 # %% [markdown]
+# ## Phân tích kết quả (học viên)
+#
+# **Tạo bảng qua catalog.** Ta không chọn đường dẫn. `create_table` đăng ký bảng trong SQLite catalog, và
+# catalog trả về `location` cùng `metadata.json`. Mọi commit sau đó là một phép compare-and-swap con trỏ
+# metadata trong catalog. Đó là lý do catalog là control plane: ai kiểm soát con trỏ thì kiểm soát bảng.
+#
+# **Hidden partitioning, pruning 10×** (ngưỡng ≥ 5×). Spec là `ts_day: day(ts)`. Ta lọc trên **`ts`**
+# (`ts >= '2026-08-05' and ts < '2026-08-06'`) và không hề nhắc đến `ts_day`. Iceberg áp transform đã lưu
+# trong metadata lên predicate, ra `ts_day = 2026-08-05`, rồi so với partition value ghi trong manifest.
+# `plan_files()` chỉ chọn 1/10 file và trả đúng 500 dòng. Người dùng Hive quên `WHERE dt = ...` sẽ đọc cả 10 file.
+# Ở quy mô 512 MB/file và 10K query/ngày, đó là ~$220/ngày lãng phí, như cell trên đã tính.
+#
+# **Cây metadata 3 tầng.** metadata.json → 10 manifest list (1 cho mỗi snapshot) → 10 manifest → 10 data file.
+# Metadata ở đây chiếm **286%** dung lượng dữ liệu (135 KB so với 47 KB), vì mỗi file chỉ có 500 dòng.
+# Tỉ lệ metadata:data này là cái giá của small files: càng nhiều file nhỏ thì planner càng phải đọc nhiều metadata.
+# Với file 512 MB, tỉ lệ này còn khoảng 0.1%.
+#
+# **Schema evolution theo field-ID.** Sau khi rename `latency_ms → latency_millis`, cột vẫn giữ **`field_id = 4`**.
+# File Parquet cũ lưu cột theo ID chứ không theo tên, nên không file nào phải rewrite. Cột `tier` mới nhận ID 6,
+# và 5,000 dòng cũ đọc ra `null`.
+#
+# **Partition evolution.** Sau khi thêm `model_id` vào spec, data file cũ vẫn mang `spec_id = 1`, còn batch mới
+# mang `spec_id = 2`. Hai layout cùng tồn tại trong một bảng và đọc được đủ **5,500** dòng. Hive phải rewrite
+# toàn bộ bảng mới làm được việc này.
+
+# %% [markdown]
 # ## ✅ NB5 pass criteria
 #
 # | Check | Target |
