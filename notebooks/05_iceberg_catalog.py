@@ -61,6 +61,7 @@ print(f"Created {tbl.name()}")
 print(f"  location:  {tbl.location()}")
 print(f"  metadata:  {tbl.metadata_location.rsplit('/', 1)[-1]}")
 print(f"  format-v{tbl.format_version}")
+print(f"  schema:    {[(f.field_id, f.name, str(f.field_type)) for f in tbl.schema().fields]}")
 
 # %% [markdown]
 # ## 2. Hidden partitioning — the feature that killed Hive
@@ -130,11 +131,12 @@ scan_one_day = tbl.scan(row_filter="ts >= '2026-08-05T00:00:00' and ts < '2026-0
 
 files_all = len(list(scan_all.plan_files()))
 files_one = len(list(scan_one_day.plan_files()))
+rows_one_day = scan_one_day.to_arrow().num_rows
 
 print(f"Files to read, no filter:    {files_all}")
 print(f"Files to read, one-day filter: {files_one}")
 print(f"→ Pruning ratio: {files_all / max(files_one, 1):.0f}×   (target ≥ 5×)")
-print(f"  rows returned: {scan_one_day.to_arrow().num_rows:,}")
+print(f"  rows returned: {rows_one_day:,}")
 
 PRUNE_RATIO = files_all / max(files_one, 1)
 assert PRUNE_RATIO >= 5, f"expected ≥5x pruning, got {PRUNE_RATIO:.1f}x"
@@ -196,11 +198,14 @@ print(f"Partitions tracked  : {tbl.inspect.partitions().num_rows}")
 loc = tbl.location().replace("file://", "")
 meta_bytes = du(f"{loc}/metadata")
 data_bytes = du(f"{loc}/data")
-print(f"data/     {human(data_bytes):>10}   ({count_files(f'{loc}/data')} parquet files)")
-print(f"metadata/ {human(meta_bytes):>10}   ({count_files(f'{loc}/metadata', '.avro')} avro + "
-      f"{count_files(f'{loc}/metadata', '.json')} json)")
-print(f"→ metadata is {meta_bytes / max(data_bytes, 1) * 100:.1f}% of table size")
-print("\nAt 10 rows/file this looks absurd. At 512 MB/file it is ~0.1%.")
+data_file_count = count_files(f"{loc}/data")
+avro_count = count_files(f"{loc}/metadata", ".avro")
+json_count = count_files(f"{loc}/metadata", ".json")
+metadata_ratio = meta_bytes / max(data_bytes, 1)
+print(f"data/     {human(data_bytes):>10}   ({data_file_count} parquet files)")
+print(f"metadata/ {human(meta_bytes):>10}   ({avro_count} avro + {json_count} json)")
+print(f"→ metadata:data = {metadata_ratio:.3f}:1 ({metadata_ratio * 100:.1f}%)")
+print(f"\nAt {ROWS_PER_DAY} rows/file this ratio is intentionally large; real files are much larger.")
 print("Small files punish you TWICE: more data files AND more metadata to plan over.")
 
 # %% [markdown]
@@ -216,6 +221,7 @@ print("Small files punish you TWICE: more data files AND more metadata to plan o
 from pyiceberg.types import StringType  # noqa: E402
 
 print("Field IDs before:", [(f.field_id, f.name) for f in tbl.schema().fields])
+latency_id_before = tbl.schema().find_field("latency_ms").field_id
 
 with tbl.update_schema() as upd:
     upd.add_column("tier", StringType(), doc="customer tier, added after 5000 rows existed")
@@ -226,7 +232,10 @@ with tbl.update_schema() as upd:
 tbl = cat.load_table(f"{ns}.llm_events")
 
 print("Field IDs after :", [(f.field_id, f.name) for f in tbl.schema().fields])
-print("\nlatency_ms → latency_millis kept field_id=4: a rename rewrote NO data.")
+latency_id_after = tbl.schema().find_field("latency_millis").field_id
+print(f"\nRename evidence: latency_ms(id={latency_id_before}) → "
+      f"latency_millis(id={latency_id_after})")
+print("The stable ID proves this was a metadata rename, not a new logical column.")
 print("Old rows read back with tier=NULL — no backfill, no migration job.")
 
 # %%
@@ -272,9 +281,13 @@ tbl.append(day_batch(11).append_column("tier", pa.array(["gold"] * ROWS_PER_DAY)
            .rename_columns(["event_id", "ts", "model", "latency_millis", "cost_usd", "tier"]))
 tbl = cat.load_table(f"{ns}.llm_events")
 
-specs_in_use = set(tbl.inspect.files().column("spec_id").to_pylist())
-print(f"Partition specs in use across data files: {sorted(specs_in_use)}")
-print(f"Total rows readable across BOTH specs: {tbl.scan().to_arrow().num_rows:,}")
+file_spec_ids = tbl.inspect.files().column("spec_id").to_pylist()
+spec_file_counts = {spec_id: file_spec_ids.count(spec_id) for spec_id in sorted(set(file_spec_ids))}
+specs_in_use = set(file_spec_ids)
+all_rows_after_evolution = tbl.scan().to_arrow().num_rows
+print(f"Partition specs defined in table metadata: {sorted(tbl.specs())}")
+print(f"Data files per spec_id: {spec_file_counts}")
+print(f"Total rows readable across BOTH specs: {all_rows_after_evolution:,}")
 print("\nTwo layouts, one table, zero rewrites. This is the feature.")
 
 # %% [markdown]
@@ -289,13 +302,32 @@ print("\nTwo layouts, one table, zero rewrites. This is the feature.")
 
 # %%
 checks = {
+    "catalog namespace exists":       (ns,) in cat.list_namespaces(),
     "pruning ratio ≥ 5x":        PRUNE_RATIO >= 5,
+    "source-column filter returns one day": rows_one_day == ROWS_PER_DAY,
+    "metadata and data measured": meta_bytes > 0 and data_bytes > 0,
     "≥ 10 snapshots":            len(tbl.snapshots()) >= 10,
-    "field_id stable on rename": [f.field_id for f in tbl.schema().fields if f.name == "latency_millis"] == [4],
+    "field_id stable on rename": latency_id_before == latency_id_after == 4,
+    "renamed column readable": "latency_millis" in tbl.scan().to_arrow().column_names,
     "≥ 2 partition specs":       len(specs_in_use) >= 2,
-    "all rows readable":         tbl.scan().to_arrow().num_rows == (N_DAYS + 1) * ROWS_PER_DAY,
+    "old and new spec files coexist": all(count > 0 for count in spec_file_counts.values()),
+    "all rows readable":         all_rows_after_evolution == (N_DAYS + 1) * ROWS_PER_DAY,
 }
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB5 incomplete — see FAIL rows above"
 print("\nNB5 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Catalog quản lý namespace, location và metadata của bảng; người ghi không tự ghép đường dẫn.
+# Hidden partitioning dùng transform day(ts) và thống kê partition để suy ra file phù hợp từ
+# filter trên cột nguồn ts, nên query không cần biết hay lọc trực tiếp cột dẫn xuất ts_day.
+#
+# Field ID là định danh logic bền vững của cột: latency_ms và latency_millis đều có ID 4,
+# vì vậy engine hiểu đây là cùng một cột sau metadata-only rename, không phải hai cột khác nhau.
+# Partition evolution chỉ áp dụng spec mới cho lần ghi tiếp theo; file cũ giữ spec_id và layout
+# ban đầu, còn planner đọc metadata của từng file để lập kế hoạch chung. Vì thế hai layout cùng
+# tồn tại mà không cần rewrite ngay. Tỷ lệ metadata:data lớn trong toy table cũng cho thấy small
+# files làm tăng cả I/O dữ liệu lẫn chi phí planning.

@@ -5,17 +5,16 @@
 # ---
 
 # %% [markdown]
-# # NB6 — Table Maintenance: the 4 jobs that are not optional
+# # NB6 — Table Maintenance: 5 measured jobs
 #
 # **Stack:** `deltalake` + `pyiceberg`. Maps to slide §6 (Storage Optimization →
 # *Table Maintenance: 4 Job Bắt Buộc*) + §12 FinOps + deliverable bullet 6.
 #
-# > **The small-file problem is the single most common production failure mode
-# > of a lakehouse** — more common than every other cause combined. It is not
-# > caused by bad code. It is caused by *normal* streaming ingestion plus the
-# > absence of a cron job.
+# > Small files are a common lakehouse failure mode: normal streaming ingestion
+# > creates them continuously unless scheduled maintenance controls the buildup.
 #
-# The four mandatory jobs, per the slide:
+# The first four jobs maintain table data/metadata; checkpointing is the fifth
+# Delta-log maintenance job measured later in this notebook.
 #
 # | # | Job | If you skip it | Delta | Iceberg |
 # |---|---|---|---|---|
@@ -30,7 +29,6 @@
 import _setup  # noqa: F401
 
 import datetime as dtm
-import glob
 import os
 import time
 from pathlib import Path
@@ -39,7 +37,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from deltalake import DeltaTable, write_deltalake
 
-from lakehouse import catalog, count_files, du, human, namespace, path, reset, reset_catalog
+from lakehouse import catalog, du, human, namespace, path, reset, reset_catalog
 
 TABLE = path("scratch", "maint_events")
 reset(TABLE)
@@ -103,7 +101,7 @@ print(f"\nAverage file size: {human(base['data bytes'] / base['data files'])}"
 # 200 million files is a platform outage.
 
 # %%
-GET_PER_1K = 0.0004     # S3 GET list price, USD per 1,000 requests
+GET_PER_1K = 0.0004     # illustrative lab assumption, USD per 1,000 requests
 QUERIES_PER_DAY = 50_000
 gets_now = base["data files"] * QUERIES_PER_DAY
 print(f"Full-scan GETs/day at {base['data files']} files: {gets_now:,}"
@@ -154,8 +152,16 @@ def files_touched(target: int = TARGET_USER) -> int:
     return sum(1 for f in aa if f["min.user_id"] <= target <= f["max.user_id"])
 
 
+def user_id_ranges() -> list[tuple[int, int]]:
+    """Per-file user_id ranges recorded in the Delta add actions."""
+    aa = pa.table(DeltaTable(TABLE).get_add_actions(flatten=True)).to_pylist()
+    return sorted((f["min.user_id"], f["max.user_id"]) for f in aa)
+
+
+before_ranges = user_id_ranges()
 before_cluster = files_touched()
 DeltaTable(TABLE).optimize.z_order(["user_id"], target_size=TARGET_SIZE)
+after_ranges = user_id_ranges()
 after_cluster = files_touched()
 total_files = len(DeltaTable(TABLE).file_uris())
 
@@ -163,6 +169,10 @@ print(f"Point query user_id={TARGET_USER}")
 print(f"  before clustering: must open {before_cluster}/{after_compact['data files']} files")
 print(f"  after  clustering: must open {after_cluster}/{total_files} files")
 print(f"  → skip rate: {(1 - after_cluster / max(total_files, 1)) * 100:.0f}% of files never touched")
+print("\nAfter-clustering min/max evidence:")
+for i, (lo, hi) in enumerate(after_ranges, 1):
+    print(f"  file {i:02d}: [{lo:>5}, {hi:>5}]  "
+          f"{'READ' if lo <= TARGET_USER <= hi else 'SKIP'}")
 print("\nUnclustered data has overlapping min/max ranges, so stats prove nothing")
 print("and the engine must read everything. Clustering is what makes stats USEFUL.")
 
@@ -179,13 +189,18 @@ print("and the engine must read everything. Clustering is what makes stats USEFU
 # %%
 dt = DeltaTable(TABLE)
 doomed = dt.vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
+doomed_paths = [Path(f.replace("file://", "")) for f in doomed]
+doomed_paths = [f if f.is_absolute() else Path(TABLE) / f for f in doomed_paths]
+doomed_bytes = sum(f.stat().st_size for f in doomed_paths if f.exists())
 print(f"VACUUM would reclaim {len(doomed)} tombstoned files "
-      f"({human(sum(du(f) for f in doomed))})")
+      f"({human(doomed_bytes)})")
 
 before_vacuum = du(TABLE)
-dt.vacuum(retention_hours=0, dry_run=False, enforce_retention_duration=False)
+removed_by_vacuum = dt.vacuum(retention_hours=0, dry_run=False, enforce_retention_duration=False)
+vacuum_reclaimed_bytes = before_vacuum - du(TABLE)
 after_vacuum = snapshot_metrics("AFTER vacuum")
-print(f"\nReclaimed: {human(before_vacuum - du(TABLE))}")
+print(f"\nRemoved by VACUUM: {len(removed_by_vacuum)} files")
+print(f"Reclaimed: {human(vacuum_reclaimed_bytes)}")
 print(f"Time travel to v0 is now GONE — that is the trade you just made.")
 
 # %% [markdown]
@@ -198,6 +213,11 @@ print(f"Time travel to v0 is now GONE — that is the trade you just made.")
 # We simulate three crashed writers:
 
 # %%
+def data_parquet_files(table_path: str) -> list[Path]:
+    """Physical data files only; Delta checkpoints are log metadata."""
+    return [f for f in Path(table_path).rglob("*.parquet") if "_delta_log" not in f.parts]
+
+
 for i in range(3):
     orphan = Path(TABLE) / f"part-9999{i}-crashed-writer-c000.snappy.parquet"
     pq.write_table(pa.table({"event_id": list(range(1000)), "user_id": [0] * 1000,
@@ -209,9 +229,9 @@ for i in range(3):
 
 dt = DeltaTable(TABLE)
 print(f"Rows reported by the table: {dt.count():,}   (orphans are invisible)")
-print(f"Parquet files on disk:      {count_files(TABLE)}")
+print(f"Data files on disk:         {len(data_parquet_files(TABLE))}")
 print(f"Parquet files in the log:   {len(dt.file_uris())}")
-print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and cannot see")
+print(f"→ {len(data_parquet_files(TABLE)) - len(dt.file_uris())} files you pay for and cannot see")
 
 # %% [markdown]
 # ### Measured finding: `VACUUM` alone does **not** catch these
@@ -220,16 +240,18 @@ print(f"→ {count_files(TABLE) - len(dt.file_uris())} files you pay for and can
 
 # %%
 still = DeltaTable(TABLE).vacuum(retention_hours=0, dry_run=True, enforce_retention_duration=False)
-print(f"VACUUM dry-run now finds: {len(still)} files")
-print(f"Orphans still on disk:    {count_files(TABLE) - len(DeltaTable(TABLE).file_uris())}")
+vacuum_saw_planted_orphans = [f for f in still if "crashed-writer" in f]
+print(f"VACUUM dry-run candidates from tombstones: {len(still)}")
+print(f"Planted uncommitted orphans among candidates: {len(vacuum_saw_planted_orphans)}")
+print(f"Unreferenced data files still on disk: "
+      f"{len(data_parquet_files(TABLE)) - len(DeltaTable(TABLE).file_uris())}")
 print("""
 `deltalake` (the Rust/Python implementation used here) reclaims files the
 transaction log has TOMBSTONED. A file that was never committed was never
 tombstoned, so the log has no idea it exists.
 
-Spark's VACUUM additionally lists the table directory, which is why the slide
-lists VACUUM under orphan removal — but you should never *assume* your engine
-does the directory pass. Verify it, or run the diff yourself:
+Other implementations may also list the table directory, but you should never
+assume your engine does that pass. Verify it, or run the diff yourself:
 """)
 
 # %% [markdown]
@@ -245,9 +267,7 @@ def find_orphans(table_path: str, min_age_hours: int = 24) -> list[str]:
                   for u in DeltaTable(table_path).file_uris()}
     cutoff = time.time() - min_age_hours * 3600
     orphans = []
-    for f in Path(table_path).rglob("*.parquet"):
-        if "_delta_log" in f.parts:
-            continue
+    for f in data_parquet_files(table_path):
         if os.path.realpath(f) not in referenced and f.stat().st_mtime < cutoff:
             orphans.append(str(f))
     return orphans
@@ -260,7 +280,9 @@ for f in found:
     print(f"  {os.path.basename(f)}")
     os.remove(f)
 
-print(f"\nAfter removal — on disk: {count_files(TABLE)}, in log: {len(DeltaTable(TABLE).file_uris())}")
+delta_data_files_after_sweep = len(data_parquet_files(TABLE))
+print(f"\nAfter removal — data files on disk: {delta_data_files_after_sweep}, "
+      f"in log: {len(DeltaTable(TABLE).file_uris())}")
 print("\n⚠️ The age guard is not optional. Without it you will delete files that a")
 print("   concurrent writer has written but not yet committed, and corrupt the table.")
 
@@ -281,8 +303,7 @@ print(f"JSON log entries a cold reader would replay: {json_before}")
 print(f"Checkpoint written: {ckpt[0].name if ckpt else 'NONE'}")
 print(f"_last_checkpoint present: {(log_dir / '_last_checkpoint').exists()}")
 print("\nA reader now loads 1 checkpoint + the few JSONs after it, not all 200.")
-print("For CDC/streaming tables this is the difference between a 200 ms and a")
-print("20 s cold start — and it is why the slide calls it the 5th job.")
+print("The checkpoint bounds log replay work for a new reader.")
 
 # %% [markdown]
 # ## The same four jobs on Iceberg
@@ -385,7 +406,9 @@ for f in stranded:
     f.unlink()
 
 ice_final = ice_metrics("after sweep")
+iceberg_manifest_lists_removed = ice_after["manifest avro"] - ice_final["manifest avro"]
 print(f"\nReclaimed by chaining expiry → orphan removal: {human(reclaimed_ice)}")
+print(f"Physical manifest lists removed: {iceberg_manifest_lists_removed}")
 print(f"Rows still intact: {cat.load_table(f'{ns}.maint').scan().to_arrow().num_rows:,}")
 print("\n→ Job 3 and Job 4 are a PAIR. Running expiry without a sweep is why")
 print("  teams report 'we expire snapshots but the S3 bill never drops'.")
@@ -393,9 +416,8 @@ print("  teams report 'we expire snapshots but the S3 bill never drops'.")
 # %% [markdown]
 # ## Who runs these jobs? Self-managed vs managed
 #
-# "Fully managed" ≠ free. Managed compaction meters **per GB processed** *and*
-# **per 1,000 objects** — a table with pathological small files is exactly the
-# table that is most expensive to have auto-compacted.
+# Managed offerings use provider-specific meters. The following is an
+# illustrative scenario, not a current provider quote.
 
 # %%
 TABLE_GB, FILES, COMPACTIONS_PER_MONTH = 500, 2_000_000, 30
@@ -404,6 +426,7 @@ PRICE_GB, PRICE_PER_1K_OBJ = 0.05, 0.004
 gb_cost = TABLE_GB * PRICE_GB * COMPACTIONS_PER_MONTH
 obj_cost = FILES / 1000 * PRICE_PER_1K_OBJ * COMPACTIONS_PER_MONTH
 print(f"Managed compaction, {TABLE_GB} GB / {FILES:,} files, daily:")
+print("  illustrative lab assumptions")
 print(f"  per-GB component:     ${gb_cost:,.0f}/mo")
 print(f"  per-object component: ${obj_cost:,.0f}/mo")
 print(f"  TOTAL:                ${gb_cost + obj_cost:,.0f}/mo")
@@ -426,15 +449,41 @@ print("trigger interval is cheaper than paying someone to clean up after it.")
 checks = {
     "compaction ≥ 10x fewer files": base["data files"] / max(after_compact["data files"], 1) >= 10,
     "clustering skips ≥ 50% files": (1 - after_cluster / max(total_files, 1)) >= 0.5,
-    "vacuum reclaimed bytes":       before_vacuum > du(TABLE),
+    "clustering improves min/max":  before_cluster > after_cluster,
+    "vacuum planned nonzero bytes": doomed_bytes > 0,
+    "vacuum reclaimed bytes":       vacuum_reclaimed_bytes > 0 and len(removed_by_vacuum) > 0,
+    "vacuum misses uncommitted files": vacuum_saw_planted_orphans == [],
     "3 delta orphans removed":      len(found) == 3,
-    "no delta orphans remain":      find_orphans(TABLE) == [],
+    "no delta orphans remain":      find_orphans(TABLE) == [] and delta_data_files_after_sweep == len(DeltaTable(TABLE).file_uris()),
     "checkpoint written":           bool(ckpt) and (log_dir / "_last_checkpoint").exists(),
+    "delta data intact":            DeltaTable(TABLE).count() == N_BATCHES * ROWS_PER_BATCH,
     "iceberg expired to 3 snaps":   len(ice.snapshots()) == KEEP_LAST,
-    "iceberg stranded files swept": len(stranded) > 0 and find_iceberg_orphans(ice) == [],
+    "expiry did not delete avro":   ice_after["manifest avro"] == ice_before["manifest avro"],
+    "iceberg stranded files swept": len(stranded) > 0 and iceberg_manifest_lists_removed == len(stranded) and find_iceberg_orphans(ice) == [],
     "iceberg data intact":          cat.load_table(f"{ns}.maint").scan().to_arrow().num_rows == 2000,
 }
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB6 incomplete — see FAIL rows above"
 print("\nNB6 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Compaction giảm 200 → 11 file (18×). Sau clustering, các khoảng min/max user_id
+# tách biệt hơn nên point query chỉ cần đọc 1/10 file và có thể skip 90% file.
+#
+# Delta VACUUM trên delta-rs dựa vào tombstone trong transaction log. Orphan từ writer
+# bị crash chưa từng commit nên không có add/remove action hay tombstone; VACUUM không có
+# căn cứ để nhận ra nó. Phép trừ file vật lý với file được metadata tham chiếu, kèm age
+# guard, tìm và xóa đúng 3 orphan mà không tính nhầm checkpoint là data file.
+#
+# Trên đường PyIceberg của lab, expiry chỉ bỏ snapshot khỏi metadata: 20 → 3 snapshot
+# nhưng số Avro vật lý chưa giảm. Job orphan sweep kế tiếp mới xóa manifest list không còn
+# được snapshot sống tham chiếu. Đây là hành vi đo được của client/phiên bản trong lab,
+# không phải cam kết rằng mọi engine Iceberg đều tách hai bước giống nhau.
+#
+# Retention 0 chỉ dùng cho scratch. Một reader đã pin version cũ có thể vẫn cần file vừa bị
+# vacuum xóa và sẽ lỗi giữa query; production phải giữ retention dài hơn query lâu nhất,
+# streaming lag và thời gian phục hồi cần hỗ trợ. Checkpoint chỉ giảm log replay, không thay
+# thế retention hay snapshot expiry.

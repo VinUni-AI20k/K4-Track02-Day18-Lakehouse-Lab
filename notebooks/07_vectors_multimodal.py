@@ -130,22 +130,26 @@ def row_group_bytes(table_path: str) -> tuple[int, int, int]:
     data_file = next(f for f in Path(table_path).rglob("*.parquet") if "_delta_log" not in f.parts)
     md = pq.ParquetFile(data_file).metadata
     rg0 = md.row_group(0)
-    return md.num_row_groups, rg0.num_rows, rg0.total_byte_size
+    blob_chunk_bytes = next(rg0.column(i).total_compressed_size
+                            for i in range(rg0.num_columns)
+                            if rg0.column(i).path_in_schema == "blob")
+    return md.num_row_groups, rg0.num_rows, blob_chunk_bytes
 
 
-n_rg, rg_rows, rg_bytes = row_group_bytes(INLINE)
+n_rg, rg_rows, blob_rg_bytes = row_group_bytes(INLINE)
 one_blob = len(blobs[0])
 
-print(f"inline parquet: {n_rg} row group(s), {rg_rows} rows, {human(rg_bytes)} per group")
+print(f"inline parquet: {n_rg} row group(s), {rg_rows} rows")
+print(f"compressed blob column chunk per group: {human(blob_rg_bytes)}")
 print(f"\nFetching ONE frame (doc_id=137):")
-print(f"  inline  → must read the row group: {human(rg_bytes)}")
+print(f"  inline  → must read the row-group blob chunk: {human(blob_rg_bytes)}")
 print(f"  pointer → one GET of the object:   {human(one_blob)}")
-print(f"  → amplification: {rg_bytes / one_blob:.0f}× more bytes than needed")
+print(f"  → amplification: {blob_rg_bytes / one_blob:.0f}× more bytes than needed")
 print("\nAt 1,000 random frame fetches/sec to feed a GPU, that amplification IS")
 print("the GPU-starvation problem. Formats like Lance restructure the file so a")
 print("random read costs ~one row, not one row group.")
 
-AMPLIFICATION = rg_bytes / one_blob
+AMPLIFICATION = blob_rg_bytes / one_blob
 
 # %% [markdown]
 # ## 2. Embeddings as a column: the storage arithmetic
@@ -174,9 +178,14 @@ reset(F32, I8)
 write_deltalake(F32, f32_tbl, mode="overwrite")
 write_deltalake(I8, i8_tbl, mode="overwrite")
 
+f32_roundtrip = DeltaTable(F32).to_pyarrow_table()
+f32_bytes, i8_bytes = du(F32), du(I8)
+quantization_ratio = f32_bytes / max(i8_bytes, 1)
 print(f"\nOn disk (Parquet, compressed):")
-print(f"  float32: {human(du(F32))}")
-print(f"  int8   : {human(du(I8))}   →  {du(F32) / max(du(I8), 1):.1f}× smaller")
+print(f"  float32: {human(f32_bytes)}")
+print(f"  int8   : {human(i8_bytes)}   →  {quantization_ratio:.1f}× smaller")
+print(f"Delta float32 round-trip: {f32_roundtrip.num_rows:,} rows, "
+      f"type={f32_roundtrip.schema.field('emb').type}")
 
 # %% [markdown]
 # ## 3. Semantic search *is* a SQL query now
@@ -197,6 +206,7 @@ print("arrow type on read:", docs.schema.field("emb").type, " → cast to FLOAT[
 print("This lab casts the variable-length list to a fixed-size DuckDB array before vector queries.\n")
 
 query_vec = emb[7].tolist()          # pretend this came from an encoder
+query_topic = docs.column("topic")[7].as_py()
 t0 = time.perf_counter()
 hits = con.sql(f"""
     SELECT doc_id, title, topic,
@@ -207,10 +217,13 @@ hits = con.sql(f"""
 """).fetchall()
 sql_ms = (time.perf_counter() - t0) * 1000
 
-print(f"Query doc: {docs.column('title')[7]}  (topic={docs.column('topic')[7]})")
+print(f"Query doc: {docs.column('title')[7]}  (topic={query_topic})")
 print(f"\n{'doc_id':>7}  {'topic':<12} {'sim':>6}  title")
 for doc_id, title, topic, sim in hits:
     print(f"{doc_id:>7}  {topic:<12} {sim:6.3f}  {title}")
+top_topics = [h[2] for h in hits]
+same_topic_hits = top_topics.count(query_topic)
+print(f"Top-5 topic match: {same_topic_hits}/5 ({same_topic_hits / 5:.0%})")
 print(f"\nbrute-force scan over {n:,} vectors: {sql_ms:.1f} ms")
 
 # %% [markdown]
@@ -277,7 +290,7 @@ topic_fidelity = np.mean([
 
 print(f"recall@10 (exact doc IDs), int8 vs float32: {recall:.3f}")
 print(f"topic fidelity of int8 top-10:              {topic_fidelity:.3f}")
-print(f"storage saved: {(1 - du(I8) / du(F32)) * 100:.0f}%")
+print(f"storage saved: {(1 - i8_bytes / f32_bytes) * 100:.0f}%")
 print(f"""
 → int8 loses ~{(1 - recall) * 100:.0f}% of exact IDs but {topic_fidelity * 100:.0f}% of results are still
   on-topic. The "misses" are swaps between near-equivalent neighbours, which
@@ -330,8 +343,6 @@ print(f"external index rows: {DeltaTable(EXTERNAL).count():,}   ← untouched")
 # ### Now query both
 
 # %%
-victim_vec = emb[victim_ids[0]].tolist()
-
 con.register("intable", DeltaTable(INTABLE).to_pyarrow_table())
 con.register("external", DeltaTable(EXTERNAL).to_pyarrow_table())
 
@@ -365,8 +376,17 @@ DeltaTable(CDF_TABLE).delete(f"subject_id = '{SUBJECT}'")
 cdf = DeltaTable(CDF_TABLE).load_cdf(starting_version=1).read_all()
 changes = cdf.column("_change_type").to_pylist()
 deletes = [t for t in changes if t == "delete"]
+cdf_doc_ids = cdf.column("doc_id").to_pylist()
+cdf_delete_ids = [doc_id for doc_id, change in zip(cdf_doc_ids, changes) if change == "delete"]
 print(f"CDF rows since v1: {len(changes)}   deletes: {len(deletes)}")
-print(f"Delete events carry the doc_ids to evict: {cdf.column('doc_id').to_pylist()[:5]} ...")
+print(f"Delete events carry the doc_ids to evict: {cdf_delete_ids[:5]} ...")
+
+# Simulate an idempotent index consumer applying those delete IDs.
+DeltaTable(EXTERNAL).delete(f"doc_id IN ({','.join(map(str, cdf_delete_ids))})")
+con.register("external_repaired", DeltaTable(EXTERNAL).to_pyarrow_table())
+repaired_hits = con.sql(f"""SELECT count(*) FROM external_repaired
+                             WHERE doc_id IN ({','.join(map(str, victim_ids))})""").fetchone()[0]
+print(f"External-index hits after consuming CDF deletes: {repaired_hits}")
 print("""
 That is the contract: the index subscribes to deletes instead of guessing.
 Best of all is not needing the sync — keep the vector in the row (§2 above)
@@ -384,22 +404,44 @@ and the lifecycle is enforced by the table itself.
 # | int8 topic fidelity | ≥ 0.95 — the metric that matters for RAG |
 # | Semantic search returns same-topic neighbours | top-5 majority share the query's topic |
 # | Lifecycle bug reproduced | 0 hits in-table, > 0 hits in the external index |
+# | CDF consumer repair | victim IDs match delete events; applying them leaves 0 stale hits |
 # | CDF emits delete events | ≥ 1 `delete` in the change feed |
 
 # %%
-top_topics = [h[2] for h in hits]
-query_topic = docs.column("topic")[7].as_py()
-
 checks = {
     "random-access amplification ≥ 5x": AMPLIFICATION >= 5,
-    "int8 ≥ 3x smaller":                du(F32) / max(du(I8), 1) >= 3,
+    "float32 Delta round-trip":         (
+        f32_roundtrip.num_rows == n
+        and pa.types.is_list(f32_roundtrip.schema.field("emb").type)
+        and len(f32_roundtrip.column("emb")[0]) == dim
+    ),
+    "int8 ≥ 3x smaller":                quantization_ratio >= 3,
     "int8 recall@10 ≥ 0.80":            recall >= 0.80,
     "int8 topic fidelity ≥ 0.95":       topic_fidelity >= 0.95,
-    "top-5 share query topic":          top_topics.count(query_topic) >= 3,
+    "top-5 all share query topic":      same_topic_hits == len(hits) == 5,
     "lifecycle bug reproduced":         in_hits == 0 and ex_hits > 0,
-    "CDF emits delete events":          len(deletes) == len(victim_ids),
+    "CDF delete IDs match victims":     set(cdf_delete_ids) == set(victim_ids) and len(deletes) == len(victim_ids),
+    "CDF deletes repair index":         repaired_hits == 0,
 }
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB7 incomplete — see FAIL rows above"
 print("\nNB7 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Column pruning khiến blob inline gần như không ảnh hưởng analytical scan không chọn
+# cột blob. Random-read thì khác: Parquet đọc theo column chunk của cả row group, nên
+# lấy một object 64 KB phải chạm khoảng 12,5 MB và khuếch đại I/O khoảng 200×.
+#
+# Int8 giảm từ 4 byte xuống 1 byte mỗi phần tử; file lab nhỏ hơn 5,8× nhờ cả kiểu dữ
+# liệu lẫn nén Parquet. Đổi lại, recall@10 theo doc ID chỉ còn 0,904 vì metric này yêu
+# cầu trùng đúng ID trong top-10 float32. Topic fidelity đạt 1,0 vì các tài liệu bị đổi
+# chỗ vẫn cùng chủ đề với query; metric này đo độ phù hợp ngữ nghĩa, không đo danh tính.
+# Cả hai phải được đánh giá trên corpus thật vì một kết quả đúng topic chưa chắc thay thế
+# được tài liệu cụ thể mà ứng dụng cần.
+#
+# Sau erasure, bảng còn 0 hit nhưng external index cũ còn 8 hit. Derived index phải nhận
+# delete/tombstone event kèm doc_id từ CDF, xử lý idempotent và theo dõi version; mô phỏng
+# consumer trong notebook áp dụng đủ 8 ID rồi đưa stale hits về 0.

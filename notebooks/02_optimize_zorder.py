@@ -69,7 +69,7 @@ print(f"Files before OPTIMIZE: {files_before}")
 # want to measure — the same one Spark/Trino use.
 
 # %%
-def bench(label: str, runs: int = 3) -> float:
+def bench(label: str, runs: int = 3) -> tuple[float, int]:
     """Median of `runs` point-queries using Delta's stats-based file pruning."""
     times = []
     n = 0
@@ -84,9 +84,9 @@ def bench(label: str, runs: int = 3) -> float:
     times.sort()
     median = times[len(times) // 2]
     print(f"{label:25s}  count={n}  median={median*1000:6.1f} ms  (n={runs})")
-    return median
+    return median, n
 
-before = bench("BEFORE OPTIMIZE")
+before, rows_before = bench("BEFORE OPTIMIZE")
 
 # %% [markdown]
 # ## 3. OPTIMIZE (compact small files) + Z-ORDER (co-locate by user_id)
@@ -109,9 +109,18 @@ print(f"Files after OPTIMIZE+ZORDER: {files_after}  (was {files_before})")
 # ## 4. Benchmark AFTER
 
 # %%
-after = bench("AFTER OPTIMIZE+ZORDER")
+after, rows_after = bench("AFTER OPTIMIZE+ZORDER")
 print(f"\nSpeedup: {before/max(after, 1e-6):.1f}×  (target ≥ 3×)")
 print(f"File reduction: {files_before} → {files_after}  ({files_before/max(files_after,1):.0f}× fewer)")
+
+evidence = pl.DataFrame({
+    "stage": ["before", "after"],
+    "files": [files_before, files_after],
+    "median_query_ms": [round(before * 1000, 1), round(after * 1000, 1)],
+    "matched_rows": [rows_before, rows_after],
+})
+print("\nBefore/after evidence:")
+print(evidence)
 
 # %% [markdown]
 # ## 5. Why this works — inspect file-level stats
@@ -158,17 +167,21 @@ print(
 
 # %% [markdown]
 # ## ✅ Deliverable check
+# - [ ] At least 100 files exist before optimization
 # - [ ] Speedup ≥ 3× **or** files-pruned ratio ≥ 10× (slide §6 allows either)
 # - [ ] File count dropped substantially after compact()
+# - [ ] Query result count is unchanged after optimization
 # - [ ] Stats inspection shows ~1 file covers `user_id=4242`
 # - [ ] Screenshot the printed numbers
 
 # %%
 speedup = before / max(after, 1e-6)
 checks = {
+    "small-file problem has ≥ 100 files": files_before >= 100,
     "compaction reduced file count":  files_after < files_before,
     "speedup ≥ 3x OR pruning ≥ 10x":  speedup >= 3 or pruned_ratio >= 10,
-    "stats isolate the target user":  hits <= max(2, files_after // 4),
+    "stats isolate the target user":  1 <= hits <= max(2, files_after // 4),
+    "query result count preserved":   rows_before == rows_after,
 }
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
@@ -176,3 +189,19 @@ print(f"\n  (speedup={speedup:.1f}x, pruning={pruned_ratio:.1f}x — the slide a
 print("   wall-clock is noisy on a laptop, which is why file-pruning is the fallback.)")
 assert all(checks.values()), "NB2 incomplete — see FAIL rows above"
 print("\nNB2 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Dữ liệu đo trên máy này bắt đầu với 200 small files; OPTIMIZE + Z-order giảm còn
+# khoảng 55 file mà số dòng khớp truy vấn không đổi. Compaction ghép file nhỏ để giảm
+# chi phí open/list/schedule. Z-order giải quyết việc khác: sắp xếp gần nhau theo
+# user_id để min/max giữa các file ít chồng lấn, nhờ đó engine có thể file-skip.
+#
+# Target 256 KiB cố ý giữ nhiều file. Nếu compact thành đúng một file lớn, file đó
+# chứa target nên vẫn phải mở: file là đơn vị pruning, vì vậy ratio chỉ còn 1× và ta
+# không quan sát được lợi ích Z-order dù dữ liệu bên trong đã được sắp xếp tốt hơn.
+#
+# Wall-clock thay đổi theo page cache, tốc độ SSD, CPU, background load và cache
+# metadata của hệ điều hành/engine. Notebook dùng median của ba lần chạy và báo thêm
+# pruning từ min/max; pruning là bằng chứng cấu trúc ổn định hơn timing trên laptop.
