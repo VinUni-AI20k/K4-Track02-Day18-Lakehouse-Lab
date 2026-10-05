@@ -46,7 +46,8 @@ print(pl.from_arrow(DeltaTable(BRONZE).to_pyarrow_table().slice(0, 2)))
 # %% [markdown]
 # ## Silver — parse, validate, dedup
 #
-# Rules: drop malformed JSON, dedupe by `request_id`, project typed columns.
+# The provided generator emits valid JSON. This lab dedupes by request_id
+# and projects typed columns; malformed JSON fails fast rather than being silently dropped.
 
 # %%
 reset(SILVER)
@@ -64,7 +65,9 @@ silver_arrow = con.sql(f"""
       SELECT
         request_id,
         ts,
-        CAST(ts AS DATE)                            AS date,
+        -- TIMESTAMPTZ -> DATE follows the session time zone; pin UTC so the
+        -- 7 generated UTC days stay 7 Gold dates on any machine.
+        CAST(ts AT TIME ZONE 'UTC' AS DATE)         AS date,
         json_extract_string(raw_json, '$.model')          AS model,
         json_extract_string(raw_json, '$.user_id')        AS user_id,
         CAST(json_extract(raw_json, '$.usage.input')  AS INTEGER) AS prompt_tokens,
@@ -132,8 +135,9 @@ DeltaTable(GOLD).optimize.z_order(["model"])
 # ## Verify Gold
 
 # %%
-gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table())
-print(gold_df)
+gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table()).sort(["date", "model"])
+with pl.Config(tbl_rows=30, tbl_cols=10, tbl_width_chars=160):
+    print(gold_df)
 
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
@@ -155,3 +159,40 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %% [markdown]
+# ## Kiểm tra đầy đủ hợp đồng Gold
+# Đối chiếu từng nhóm bằng Polars, độc lập với câu SQL DuckDB phía trên.
+# Quantile dùng nội suy linear tương ứng QUANTILE_CONT. Giá là giả định của lab.
+
+# %%
+import math
+
+rates = {"claude-haiku-4-5": (0.8, 4.0), "claude-sonnet-4-6": (3.0, 15.0),
+         "claude-opus-4-7": (15.0, 75.0)}
+silver_df = pl.from_arrow(DeltaTable(SILVER).to_pyarrow_table())
+assert silver_df["request_id"].n_unique() == silver_n
+assert (silver_df["ts"].dt.convert_time_zone("UTC").dt.date() == silver_df["date"]).all()
+assert gold_df.null_count().sum_horizontal().item() == 0
+assert n_models == 3 and gold_df.height == n_dates * n_models
+assert gold_df.select(["date", "model"]).n_unique() == gold_df.height
+assert gold_df.group_by("date").agg(pl.col("model").n_unique())["model"].to_list() == [3] * n_dates
+for row in gold_df.iter_rows(named=True):
+    group = silver_df.filter((pl.col("date") == row["date"]) & (pl.col("model") == row["model"]))
+    c_in, c_out = rates[row["model"]]
+    expected = {
+        "p50_latency_ms": group["latency_ms"].quantile(0.5, interpolation="linear"),
+        "p95_latency_ms": group["latency_ms"].quantile(0.95, interpolation="linear"),
+        "total_prompt_tokens": group["prompt_tokens"].sum(),
+        "total_completion_tokens": group["completion_tokens"].sum(),
+        "error_rate": (group["status"] != "ok").mean(),
+        "cost_usd": (group["prompt_tokens"].sum() * c_in + group["completion_tokens"].sum() * c_out) / 1e6,
+    }
+    assert all(math.isclose(row[k], v, rel_tol=1e-9, abs_tol=1e-9) for k, v in expected.items())
+    assert 0 <= row["error_rate"] <= 1 and row["cost_usd"] > 0
+    assert 0 <= row["p50_latency_ms"] <= row["p95_latency_ms"]
+for label, location in [("Bronze", BRONZE), ("Silver", SILVER), ("Gold", GOLD)]:
+    assert (Path(location) / "_delta_log").is_dir()
+    print(f"{label}: {DeltaTable(location).count():,} rows; storage={location}")
+print(f"PASS: {n_dates} days x {n_models} models = {gold_df.height} groups; all Gold metrics independently verified")
+print(f"Total cost (illustrative USD): {gold_df['cost_usd'].sum():.6f}")

@@ -52,12 +52,18 @@ for h in dt.history():
 
 # %%
 bad = pl.DataFrame({"id": [4], "name": ["dan"], "age": ["thirty"], "city": ["Hue"]})
+schema_blocked = False
+version_before_bad = DeltaTable(table_path).version()
 try:
     write_deltalake(table_path, bad.to_arrow(), mode="append")
     print("UNEXPECTED: bad write succeeded — schema enforcement broken")
 except Exception as e:
+    schema_blocked = True
     msg = str(e).splitlines()[0][:120]
     print(f"BLOCKED by schema enforcement (expected): {type(e).__name__}: {msg}")
+assert schema_blocked, "Bad-schema write must be rejected"
+assert DeltaTable(table_path).version() == version_before_bad
+assert DeltaTable(table_path).count() == 3
 
 # %% [markdown]
 # ## 4. Schema evolution (opt-in)
@@ -92,8 +98,8 @@ print(tier_counts)
 # - [ ] Schema enforcement blocked the bad write
 # - [ ] schema_mode="merge" added the `tier` column
 # - [ ] DuckDB query returned 2 tier groups
-# The final schema-enforcement flag is hardcoded; inspect the actual error
-# from the bad-write cell rather than treating that PASS line as proof.
+# The enforcement check records the actual rejection and verifies that the
+# failed write changed neither the version nor the row count.
 
 # %%
 from pathlib import Path as _Path  # noqa: E402
@@ -102,7 +108,7 @@ _log = sorted(_Path(table_path).glob("_delta_log/*.json"))
 _cols = DeltaTable(table_path).schema().to_arrow().names
 checks = {
     "_delta_log/ has JSON commits": len(_log) >= 2,
-    "schema enforcement blocked bad write": True,   # placeholder; inspect the bad-write output
+    "schema enforcement blocked bad write": schema_blocked,
     "tier column added via schema_mode=merge": "tier" in _cols,
     "duckdb sees 2 tier groups": len(tier_counts) == 2,
 }
@@ -110,3 +116,13 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB1 incomplete — see FAIL rows above"
 print("\nNB1 complete.")
+
+# %% [markdown]
+# ## Bằng chứng transaction log
+# Mỗi dòng JSON là một action của transaction. `add` đăng ký file dữ liệu;
+# `metaData` lưu schema và `commitInfo` ghi thao tác. Ghi sai kiểu không tạo version.
+
+# %%
+print("Commit files:", [p.name for p in _log])
+print("Commit v0 JSON (nguyên văn):")
+print(_log[0].read_text(encoding="utf-8"))

@@ -1,0 +1,9 @@
+PASS 01_delta_basics.ipynb: sequential execution, outputs, hashes, screenshot
+PASS 02_optimize_zorder.ipynb: sequential execution, outputs, hashes, screenshot
+PASS 03_time_travel.ipynb: sequential execution, outputs, hashes, screenshot
+PASS 04_medallion.ipynb: sequential execution, outputs, hashes, screenshot
+PASS 05_iceberg_catalog.ipynb: sequential execution, outputs, hashes, screenshot
+PASS 06_maintenance.ipynb: sequential execution, outputs, hashes, screenshot
+PASS 07_vectors_multimodal.ipynb: sequential execution, outputs, hashes, screenshot
+PASS 08_agents_provenance.ipynb: sequential execution, outputs, hashes, screenshot
+PASS all numeric rubric gates; reflection 186/200 whitespace-separated words.
