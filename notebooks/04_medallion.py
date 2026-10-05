@@ -133,7 +133,8 @@ DeltaTable(GOLD).optimize.z_order(["model"])
 
 # %%
 gold_df = pl.from_arrow(DeltaTable(GOLD).to_pyarrow_table())
-print(gold_df)
+with pl.Config(tbl_rows=30, tbl_cols=8, tbl_width_chars=160):
+    print(gold_df.sort(["date", "model"]))
 
 # Slide-5 deliverable: "Gold p50/p95/cost qua ≥ 7 ngày". Make that explicit.
 n_dates = gold_df.select("date").n_unique()
@@ -155,3 +156,46 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %%
+# Independently recompute Gold with Polars from the persisted Silver table.
+# This checks values as well as coverage, using the lab's illustrative prices.
+import math
+
+silver_df = pl.from_arrow(DeltaTable(SILVER).to_pyarrow_table())
+expected = silver_df.group_by(["date", "model"]).agg(
+    pl.col("latency_ms").quantile(0.50, interpolation="linear").alias("p50_latency_ms"),
+    pl.col("latency_ms").quantile(0.95, interpolation="linear").alias("p95_latency_ms"),
+    pl.col("prompt_tokens").sum().alias("total_prompt_tokens"),
+    pl.col("completion_tokens").sum().alias("total_completion_tokens"),
+    (pl.col("status") != "ok").mean().alias("error_rate"),
+)
+lab_prices = {
+    "claude-haiku-4-5": (0.80, 4.00),
+    "claude-sonnet-4-6": (3.00, 15.00),
+    "claude-opus-4-7": (15.00, 75.00),
+}
+expected_by_key = {(r["date"], r["model"]): r for r in expected.to_dicts()}
+gold_values_correct = True
+for row in gold_df.to_dicts():
+    ref = expected_by_key[(row["date"], row["model"])]
+    c_in, c_out = lab_prices[row["model"]]
+    ref["cost_usd"] = (ref["total_prompt_tokens"] * c_in + ref["total_completion_tokens"] * c_out) / 1e6
+    for metric in ("p50_latency_ms", "p95_latency_ms", "total_prompt_tokens",
+                   "total_completion_tokens", "error_rate", "cost_usd"):
+        gold_values_correct &= math.isclose(row[metric], ref[metric], rel_tol=1e-9, abs_tol=1e-9)
+
+checks = {
+    "Bronze/Silver/Gold Delta logs exist": all((Path(p) / "_delta_log").is_dir() for p in (BRONZE, SILVER, GOLD)),
+    "Silver dedup drops rows": silver_n < bronze_n,
+    "Gold covers >= 7 dates x 3 models": n_dates >= 7 and n_models == 3 and gold_df.height == n_dates * 3,
+    "Gold date/model keys are unique": gold_df.select(["date", "model"]).n_unique() == gold_df.height,
+    "p50 <= p95 and both populated": gold_df.filter(pl.col("p50_latency_ms").is_not_null() & pl.col("p95_latency_ms").is_not_null() & (pl.col("p50_latency_ms") <= pl.col("p95_latency_ms"))).height == gold_df.height,
+    "cost_usd is positive": gold_df.filter(pl.col("cost_usd") > 0).height == gold_df.height,
+    "error_rate is in [0, 1]": gold_df.filter(pl.col("error_rate").is_between(0, 1)).height == gold_df.height,
+    "Gold matches independent Silver aggregation": gold_values_correct,
+}
+for label, passed in checks.items():
+    print(f"  [{'PASS' if passed else 'FAIL'}] {label}")
+assert all(checks.values()), "NB4 incomplete — see FAIL rows above"
+print("\nNB4 complete.")

@@ -1,0 +1,134 @@
+{
+  "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/us-east-1/index.json",
+  "retrieved_at_utc": "2026-10-05T04:29:49.755745+00:00",
+  "offer_publication_date": "2026-09-28T23:04:16Z",
+  "offer_version": "20260928230416",
+  "price_dimensions": [
+    {
+      "sku": "ZWQ6Q48CRJXX4FXE",
+      "attributes": {
+        "servicecode": "AmazonS3",
+        "location": "US East (N. Virginia)",
+        "locationType": "AWS Region",
+        "group": "S3-API-Tier2",
+        "groupDescription": "GET and all other requests",
+        "usagetype": "Requests-Tier2",
+        "operation": "",
+        "regionCode": "us-east-1",
+        "servicename": "Amazon Simple Storage Service"
+      },
+      "effective_date": "2026-09-01T00:00:00Z",
+      "rateCode": "ZWQ6Q48CRJXX4FXE.JRTCKXETXF.6YS6EN2CT7",
+      "description": "$0.004 per 10,000 GET and all other requests",
+      "beginRange": "0",
+      "endRange": "Inf",
+      "unit": "Requests",
+      "pricePerUnit": {
+        "USD": "0.0000004000"
+      },
+      "appliesTo": []
+    },
+    {
+      "sku": "E9YHNFENF4XQBZR6",
+      "attributes": {
+        "servicecode": "AmazonS3",
+        "location": "US East (N. Virginia)",
+        "locationType": "AWS Region",
+        "group": "S3-API-Tier1",
+        "groupDescription": "PUT/COPY/POST or LIST requests",
+        "usagetype": "Requests-Tier1",
+        "operation": "",
+        "regionCode": "us-east-1",
+        "servicename": "Amazon Simple Storage Service"
+      },
+      "effective_date": "2026-09-01T00:00:00Z",
+      "rateCode": "E9YHNFENF4XQBZR6.JRTCKXETXF.6YS6EN2CT7",
+      "description": "$0.005 per 1,000 PUT, COPY, POST, or LIST requests",
+      "beginRange": "0",
+      "endRange": "Inf",
+      "unit": "Requests",
+      "pricePerUnit": {
+        "USD": "0.0000050000"
+      },
+      "appliesTo": []
+    },
+    {
+      "sku": "WP9ANXZGBYYSGJEA",
+      "attributes": {
+        "servicecode": "AmazonS3",
+        "location": "US East (N. Virginia)",
+        "locationType": "AWS Region",
+        "availability": "99.99%",
+        "storageClass": "General Purpose",
+        "volumeType": "Standard",
+        "usagetype": "TimedStorage-ByteHrs",
+        "operation": "",
+        "durability": "99.999999999%",
+        "regionCode": "us-east-1",
+        "servicename": "Amazon Simple Storage Service"
+      },
+      "effective_date": "2026-09-01T00:00:00Z",
+      "rateCode": "WP9ANXZGBYYSGJEA.JRTCKXETXF.PGHJ3S3EYE",
+      "description": "$0.023 per GB - first 50 TB / month of storage used",
+      "beginRange": "0",
+      "endRange": "51200",
+      "unit": "GB-Mo",
+      "pricePerUnit": {
+        "USD": "0.0230000000"
+      },
+      "appliesTo": []
+    },
+    {
+      "sku": "WP9ANXZGBYYSGJEA",
+      "attributes": {
+        "servicecode": "AmazonS3",
+        "location": "US East (N. Virginia)",
+        "locationType": "AWS Region",
+        "availability": "99.99%",
+        "storageClass": "General Purpose",
+        "volumeType": "Standard",
+        "usagetype": "TimedStorage-ByteHrs",
+        "operation": "",
+        "durability": "99.999999999%",
+        "regionCode": "us-east-1",
+        "servicename": "Amazon Simple Storage Service"
+      },
+      "effective_date": "2026-09-01T00:00:00Z",
+      "rateCode": "WP9ANXZGBYYSGJEA.JRTCKXETXF.D42MF2PVJS",
+      "description": "$0.022 per GB - next 450 TB / month of storage used",
+      "beginRange": "51200",
+      "endRange": "512000",
+      "unit": "GB-Mo",
+      "pricePerUnit": {
+        "USD": "0.0220000000"
+      },
+      "appliesTo": []
+    },
+    {
+      "sku": "WP9ANXZGBYYSGJEA",
+      "attributes": {
+        "servicecode": "AmazonS3",
+        "location": "US East (N. Virginia)",
+        "locationType": "AWS Region",
+        "availability": "99.99%",
+        "storageClass": "General Purpose",
+        "volumeType": "Standard",
+        "usagetype": "TimedStorage-ByteHrs",
+        "operation": "",
+        "durability": "99.999999999%",
+        "regionCode": "us-east-1",
+        "servicename": "Amazon Simple Storage Service"
+      },
+      "effective_date": "2026-09-01T00:00:00Z",
+      "rateCode": "WP9ANXZGBYYSGJEA.JRTCKXETXF.PXJDJ3YRG3",
+      "description": "$0.021 per GB - storage used / month over 500 TB",
+      "beginRange": "512000",
+      "endRange": "Inf",
+      "unit": "GB-Mo",
+      "pricePerUnit": {
+        "USD": "0.0210000000"
+      },
+      "appliesTo": []
+    }
+  ]
+}

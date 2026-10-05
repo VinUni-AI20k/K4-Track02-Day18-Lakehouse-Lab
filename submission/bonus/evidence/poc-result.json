@@ -1,0 +1,19 @@
+{
+  "result": {
+    "crash_after_commit": true,
+    "replay_added_rows": 0,
+    "stale_revision_ignored": true,
+    "conflicting_revision_blocked": true,
+    "request_count": 2,
+    "final_cost_micro_usd": 350,
+    "old_snapshot_cost_micro_usd": 300,
+    "repeated_gold_equal": true
+  },
+  "code_cells_executed": 3,
+  "source_lines": 112,
+  "execution": {
+    "python": "3.11.3",
+    "executed_at_utc": "2026-10-05T05:24:59.729246+00:00"
+  },
+  "stdout": "Injected crash: commit succeeded, checkpoint not saved\n{\n  \"crash_after_commit\": true,\n  \"replay_added_rows\": 0,\n  \"stale_revision_ignored\": true,\n  \"conflicting_revision_blocked\": true,\n  \"request_count\": 2,\n  \"final_cost_micro_usd\": 350,\n  \"old_snapshot_cost_micro_usd\": 300,\n  \"repeated_gold_equal\": true\n}\nBONUS_RESULT_JSON={\"crash_after_commit\": true, \"replay_added_rows\": 0, \"stale_revision_ignored\": true, \"conflicting_revision_blocked\": true, \"request_count\": 2, \"final_cost_micro_usd\": 350, \"old_snapshot_cost_micro_usd\": 300, \"repeated_gold_equal\": true}\n"
+}

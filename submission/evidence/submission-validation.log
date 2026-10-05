@@ -1,0 +1,10 @@
+PASS 01_delta_basics.ipynb: 9 executed cells, no error outputs; PNG 1564x1208
+PASS 02_optimize_zorder.ipynb: 9 executed cells, no error outputs; PNG 1000x368
+PASS 03_time_travel.ipynb: 9 executed cells, no error outputs; PNG 1000x620
+PASS 04_medallion.ipynb: 8 executed cells, no error outputs; PNG 1484x1516
+PASS 05_iceberg_catalog.ipynb: 15 executed cells, no error outputs; PNG 1000x424
+PASS 06_maintenance.ipynb: 18 executed cells, no error outputs; PNG 1000x676
+PASS 07_vectors_multimodal.ipynb: 16 executed cells, no error outputs; PNG 1000x592
+PASS 08_agents_provenance.ipynb: 17 executed cells, no error outputs; PNG 1314x620
+PASS all numeric rubric thresholds
+PASS reflection: 199 whitespace-separated words (<= 200)

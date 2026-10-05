@@ -21,7 +21,7 @@ def path(layer: str, table: str) -> str:
     layer ∈ {"bronze", "silver", "gold", "scratch"}.
     """
     p = ROOT / layer / table
-    p.parent.mkdir(parents=True, exist_ok=True)
+    p.mkdir(parents=True, exist_ok=True)
     return str(p)
 
 

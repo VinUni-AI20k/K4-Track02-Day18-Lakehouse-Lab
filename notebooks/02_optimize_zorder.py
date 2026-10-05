@@ -59,6 +59,7 @@ for batch in range(200):
 dt = DeltaTable(table_path)
 files_before = len(dt.file_uris())
 print(f"Files before OPTIMIZE: {files_before}")
+assert files_before >= 100, "Rubric requires at least 100 initial small files"
 
 # %% [markdown]
 # ## 2. Benchmark BEFORE optimize

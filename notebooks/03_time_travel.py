@@ -50,7 +50,7 @@ updates = pl.DataFrame({
     "tier":        ["platinum"] * 100_000,
 })
 t0 = time.time()
-(DeltaTable(table_path)
+merge_metrics = (DeltaTable(table_path)
     .merge(source=updates.to_arrow(),
            predicate="t.customer_id = s.customer_id",
            source_alias="s", target_alias="t")
@@ -58,6 +58,10 @@ t0 = time.time()
     .when_not_matched_insert_all()
     .execute())
 print(f"MERGE 100K rows: {time.time()-t0:.2f}s")
+print(f"MERGE metrics: {merge_metrics}")
+assert merge_metrics["num_source_rows"] == 100_000
+assert merge_metrics["num_target_rows_updated"] == 50_000
+assert merge_metrics["num_target_rows_inserted"] == 50_000
 
 # v3 — simulate bad data
 bad = pl.DataFrame({
@@ -126,6 +130,8 @@ checks = {
     "history ≥ 5 versions":          len(final_history) >= 5,
     "history includes the RESTORE":  any("RESTORE" in o.upper() for o in ops),
     "MERGE recorded in history":     any("MERGE" in o.upper() for o in ops),
+    "MERGE processed 100K source rows": merge_metrics["num_source_rows"] == 100_000,
+    "RESTORE kept the 150K good rows": dt_after.count() == 150_000,
     "bad rows gone after restore":   bad_count == 0,
 }
 for k, v in checks.items():

@@ -1,0 +1,110 @@
+.\.venv\Scripts\python.exe : Traceback (most recent call last):
+At line:2 char:24
++ ... UTF8 = '1'; .\.venv\Scripts\python.exe scripts/prepare_submission.py  ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\pa
+ths.py", line 615, in win32_restrict_file_to_user
+    import win32api  # noqa: PLC0415
+    ^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'win32api'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\scripts\prepare_submission.py", line 
+185, in <module>
+    main()
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\scripts\prepare_submission.py", line 
+176, in main
+    metrics[source.name[:2]] = execute_notebook(source)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\scripts\prepare_submission.py", line 
+150, in execute_notebook
+    client.execute()
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\ut
+ils\__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 653, in 
+run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File 
+"D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\nbclient\client.py", 
+line 693, in async_execute
+    async with self.async_setup_kernel(**kwargs):
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 204, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File 
+"D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\nbclient\client.py", 
+line 648, in async_setup_kernel
+    await self.async_start_new_kernel(**kwargs)
+  File 
+"D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\nbclient\client.py", 
+line 550, in async_start_new_kernel
+    await ensure_async(self.km.start_kernel(extra_arguments=self.extra_arguments, **kwargs))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\ut
+ils\__init__.py", line 171, in wrapped
+    return _runner_map[name].run(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\ut
+ils\__init__.py", line 128, in run
+    return fut.result(None)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in 
+__get_result
+    raise self._exception
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_client\
+manager.py", line 116, in wrapper
+    raise e
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_client\
+manager.py", line 107, in wrapper
+    out = await method(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_client\
+manager.py", line 528, in _async_start_kernel
+    kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_client\
+manager.py", line 493, in _async_pre_start_kernel
+    kw = await self.provisioner.pre_launch(**kw)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_client\
+provisioning\local_provisioner.py", line 243, in pre_launch
+    km.write_connection_file()
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_client\
+connect.py", line 537, in write_connection_file
+    self.connection_file, cfg = write_connection_file(
+                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_client\
+connect.py", line 185, in write_connection_file
+    with secure_write(fname) as f:
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\pa
+ths.py", line 1080, in secure_write
+    win32_restrict_file_to_user(fname)
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\pa
+ths.py", line 617, in win32_restrict_file_to_user
+    return _win32_restrict_file_to_user_ctypes(fname)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\pa
+ths.py", line 1019, in _win32_restrict_file_to_user_ctypes
+    SetFileSecurity(fname, DACL_SECURITY_INFORMATION, SelfRelativeSD)
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\pa
+ths.py", line 910, in SetFileSecurity
+    advapi32.SetFileSecurityW(lpFileName, RequestedInformation, pSecurityDescriptor)
+  File "D:\AI_Thucchien\K4-Track02-Day18-HoangThaiDat-2A202602959-Lakehouse-Lab\.venv\Lib\site-packages\jupyter_core\pa
+ths.py", line 712, in _nonzero_success
+    raise ctypes.WinError(ctypes.get_last_error())  # type:ignore[attr-defined]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied.
