@@ -1,0 +1,13 @@
+﻿Bronze rows: 30,000  files: 3
+Raw PII matches in Bronze files: {'APIKEY': 0, 'EMAIL': 0, 'CCCD': 0, 'PHONE': 0}   canaries found raw: 0/4
+Token deterministic within tenant: True;  differs across tenants: True
+
+Table bytes: 797 KB → delete 813 KB → expire 817 KB → sweep 554 KB   (swept 2 files)
+Oldest ts left on disk: 2026-04-02 00:00:00+00:00   cutoff: 2026-04-02 00:00:00+00:00
+Bronze rows now: 20,000   Gold rows kept: 26,902
+  [PASS] 0 raw PII in Bronze files
+  [PASS] tokens per-tenant deterministic
+  [PASS] expiry alone does not free bytes
+  [PASS] sweep frees bytes
+  [PASS] no expired-day data on disk
+  [PASS] gold survives retention
