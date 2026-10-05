@@ -1,7 +1,11 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
 # ---
 
 # %% [markdown]
@@ -438,3 +442,19 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB6 incomplete — see FAIL rows above"
 print("\nNB6 complete.")
+
+# %% [markdown]
+# ## Kết quả chạy và diễn giải
+#
+# | Job | Trước | Sau / kết quả |
+# |---|---:|---:|
+# | Compaction | 200 files, 10,0 MB | 11 files, giảm 18× |
+# | Clustering point query | 11/11 files cần mở | 1/10 file, skip 90% |
+# | Delta vacuum | — | thu hồi 16,1 MB |
+# | Delta orphan sweep | 3 planted files | tìm và xóa 3 (21,2 KB) |
+# | Checkpoint | 204 JSON để cold replay | checkpoint Parquet + _last_checkpoint |
+# | Iceberg expiry + sweep | 20 snapshots, 40 AVRO | 3 snapshots, 23 AVRO sau dọn 17 manifest lists |
+#
+# Min/max sau clustering cô lập user_id=12345 vào 1/10 file; đây là căn cứ cho skip rate. Compaction tạm tăng bytes vì file mới được ghi trước khi file cũ được vacuum. Delta vacuum trong đường thư viện này thấy file đã được transaction log tombstone; orphan chưa từng commit không xuất hiện trong log nên cần phép so sánh thư mục và xóa có age guard.
+#
+# PyIceberg expiry giảm snapshot 20→3 nhưng số AVRO trên đĩa ban đầu vẫn 40; expiry loại metadata references, còn xóa 17 manifest lists không còn tham chiếu mới thu hồi 37,1 KB. Reader cũ có thể cần snapshot/file cũ, vì vậy retention phải dài hơn query/replay tối đa. Retention 0 ở đây chỉ dùng với scratch; các kiểm tra cuối xác nhận 100.000 Delta rows và 2.000 Iceberg rows còn đọc được.
