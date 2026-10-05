@@ -42,4 +42,4 @@ Chỉ làm kiểm tra **chặt hơn**, không hạ ngưỡng hay bỏ assertion 
    mỗi ngày đủ 3 model, Bronze/Silver/Gold đều có `_delta_log/`.
 3. Cả 8 notebook — thêm cell Markdown giải thích kết quả.
 
-Sử dụng AI: xem [AI_USAGE.md](AI_USAGE.md).
+Khai báo AI: xem [AI_USAGE.md](AI_USAGE.md).

@@ -13,4 +13,4 @@ Cách phòng tránh tôi sẽ áp dụng:
 4. Tạo checkpoint log định kỳ.
 5. Theo dõi chỉ số "số file / partition" và "kích thước file trung bình" như một SLO.
 
-*AI:* dùng Claude Code để chạy lab, soạn nháp giải thích và reflection; chi tiết tại [AI_USAGE.md](AI_USAGE.md).
+*AI:* có dùng Claude Code hỗ trợ — xem [AI_USAGE.md](AI_USAGE.md).
