@@ -115,6 +115,14 @@ for h in final_history:
 print(f"\nTotal versions: {len(final_history)}  (target ≥ 5)")
 
 # %% [markdown]
+# ## Interpretation
+#
+# A time-travel query reads a previous table version without changing the
+# current table. RESTORE changes the current state back to an earlier version.
+# RESTORE creates a new transaction so the rollback is recorded and the prior
+# history remains available for auditing and recovery.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] history() shows ≥ 5 versions (incl. RESTORE itself)
 # - [ ] MERGE 100K finished in < 60s (likely < 1s on lightweight path)

@@ -157,6 +157,17 @@ print(
 )
 
 # %% [markdown]
+# ## Interpretation
+#
+# Compaction reduces the number of small files and lowers file-management
+# overhead. Z-order rearranges rows so related `user_id` values are grouped,
+# which improves file pruning for point queries. If compaction creates one very
+# large file, there are no other files to prune, so the benefit is harder to
+# observe. Benchmark times vary with disk speed, CPU load, caching, and system
+# activity. The file-pruning ratio is therefore more stable than wall-clock
+# speedup on different machines.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] Speedup ≥ 3× **or** files-pruned ratio ≥ 10× (slide §6 allows either)
 # - [ ] File count dropped substantially after compact()

@@ -150,6 +150,16 @@ assert n_dates >= 7, (
 )
 
 # %% [markdown]
+# ## Interpretation
+#
+# Deduplication in Silver removes repeated requests and creates a cleaner,
+# typed dataset for downstream analysis. Dashboards read Gold because it is
+# already aggregated by date and model, which makes queries faster and more
+# consistent. The error rate is the share of non-`ok` requests, while cost is
+# calculated from token usage and the lab's illustrative model prices. These
+# metrics are appropriate only for this sample data and pricing model.
+
+# %% [markdown]
 # ## ✅ Deliverable check
 # - [ ] All three tables exist under `_lakehouse/{bronze,silver,gold}/`
 # - [ ] Silver has fewer rows than Bronze (dedup worked)

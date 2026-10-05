@@ -278,6 +278,16 @@ print(f"Total rows readable across BOTH specs: {tbl.scan().to_arrow().num_rows:,
 print("\nTwo layouts, one table, zero rewrites. This is the feature.")
 
 # %% [markdown]
+# ## Interpretation
+#
+# Hidden partitioning stores a transform such as `day(ts)` in table metadata,
+# so a filter on the original `ts` column can still prune unrelated files.
+# Stable field IDs let Iceberg rename `latency_ms` without changing the field's
+# identity or rewriting old data. Partition evolution keeps old files in their
+# original layout while new files use the new spec, so migration can happen
+# incrementally without rewriting the whole table.
+
+# %% [markdown]
 # ## ✅ NB5 pass criteria
 #
 # | Check | Target |
