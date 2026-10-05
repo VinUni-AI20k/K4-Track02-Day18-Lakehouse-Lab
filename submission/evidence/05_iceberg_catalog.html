@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>05_iceberg_catalog</title>
+<style>body{margin:32px;font:16px Segoe UI,sans-serif;color:#172b3a;background:#f4f6f8}
+h1{font-size:26px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px;border:1px solid #cad3dc;font:14px/1.5 Consolas,monospace}small{color:#44576a}</style>
+<h1>05_iceberg_catalog · Kết quả thực thi</h1>
+<p>Trần Đại Nhân · 2A202602642 · Lightweight / Python 3.11</p>
+<small>Rendered directly from the executed notebook's final evidence cell. 2026-10-05T11:41:03.976718+07:00</small>
+<pre>Metadata tree: catalog -&gt; metadata.json -&gt; manifest list -&gt; manifests -&gt; data
+
+{
+  &quot;catalog&quot;: &quot;SqlCatalog&quot;,
+  &quot;partition_spec&quot;: &quot;[\n  1000: ts_day: day(2)\n  1001: model_id: identity(3)\n]&quot;,
+  &quot;files_all&quot;: 10,
+  &quot;files_one_day&quot;: 1,
+  &quot;pruning_ratio&quot;: 10.0,
+  &quot;metadata_bytes&quot;: 140235,
+  &quot;data_bytes&quot;: 48419,
+  &quot;metadata_to_data_pct&quot;: 289.6280385798963,
+  &quot;renamed_field_id&quot;: 4,
+  &quot;spec_ids&quot;: [
+    1,
+    2
+  ],
+  &quot;rows_after_evolution&quot;: 5500,
+  &quot;snapshots&quot;: 11
+}</pre>

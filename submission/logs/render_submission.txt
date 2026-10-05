@@ -1,0 +1,9 @@
+Screenshot: nb01_delta_basics.png
+Screenshot: nb02_optimize_zorder.png
+Screenshot: nb03_time_travel.png
+Screenshot: nb04_medallion.png
+Screenshot: nb05_iceberg_catalog.png
+Screenshot: nb06_maintenance.png
+Screenshot: nb07_vectors_multimodal.png
+Screenshot: nb08_agents_provenance.png
+Bonus rendered: 5 pages. Preview: D:\DAI_NHAN\Projects\AITC\K4-Track02-Day18-TranDaiNhan-2A202602642-Lakehouse-Lab\_lakehouse\artifact-preview

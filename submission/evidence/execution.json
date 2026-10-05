@@ -1,0 +1,216 @@
+{
+  "executed_at": "2026-10-05T11:41:03.976718+07:00",
+  "python": "3.11.16 (main, Aug 25 2026, 13:59:19) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "notebooks": {
+    "01_delta_basics": {
+      "source_sha256": "68f18633306399fabce45012955cf4df26482ef1b671b714763e86ea102cf0d6",
+      "notebook_sha256": "cad74ac8a1d9581148406874d7409f38c1ecefdc2b1929c44c732948fb3dba84",
+      "metrics": {
+        "commits": [
+          "00000000000000000000.json",
+          "00000000000000000001.json"
+        ],
+        "schema_blocked": true,
+        "columns": [
+          "id",
+          "name",
+          "age",
+          "city",
+          "tier"
+        ],
+        "tier_groups": [
+          [
+            "premium",
+            1
+          ],
+          [
+            null,
+            3
+          ]
+        ],
+        "rows": 4
+      }
+    },
+    "02_optimize_zorder": {
+      "source_sha256": "147427dda095de603885083b96c3cd66f6425e2e7a5b817ce447aa5c52985744",
+      "notebook_sha256": "0364993c3b23ba75ee203ab1b54605aba735b27cb1bf7d123b8d0115463fc4f7",
+      "metrics": {
+        "files_before": 200,
+        "files_after": 55,
+        "before_ms": 224.0241000545211,
+        "after_ms": 23.38700002292171,
+        "speedup": 9.579001147430368,
+        "candidate_files": 1,
+        "pruning_ratio": 55.0
+      }
+    },
+    "03_time_travel": {
+      "source_sha256": "7f47e17d1e5c5c00c0df7fde3523cce5b43e9bb2ed0c445814bea0084625f37f",
+      "notebook_sha256": "9de7f9ddc9259ccdfaeb18c10840738001908417fbf2cacf4c7d870f7a274b35",
+      "metrics": {
+        "history": [
+          {
+            "version": 4,
+            "operation": "RESTORE"
+          },
+          {
+            "version": 3,
+            "operation": "WRITE"
+          },
+          {
+            "version": 2,
+            "operation": "MERGE"
+          },
+          {
+            "version": 1,
+            "operation": "WRITE"
+          },
+          {
+            "version": 0,
+            "operation": "WRITE"
+          }
+        ],
+        "merge_metrics": {
+          "num_source_rows": 100000,
+          "num_target_rows_inserted": 50000,
+          "num_target_rows_updated": 50000,
+          "num_target_rows_deleted": 0,
+          "num_target_rows_copied": 50000,
+          "num_output_rows": 150000,
+          "num_target_files_scanned": 1,
+          "num_target_files_skipped_during_scan": 0,
+          "num_target_files_added": 1,
+          "num_target_files_removed": 1,
+          "execution_time_ms": 71,
+          "scan_time_ms": 52,
+          "rewrite_time_ms": 9
+        },
+        "v0_rows": 100000,
+        "restored_rows": 150000,
+        "negative_scores": 0
+      }
+    },
+    "04_medallion": {
+      "source_sha256": "0f0334165a8a7f4b864b372153074cc323daaa04129b03a7dbd0c999123c000b",
+      "notebook_sha256": "31911445d7878dde0ba7b43827f8ebe8a4baff4fd1f375969dd58de48145d1b6",
+      "metrics": {
+        "bronze_rows": 200000,
+        "silver_rows": 190052,
+        "dedup_dropped": 9948,
+        "dates": 7,
+        "models": 3,
+        "gold_rows": 21,
+        "gold_metrics_verified": true,
+        "cost_total_usd": 4754.784810000002
+      }
+    },
+    "05_iceberg_catalog": {
+      "source_sha256": "413eb12dc9430b830fcbe3e686b02a94b7544cbe7b469e8e449ed3b86429e75e",
+      "notebook_sha256": "f21ddeeb084dc9741f4c56726f8e94618329676ab2907dcf128e1862cff833c1",
+      "metrics": {
+        "catalog": "SqlCatalog",
+        "partition_spec": "[\n  1000: ts_day: day(2)\n  1001: model_id: identity(3)\n]",
+        "files_all": 10,
+        "files_one_day": 1,
+        "pruning_ratio": 10.0,
+        "metadata_bytes": 140235,
+        "data_bytes": 48419,
+        "metadata_to_data_pct": 289.6280385798963,
+        "renamed_field_id": 4,
+        "spec_ids": [
+          1,
+          2
+        ],
+        "rows_after_evolution": 5500,
+        "snapshots": 11
+      }
+    },
+    "06_maintenance": {
+      "source_sha256": "3c59be017016400bf77dbbd86895b954b27bb7d265dd1eb0e60754861cb445f1",
+      "notebook_sha256": "5b770957bc906ead15b05dffd1558d32f414d45210374baf335bc102e1c5cf1e",
+      "metrics": {
+        "files_before": 200,
+        "files_after_compact": 11,
+        "compaction_ratio": 18.181818181818183,
+        "cluster_candidates": 1,
+        "cluster_files": 10,
+        "skip_rate": 0.9,
+        "vacuum_reclaimed_bytes": 16907062,
+        "delta_orphans_removed": 3,
+        "delta_orphans_remaining": 0,
+        "checkpoint": [
+          "00000000000000000099.checkpoint.parquet",
+          "00000000000000000199.checkpoint.parquet",
+          "00000000000000000203.checkpoint.parquet"
+        ],
+        "last_checkpoint": true,
+        "iceberg_snapshots_before": 20,
+        "iceberg_snapshots_after": 3,
+        "avro_before_expiry": 40,
+        "avro_after_expiry": 40,
+        "manifest_lists_swept": 17,
+        "iceberg_reclaimed_bytes": 38104,
+        "delta_rows": 100000,
+        "iceberg_rows": 2000
+      }
+    },
+    "07_vectors_multimodal": {
+      "source_sha256": "6b0b5242ba6ccd731bd522c7825d081908a96447a2975e0eff6f237aed891d20",
+      "notebook_sha256": "e9e518ab8e917649da035c18c6586c220337f3c260e8d839aa56d185f82e4e56",
+      "metrics": {
+        "row_group_rows": 200,
+        "row_group_bytes": 13110466,
+        "one_blob_bytes": 65536,
+        "amplification": 200.04983520507812,
+        "float32_bytes": 2685240,
+        "int8_bytes": 462726,
+        "storage_ratio": 5.803088652896099,
+        "recall_at_10": 0.9040000000000002,
+        "topic_fidelity": 1.0,
+        "sql_ms": 15.031400020234287,
+        "query_topic": "storage",
+        "top5_topics": [
+          "storage",
+          "storage",
+          "storage",
+          "storage",
+          "storage"
+        ],
+        "deleted_subject_docs": 8,
+        "in_table_hits": 0,
+        "stale_index_hits": 8,
+        "cdf_deletes": 8
+      }
+    },
+    "08_agents_provenance": {
+      "source_sha256": "df3f8327ff3337b4a2982b312141d9bf65c352b6c6fe1153e94524549cc7c8ad",
+      "notebook_sha256": "59297a6dac92513ab5b1c31c410e3e908213ff8751f619d0d2c5172c0eb64642",
+      "metrics": {
+        "trajectory_partitions": [
+          "agent_version=policy-v2",
+          "agent_version=policy-v3"
+        ],
+        "gold_policies": 2,
+        "pinned_version": 0,
+        "training_steps": 1578,
+        "replay_steps": 1578,
+        "current_steps": 1978,
+        "catalog_reads_for_5_turns": 1,
+        "unconfirmed_result": "input_required",
+        "task_status": "completed",
+        "provenance_partitions": [
+          "provenance_bucket=UNCLASSIFIED",
+          "provenance_bucket=licensed",
+          "provenance_bucket=public_domain",
+          "provenance_bucket=scraped_optout_checked",
+          "provenance_bucket=synthetic"
+        ],
+        "trainable_rows": 1666,
+        "unclassified_rows": 334,
+        "subject_rows_before": 8,
+        "subject_rows_after": 0
+      }
+    }
+  }
+}

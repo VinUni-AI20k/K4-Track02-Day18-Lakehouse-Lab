@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><title>01_delta_basics</title>
+<style>body{margin:32px;font:16px Segoe UI,sans-serif;color:#172b3a;background:#f4f6f8}
+h1{font-size:26px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px;border:1px solid #cad3dc;font:14px/1.5 Consolas,monospace}small{color:#44576a}</style>
+<h1>01_delta_basics · Kết quả thực thi</h1>
+<p>Trần Đại Nhân · 2A202602642 · Lightweight / Python 3.11</p>
+<small>Rendered directly from the executed notebook's final evidence cell. 2026-10-05T11:41:03.976718+07:00</small>
+<pre>_delta_log/00000000000000000000.json
+{&quot;commitInfo&quot;:{&quot;timestamp&quot;:1791175265966,&quot;operation&quot;:&quot;WRITE&quot;,&quot;operationParameters&quot;:{&quot;mode&quot;:&quot;Overwrite&quot;},&quot;engineInfo&quot;:&quot;delta-rs:py-1.6.6&quot;,&quot;operationMetrics&quot;:{&quot;num_added_files&quot;:1,&quot;num_removed_files&quot;:0,&quot;num_partitions&quot;:0,&quot;num_added_rows&quot;:3,&quot;execution_time_ms&quot;:5,&quot;num_retries&quot;:0},&quot;clientVersion&quot;:&quot;delta-rs.py-1.6.6&quot;}}
+{&quot;protocol&quot;:{&quot;minReaderVersion&quot;:1,&quot;minWriterVersion&quot;:2}}
+{&quot;metaData&quot;:{&quot;id&quot;:&quot;bdab8e0c-53bd-4b78-b441-da8a30df87bf&quot;,&quot;name&quot;:null,&quot;description&quot;:null,&quot;format&quot;:{&quot;provider&quot;:&quot;parquet&quot;,&quot;options&quot;:{}},&quot;schemaString&quot;:&quot;{\&quot;type\&quot;:\&quot;struct\&quot;,\&quot;fields\&quot;:[{\&quot;name\&quot;:\&quot;id\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;name\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;age\&quot;,\&quot;type\&quot;:\&quot;long\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}},{\&quot;name\&quot;:\&quot;city\&quot;,\&quot;type\&quot;:\&quot;string\&quot;,\&quot;nullable\&quot;:true,\&quot;metadata\&quot;:{}}]}&quot;,&quot;partitionColumns&quot;:[],&quot;createdTime&quot;:1791175265960,&quot;configuration&quot;:{}}}
+{&quot;add&quot;:{&quot;path&quot;:&quot;part-00000-51ab360b-5df1-4992-a220-224abe143dc1-c000.snappy.parquet&quot;,&quot;partitionValues&quot;:{},&quot;size&quot;:1384,&quot;modificationTime&quot;:1791175265966,&quot;dataChange&quot;:true,&quot;stats&quot;:&quot;{\&quot;numRecords\&quot;:3,\&quot;minValues\&quot;:{\&quot;id\&quot;:1,\&quot;age\&quot;:25,\&quot;city\&quot;:\&quot;Danang\&quot;,\&quot;name\&quot;:\&quot;alice\&quot;},\&quot;maxValues\&quot;:{\&quot;age\&quot;:35,\&quot;name\&quot;:\&quot;charlie\&quot;,\&quot;id\&quot;:3,\&quot;city\&quot;:\&quot;Hanoi\&quot;},\&quot;nullCount\&quot;:{\&quot;id\&quot;:0,\&quot;name\&quot;:0,\&quot;age\&quot;:0,\&quot;city\&quot;:0}}&quot;,&quot;tags&quot;:null,&quot;baseRowId&quot;:null,&quot;defaultRowCommitVersion&quot;:null,&quot;clusteringProvider&quot;:null}}
+
+{
+  &quot;commits&quot;: [
+    &quot;00000000000000000000.json&quot;,
+    &quot;00000000000000000001.json&quot;
+  ],
+  &quot;schema_blocked&quot;: true,
+  &quot;columns&quot;: [
+    &quot;id&quot;,
+    &quot;name&quot;,
+    &quot;age&quot;,
+    &quot;city&quot;,
+    &quot;tier&quot;
+  ],
+  &quot;tier_groups&quot;: [
+    [
+      &quot;premium&quot;,
+      1
+    ],
+    [
+      null,
+      3
+    ]
+  ],
+  &quot;rows&quot;: 4
+}</pre>

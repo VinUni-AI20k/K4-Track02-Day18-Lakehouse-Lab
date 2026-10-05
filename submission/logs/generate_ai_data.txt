@@ -1,0 +1,5 @@
+docs      2,000 rows, dim=256  → D:\DAI_NHAN\Projects\AITC\K4-Track02-Day18-TranDaiNhan-2A202602642-Lakehouse-Lab\_lakehouse\bronze\docs_multimodal
+blobs     200 files, 12.5 MB  → D:\DAI_NHAN\Projects\AITC\K4-Track02-Day18-TranDaiNhan-2A202602642-Lakehouse-Lab\_lakehouse\blobs
+traces    1,578 steps / 300 sessions → D:\DAI_NHAN\Projects\AITC\K4-Track02-Day18-TranDaiNhan-2A202602642-Lakehouse-Lab\_lakehouse\bronze\agent_traces
+
+Ready for NB7 (multimodal + vectors) and NB8 (agents + provenance).
