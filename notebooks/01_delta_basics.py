@@ -52,12 +52,16 @@ for h in dt.history():
 
 # %%
 bad = pl.DataFrame({"id": [4], "name": ["dan"], "age": ["thirty"], "city": ["Hue"]})
+enforcement_blocked = False
+enforcement_error = ""
 try:
     write_deltalake(table_path, bad.to_arrow(), mode="append")
     print("UNEXPECTED: bad write succeeded — schema enforcement broken")
 except Exception as e:
+    enforcement_blocked = True
     msg = str(e).splitlines()[0][:120]
-    print(f"BLOCKED by schema enforcement (expected): {type(e).__name__}: {msg}")
+    enforcement_error = f"BLOCKED by schema enforcement (expected): {type(e).__name__}: {msg}"
+    print(enforcement_error)
 
 # %% [markdown]
 # ## 4. Schema evolution (opt-in)
@@ -92,17 +96,31 @@ print(tier_counts)
 # - [ ] Schema enforcement blocked the bad write
 # - [ ] schema_mode="merge" added the `tier` column
 # - [ ] DuckDB query returned 2 tier groups
-# The final schema-enforcement flag is hardcoded; inspect the actual error
-# from the bad-write cell rather than treating that PASS line as proof.
+# The final evidence block repeats the actual exception captured above rather
+# than relying on a hardcoded flag.
 
 # %%
 from pathlib import Path as _Path  # noqa: E402
 
 _log = sorted(_Path(table_path).glob("_delta_log/*.json"))
 _cols = DeltaTable(table_path).schema().to_arrow().names
+_rows = pl.from_arrow(DeltaTable(table_path).to_pyarrow_table()).sort("id")
+
+print("──── NB1 SCREENSHOT EVIDENCE ────")
+print("A) Delta transaction log")
+print("   JSON commits:", [p.name for p in _log])
+print("   First commit JSON content:")
+for _line in _log[0].read_text(encoding="utf-8").splitlines()[:2]:
+    print("  ", _line[:350])
+print("\nB) Bad-schema write")
+print("  ", enforcement_error)
+print("\nC) Schema after opt-in evolution")
+print("   Columns:", _cols)
+print(_rows.select("id", "name", "age", "city", "tier"))
+
 checks = {
     "_delta_log/ has JSON commits": len(_log) >= 2,
-    "schema enforcement blocked bad write": True,   # placeholder; inspect the bad-write output
+    "schema enforcement blocked bad write": enforcement_blocked,
     "tier column added via schema_mode=merge": "tier" in _cols,
     "duckdb sees 2 tier groups": len(tier_counts) == 2,
 }
@@ -110,3 +128,11 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB1 incomplete — see FAIL rows above"
 print("\nNB1 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Delta Lake ghi mỗi thay đổi thành commit JSON trong `_delta_log`, nhờ đó trạng thái bảng
+# có thể được kiểm tra và truy vết. Lần ghi `age="thirty"` bị chặn bởi schema enforcement,
+# còn cột `tier` chỉ được thêm khi bật `schema_mode="merge"`. Điều này cho thấy evolution
+# là một quyết định có chủ đích, không phải thay đổi schema ngầm.

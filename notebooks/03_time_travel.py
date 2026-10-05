@@ -57,7 +57,8 @@ t0 = time.time()
     .when_matched_update_all()
     .when_not_matched_insert_all()
     .execute())
-print(f"MERGE 100K rows: {time.time()-t0:.2f}s")
+merge_elapsed = time.time() - t0
+print(f"MERGE 100K rows: {merge_elapsed:.2f}s")
 
 # v3 — simulate bad data
 bad = pl.DataFrame({
@@ -95,7 +96,8 @@ print(f"v1 schema:    {v1_cols}")
 t0 = time.time()
 dt = DeltaTable(table_path)
 dt.restore(2)
-print(f"RESTORE → v2: {time.time()-t0:.2f}s   (target < 30s)")
+restore_elapsed = time.time() - t0
+print(f"RESTORE → v2: {restore_elapsed:.2f}s   (target < 30s)")
 
 # Verify the bad rows are gone — use delta-rs's native filter pushdown.
 # (DuckDB's delta extension as of 1.5.x is stricter about post-RESTORE
@@ -122,6 +124,13 @@ print(f"\nTotal versions: {len(final_history)}  (target ≥ 5)")
 
 # %%
 ops = [h["operation"] for h in final_history]
+print("──── NB3 screenshot summary ────")
+print(f"MERGE upsert:       100,000 rows in {merge_elapsed:.2f}s")
+print(f"RESTORE target:     version 2 in {restore_elapsed:.2f}s")
+print(f"Rows with score<0:  {bad_count} (expected 0)")
+print(f"History versions:   {len(final_history)} (target ≥ 5)")
+print("Audit trail:", [(h["version"], h["operation"]) for h in final_history])
+
 checks = {
     "history ≥ 5 versions":          len(final_history) >= 5,
     "history includes the RESTORE":  any("RESTORE" in o.upper() for o in ops),
@@ -132,3 +141,10 @@ for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB3 incomplete — see FAIL rows above"
 print("\nNB3 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# MERGE xử lý 100.000 dòng gồm cả update và insert. RESTORE về version 2 loại bỏ toàn bộ
+# bản ghi có `score < 0`, nhưng không xóa lịch sử: thao tác RESTORE tạo thêm một version mới.
+# Năm version và audit trail cho phép tái hiện trạng thái cũ mà vẫn giữ được dấu vết thay đổi.

@@ -295,7 +295,24 @@ checks = {
     "≥ 2 partition specs":       len(specs_in_use) >= 2,
     "all rows readable":         tbl.scan().to_arrow().num_rows == (N_DAYS + 1) * ROWS_PER_DAY,
 }
+print("──── NB5 screenshot summary ────")
+print(f"Catalog table:             {ns}.llm_events via {type(cat).__name__}")
+print("Hidden partition:          day(ts)")
+print(f"Pruning ratio:             {PRUNE_RATIO:.1f}x (target ≥ 5x)")
+print("Metadata tree:             metadata.json → manifest list → manifest file → data file")
+print(f"Metadata:data byte ratio:  {meta_bytes / max(data_bytes, 1) * 100:.1f}%")
+print("Rename field ID:           latency_ms → latency_millis kept field_id=4")
+print(f"Partition specs in use:    {sorted(specs_in_use)}")
+print(f"Rows readable:             {tbl.scan().to_arrow().num_rows:,}")
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB5 incomplete — see FAIL rows above"
 print("\nNB5 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Bảng được tạo qua catalog và dùng hidden partition `day(ts)`. Khi lọc trực tiếp trên `ts`,
+# Iceberg chỉ lập kế hoạch đọc 1/10 file, đạt pruning 10×. Rename giữ nguyên `field_id=4`,
+# còn hai partition spec `[1, 2]` cùng tồn tại mà bảng vẫn đọc đủ 5.500 dòng. Đây là lợi ích
+# của metadata và catalog như control plane, thay vì phụ thuộc vào tên thư mục vật lý.

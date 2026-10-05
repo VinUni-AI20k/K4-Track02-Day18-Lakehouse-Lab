@@ -165,6 +165,13 @@ print(
 
 # %%
 speedup = before / max(after, 1e-6)
+print("──── NB2 screenshot summary ────")
+print(f"Files before OPTIMIZE:       {files_before}")
+print(f"Files after OPTIMIZE+ZORDER: {files_after}")
+print(f"File reduction:              {files_before / max(files_after, 1):.1f}x fewer")
+print(f"Wall-clock speedup:          {speedup:.1f}x")
+print(f"Files-pruned ratio:          {pruned_ratio:.1f}x")
+
 checks = {
     "compaction reduced file count":  files_after < files_before,
     "speedup ≥ 3x OR pruning ≥ 10x":  speedup >= 3 or pruned_ratio >= 10,
@@ -176,3 +183,11 @@ print(f"\n  (speedup={speedup:.1f}x, pruning={pruned_ratio:.1f}x — the slide a
 print("   wall-clock is noisy on a laptop, which is why file-pruning is the fallback.)")
 assert all(checks.values()), "NB2 incomplete — see FAIL rows above"
 print("\nNB2 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Compaction giảm số file từ 200 xuống 55; Z-order giúp chỉ một file có khoảng thống kê
+# chứa `user_id=4242`, tương ứng pruning 55×. Thời gian truy vấn tăng tốc 12,2× trong lần
+# đo này, nhưng wall-clock có thể dao động theo cache và ổ đĩa. Vì vậy tỷ lệ file được loại
+# là bằng chứng ổn định hơn để đánh giá hiệu quả bố trí dữ liệu.

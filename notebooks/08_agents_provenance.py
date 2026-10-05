@@ -475,7 +475,28 @@ checks = {
     "unclassified rows found":             unclassified > 0,
     "erasure removed subject rows":        after == 0 and before > 0,
 }
+print("──── NB8 screenshot summary ────")
+print("Silver partitions:         agent_version=policy-v2, agent_version=policy-v3")
+print(f"Gold policy rows:          {gold.num_rows}")
+print(f"Pinned replay:             version {training_run['table_version']}, "
+      f"{pinned.count():,}/{training_run['n_steps_seen']:,} steps")
+print(f"Catalog cache:             5 turns → {mcp.catalog_reads} catalog read")
+print(f"Destructive flow:          {attempt['resultType']} → {approved['resultType']}")
+print(f"Task polling result:       {st['status']}")
+print(f"Provenance partitions:     {parts}")
+print(f"Provenance trainable:      {trainable:,}/{governed.num_rows:,}; "
+      f"UNCLASSIFIED excluded={unclassified:,}")
+print(f"Current-version erasure:   {SUBJECT} rows {before} → {after}")
 for k, v in checks.items():
     print(f"  [{'PASS' if v else 'FAIL'}] {k}")
 assert all(checks.values()), "NB8 incomplete — see FAIL rows above"
 print("\nNB8 complete.")
+
+# %% [markdown]
+# ## Nhận xét kết quả
+#
+# Training run ghim version 0 và replay đúng 1.578 bước, nên kết quả có thể tái lập dù bảng
+# đã nhận thêm rollout. Cache giảm năm lần gọi xuống một lần đọc catalog; thao tác phá hủy
+# yêu cầu xác nhận và task polling kết thúc ở trạng thái `completed`. Bốn provenance bucket
+# được dùng cho tập train, còn 334 dòng `UNCLASSIFIED` bị loại. Việc xóa ở version hiện tại
+# không tự loại dữ liệu khỏi version cũ, nên retention và VACUUM vẫn phải được quản lý riêng.
