@@ -1,0 +1,6 @@
+- Họ tên: Nguyen Dinh Phuc
+- MSSV: 2A202602953
+- Mã bài: K4-Track02-Day18
+- Đường chạy: lightweight
+- Python: 3.11.16
+- Hệ điều hành: macOS
