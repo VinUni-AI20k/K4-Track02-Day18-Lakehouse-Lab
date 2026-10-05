@@ -1,6 +1,6 @@
 # Khai Báo Sử Dụng AI (AI Usage Declaration)
 
-- **Công cụ AI sử dụng:** Google Antigravity IDE (Gemini 3.8 Flash / Claude Code)
+- **Công cụ AI sử dụng:** Google Antigravity IDE (Gemini 3.8 Flash)
 - **Mục đích và phạm vi sử dụng:**
   1. Hỗ trợ giải thích các thông điệp cảnh báo/server từ `make lab`.
   2. Hướng dẫn đối chiếu và mapping các tiêu chí chấm điểm trong `RUBRIC.md` và `CHECKPOINTS.md` vào các cell kết quả của 8 notebooks.
