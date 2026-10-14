@@ -1,0 +1,11 @@
+[1] tokenization at landing: 6,000 prompts tokenized, raw PII left = 0
+    raw JSON 39.8 MB → Parquet 13.1 MB (compression 3.0×)
+[2] retention: delete date < 2026-04-04
+    parquet files: 10 → after DELETE 10 (still on disk!) → after VACUUM 7
+    partitions left: date=2026-04-04 … date=2026-04-10 (7 days)
+    Gold rows: 29,003 → 29,003 (untouched)
+  [PASS] no raw PII lands in the lake
+  [PASS] DELETE alone does not free storage
+  [PASS] VACUUM physically removes expired bodies
+  [PASS] exactly 7 days of bodies remain
+  [PASS] Gold (1-year aggregates) intact

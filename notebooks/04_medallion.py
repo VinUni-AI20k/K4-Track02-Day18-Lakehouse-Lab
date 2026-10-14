@@ -57,6 +57,10 @@ reset(SILVER)
 # autoloads an extension over the network; Arrow registration is offline and
 # zero-copy, so the lab works on a locked-down machine.
 con = duckdb.connect()
+# `ts` is TIMESTAMPTZ and CAST(ts AS DATE) uses the session time zone. Without
+# this, a laptop in Asia/Ho_Chi_Minh buckets 7 UTC days into 8 partial local
+# days (04-01 with 17 h, 04-08 with 7 h). Pin the day boundary to UTC.
+con.sql("SET TimeZone = 'UTC'")
 con.register("bronze", DeltaTable(BRONZE).to_pyarrow_table())
 
 silver_arrow = con.sql(f"""
@@ -155,3 +159,37 @@ assert n_dates >= 7, (
 # - [ ] Silver has fewer rows than Bronze (dedup worked)
 # - [ ] Gold spans ≥ 7 dates × 3 models (slide §8 medallion contract)
 # - [ ] Cost & error_rate columns populated and non-zero
+
+# %% [markdown]
+# ## Full Gold contract check
+#
+# The cells above only assert ≥ 7 dates. This cell checks every Gold requirement
+# explicitly: three tables on storage, Silver < Bronze, full date × model grid,
+# p50 ≤ p95, cost_usd > 0 and error_rate within [0, 1].
+
+# %%
+from pathlib import Path as _P
+
+with pl.Config(tbl_rows=-1, tbl_width_chars=140, fmt_str_lengths=20):
+    print(gold_df.sort("date", "model").select(
+        "date", "model", "p50_latency_ms", "p95_latency_ms", "error_rate",
+        pl.col("cost_usd").round(2)))
+
+_tables = {name: (_P(p) / "_delta_log").is_dir() for name, p in
+           [("bronze", BRONZE), ("silver", SILVER), ("gold", GOLD)]}
+gold_checks = {
+    "bronze/silver/gold all on storage": all(_tables.values()),
+    "silver < bronze (dedup)": silver_n < bronze_n,
+    "≥ 7 dates × 3 models, full grid": n_dates >= 7 and n_models == 3
+                                       and gold_df.height == n_dates * n_models,
+    "p50 ≤ p95 on every row": gold_df.filter(pl.col("p50_latency_ms") > pl.col("p95_latency_ms")).height == 0,
+    "cost_usd > 0 on every row": gold_df.filter(pl.col("cost_usd") <= 0).height == 0,
+    "error_rate in [0, 1] on every row": gold_df.filter(~pl.col("error_rate").is_between(0, 1)).height == 0,
+}
+for k, v in gold_checks.items():
+    print(f"  [{'PASS' if v else 'FAIL'}] {k}")
+for name, p in [("bronze", BRONZE), ("silver", SILVER), ("gold", GOLD)]:
+    print(f"  {name:6s} → {p}")
+assert all(gold_checks.values()), "NB4 Gold contract incomplete — see FAIL rows above"
+print("\nNB4 complete.")
+
